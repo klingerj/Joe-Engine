@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="src\Header Files">
+      <UniqueIdentifier>{b0f0ec63-7b12-4789-bfb5-2a3fc489b717}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Source Files">
+      <UniqueIdentifier>{d6324a9a-09e7-4ef3-9ac4-0e703804dc62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Source Files\Rendering">
+      <UniqueIdentifier>{a777a369-ac8e-4e52-8f7a-dc760706f13f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\Renderer.cpp">
+      <Filter>src\Source Files\Rendering</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
