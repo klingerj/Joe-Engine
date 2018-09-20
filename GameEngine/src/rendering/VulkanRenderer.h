@@ -18,10 +18,15 @@ private:
     void CreateVulkanInstance();
     std::vector<const char*> GetRequiredExtensions();
 
+    // Vulkan Device creation
+    VkPhysicalDevice physicalDevice;
+    void PickPhysicalDevice();
+
 public:
-    VulkanRenderer() : vulkanWindow(800, 600, "VulkanWindow") {
+    VulkanRenderer() : vulkanWindow(800, 600, "VulkanWindow"), physicalDevice(VK_NULL_HANDLE) {
         CreateVulkanInstance();
         vulkanValidationLayers.SetupDebugCallback(instance);
+        PickPhysicalDevice();
     }
 
     ~VulkanRenderer() {

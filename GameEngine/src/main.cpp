@@ -12,12 +12,11 @@
 #include <stdlib.h>  
 #include <crtdbg.h>  
 
-//static EngineApplication app = EngineApplication();
+static EngineApplication app = EngineApplication();
 
 int main() {
     // Run the app
     {
-        EngineApplication app = EngineApplication();
         try {
             app.Run();
         }
