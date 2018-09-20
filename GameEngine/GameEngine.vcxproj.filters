@@ -14,13 +14,36 @@
     <Filter Include="src\Source Files\Rendering">
       <UniqueIdentifier>{a777a369-ac8e-4e52-8f7a-dc760706f13f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Header Files\Rendering">
+      <UniqueIdentifier>{750ddd9f-a1d0-4696-b66e-b41e780bc503}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\rendering\Renderer.cpp">
+    <ClCompile Include="src\EngineApplication.cpp">
+      <Filter>src\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\VulkanRenderer.cpp">
       <Filter>src\Source Files\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="src\VulkanValidationLayers.cpp">
+      <Filter>src\Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\rendering\VulkanWindow.h">
+      <Filter>src\Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EngineApplication.h">
+      <Filter>src\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\VulkanRenderer.h">
+      <Filter>src\Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VulkanValidationLayers.h">
+      <Filter>src\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

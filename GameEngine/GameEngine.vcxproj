@@ -19,8 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\EngineApplication.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\rendering\Renderer.cpp" />
+    <ClCompile Include="src\rendering\VulkanRenderer.cpp" />
+    <ClCompile Include="src\VulkanValidationLayers.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\EngineApplication.h" />
+    <ClInclude Include="src\rendering\VulkanRenderer.h" />
+    <ClInclude Include="src\rendering\VulkanWindow.h" />
+    <ClInclude Include="src\VulkanValidationLayers.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -88,7 +96,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\include;$(Solution_Dir)..\Libraries\glm-0.9.9.2\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalOptions>/arch:AVX %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/arch:AVX /W3 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -117,6 +125,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\include;$(Solution_Dir)..\Libraries\glm-0.9.9.2\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/arch:AVX /W3 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
