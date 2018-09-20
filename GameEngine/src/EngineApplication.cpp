@@ -1,9 +1,10 @@
 #include "EngineApplication.h"
-
+#include <exception>
 void EngineApplication::Run() {
-    while (!vulkanRenderer.GetWindow().ShouldClose()) {
-        vulkanRenderer.GetWindow().PollEvents();
-        
+    const VulkanWindow& window = vulkanRenderer.GetDevice().GetWindow();
+    while (!window.ShouldClose()) {
+        window.PollEvents();
+        break;
     }
 }
 

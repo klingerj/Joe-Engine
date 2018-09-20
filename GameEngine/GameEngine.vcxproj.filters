@@ -31,6 +31,18 @@
     <ClCompile Include="src\VulkanValidationLayers.cpp">
       <Filter>src\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\rendering\VulkanWindow.cpp">
+      <Filter>src\Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\VulkanQueue.cpp">
+      <Filter>src\Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\VulkanSwapChain.cpp">
+      <Filter>src\Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\VulkanDevice.cpp">
+      <Filter>src\Source Files\Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\rendering\VulkanWindow.h">
@@ -44,6 +56,15 @@
     </ClInclude>
     <ClInclude Include="src\VulkanValidationLayers.h">
       <Filter>src\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\VulkanQueue.h">
+      <Filter>src\Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\VulkanSwapChain.h">
+      <Filter>src\Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\VulkanDevice.h">
+      <Filter>src\Header Files\Rendering</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

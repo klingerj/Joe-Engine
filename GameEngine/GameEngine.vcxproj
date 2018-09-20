@@ -21,12 +21,19 @@
   <ItemGroup>
     <ClCompile Include="src\EngineApplication.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\rendering\VulkanDevice.cpp" />
+    <ClCompile Include="src\rendering\VulkanQueue.cpp" />
     <ClCompile Include="src\rendering\VulkanRenderer.cpp" />
+    <ClCompile Include="src\rendering\VulkanSwapChain.cpp" />
+    <ClCompile Include="src\rendering\VulkanWindow.cpp" />
     <ClCompile Include="src\VulkanValidationLayers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\EngineApplication.h" />
+    <ClInclude Include="src\rendering\VulkanDevice.h" />
+    <ClInclude Include="src\rendering\VulkanQueue.h" />
     <ClInclude Include="src\rendering\VulkanRenderer.h" />
+    <ClInclude Include="src\rendering\VulkanSwapChain.h" />
     <ClInclude Include="src\rendering\VulkanWindow.h" />
     <ClInclude Include="src\VulkanValidationLayers.h" />
   </ItemGroup>

@@ -8,25 +8,22 @@
 #include <glm/mat4x4.hpp>
 
 // Memory leak detection
-#define _CRTDBG_MAP_ALLOC  
-#include <stdlib.h>  
-#include <crtdbg.h>  
-
-static EngineApplication app = EngineApplication();
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
 
 int main() {
     // Run the app
-    {
-        try {
-            app.Run();
-        }
-        catch (const std::exception& e) {
-            std::cerr << e.what() << std::endl;
-            return EXIT_FAILURE;
-        }
-        //_CrtDumpMemoryLeaks();
+    try {
+        EngineApplication app = EngineApplication();
+        app.Run();
     }
-    //_CrtDumpMemoryLeaks();
+    catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        //_CrtDumpMemoryLeaks();
+        //return EXIT_FAILURE;
+    }
+    _CrtDumpMemoryLeaks();
 
     return EXIT_SUCCESS;
 }

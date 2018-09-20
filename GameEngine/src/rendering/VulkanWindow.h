@@ -1,6 +1,6 @@
 #pragma once
 
-// Wrapper class for GLFW Window
+// Wrapper class for GLFW Window and VkSurfaceKHR
 // Note: GLFW clean-up happens in destructor
 
 #define GLFW_INCLUDE_VULKAN
@@ -11,6 +11,7 @@
 class VulkanWindow {
 private:
     GLFWwindow* window;
+    VkSurfaceKHR surface;
 public:
     VulkanWindow(const int w, const int h, const std::string& n) {
         glfwInit();
@@ -20,19 +21,25 @@ public:
     }
 
     ~VulkanWindow() {
-        glfwDestroyWindow(window);
-        glfwTerminate();
+        if (window != nullptr) {
+            glfwDestroyWindow(window);
+            glfwTerminate();
+        }
+    }
+
+    void SetupVulkanSurface(const VkInstance& instance);
+    void CleanupVulkanSurface(const VkInstance& instance);
+    const VkSurfaceKHR& GetSurface() const {
+        return surface;
     }
     
     // Somewhat useless wrapping, but makes calls to the equivalent GLFW functions (needed for main game/render loop)
     bool ShouldClose() const {
         return glfwWindowShouldClose(window);
     }
-
     void PollEvents() const {
         glfwPollEvents();
     }
-
     const char** GetRequiredInstanceExtensions(uint32_t* count) const {
         return glfwGetRequiredInstanceExtensions(count);
     }

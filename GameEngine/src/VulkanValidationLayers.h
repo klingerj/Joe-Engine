@@ -31,17 +31,19 @@ public:
     static const bool enableValidationLayers;
 
     // Construction and setup
-    VulkanValidationLayers() {}
-    ~VulkanValidationLayers() {}
+    VulkanValidationLayers() {
+    }
+    ~VulkanValidationLayers() {
+    }
     void SetupDebugCallback(const VkInstance& instance);
     void DestroyDebugCallback(const VkInstance& instance);
 
     // Getters
     bool CheckValidationLayerSupport() const;
-    bool AreValidationLayersEnabled() const {
+    static bool AreValidationLayersEnabled() {
         return enableValidationLayers;
     }
-    const std::vector<const char*>& GetValidationLayers() const {
+    static const std::vector<const char*>& GetValidationLayers() {
         return validationLayers;
     }
 };
