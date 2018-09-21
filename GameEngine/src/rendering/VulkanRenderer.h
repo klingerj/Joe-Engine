@@ -13,10 +13,19 @@ private:
     // Wrapper for Vulkan physical/logical device, window, and swap chain
     VulkanDevice vulkanDevice;
 
+    // Graphics stuff
+
+
 public:
-    VulkanRenderer() : vulkanDevice() {}
+    VulkanRenderer() : vulkanDevice() {
+        CreateGraphicsPipeline();
+    }
     ~VulkanRenderer() {}
 
+    // Vulkan Creation
+    void CreateGraphicsPipeline();
+
+    // Getters
     const VulkanDevice& GetDevice() {
         return vulkanDevice;
     }

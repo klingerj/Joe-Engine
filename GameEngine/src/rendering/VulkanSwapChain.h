@@ -19,12 +19,14 @@ private:
     std::vector<VkImage> swapChainImages;
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
+    std::vector<VkImageView> swapChainImageViews;
 public:
     VulkanSwapChain() : swapChain() {}
     ~VulkanSwapChain() {}
     
     // Creates the swap chain
     void Create(const VkPhysicalDevice& physDevice, const VkDevice& device, const VkSurfaceKHR& surface, const int width, const int height);
+    void CreateImageViews(const VkPhysicalDevice& physDevice, const VkDevice& device, const VkSurfaceKHR& surface, const int width, const int height);
     void Cleanup(const VkDevice& device);
 
     static std::vector<const char*> GetDeviceExtensions() {

@@ -17,6 +17,12 @@
     <Filter Include="src\Header Files\Rendering">
       <UniqueIdentifier>{750ddd9f-a1d0-4696-b66e-b41e780bc503}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Source Files\Shaders">
+      <UniqueIdentifier>{2c0c126b-c071-43dd-a62a-5b6a5c7e791f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Source Files\Scripts">
+      <UniqueIdentifier>{88906d0b-4f7a-45bc-87de-76d61c1f47d0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -66,5 +72,10 @@
     <ClInclude Include="src\rendering\VulkanDevice.h">
       <Filter>src\Header Files\Rendering</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\scripts\compileShaders.bat">
+      <Filter>src\Source Files\Scripts</Filter>
+    </None>
   </ItemGroup>
 </Project>
