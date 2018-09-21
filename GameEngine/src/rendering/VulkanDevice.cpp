@@ -52,6 +52,53 @@ void VulkanDevice::CreateVulkanInstance() {
     }
 }
 
+int VulkanDevice::RateDeviceSuitability(VkPhysicalDevice physDevice, const VulkanWindow& vulkanWindow) {
+    VkPhysicalDeviceProperties deviceProperties;
+    VkPhysicalDeviceFeatures deviceFeatures;
+    vkGetPhysicalDeviceProperties(physDevice, &deviceProperties);
+    vkGetPhysicalDeviceFeatures(physDevice, &deviceFeatures);
+
+    int score = 0;
+
+    QueueFamilyIndices indices = FindQueueFamilies(physDevice, vulkanWindow.GetSurface());
+    if (indices.IsComplete()) {
+        score += 10000;
+    } else {
+        return 0;
+    }
+
+    // Discrete GPUs have a significant performance advantage
+    if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+        score += 1000;
+    }
+
+    // Maximum possible size of textures affects graphics quality
+    score += deviceProperties.limits.maxImageDimension2D;
+
+    // Application can't function without geometry shaders
+    // TODO remove this
+    // TODO long term: change device requirements as engine develops
+    /*if (!deviceFeatures.geometryShader) {
+    return 0;
+    }*/
+
+    bool extensionsSupported = swapChain.CheckDeviceExtensionSupport(physDevice);
+
+    bool swapChainAdequate = false;
+    if (extensionsSupported) {
+        SwapChainSupportDetails swapChainSupport = swapChain.QuerySwapChainSupport(physDevice, vulkanWindow.GetSurface());
+        swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+    } else {
+        return 0;
+    }
+
+    if (!swapChainAdequate) {
+        return 0;
+    }
+
+    return score;
+}
+
 void VulkanDevice::PickPhysicalDevice() {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
@@ -92,7 +139,9 @@ void VulkanDevice::CreateLogicalDevice() {
     VkPhysicalDeviceFeatures deviceFeatures = {};
     createInfo.pEnabledFeatures = &deviceFeatures;
 
-    createInfo.enabledExtensionCount = 0;
+    std::vector<const char*> deviceExtensions = VulkanSwapChain::GetDeviceExtensions();
+    createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+    createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
     if (vulkanValidationLayers.AreValidationLayersEnabled()) {
         createInfo.enabledLayerCount = static_cast<uint32_t>(vulkanValidationLayers.GetValidationLayers().size());

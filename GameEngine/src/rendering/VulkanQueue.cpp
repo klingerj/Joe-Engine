@@ -35,37 +35,6 @@ QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physDevice, VkSurfaceKHR s
     return indices;
 }
 
-int RateDeviceSuitability(VkPhysicalDevice physDevice, const VulkanWindow& vulkanWindow) {
-    VkPhysicalDeviceProperties deviceProperties;
-    VkPhysicalDeviceFeatures deviceFeatures;
-    vkGetPhysicalDeviceProperties(physDevice, &deviceProperties);
-    vkGetPhysicalDeviceFeatures(physDevice, &deviceFeatures);
-
-    int score = 0;
-
-    QueueFamilyIndices indices = FindQueueFamilies(physDevice, vulkanWindow.GetSurface());
-    if (indices.IsComplete()) {
-        score += 10000;
-    }
-
-    // Discrete GPUs have a significant performance advantage
-    if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-        score += 1000;
-    }
-
-    // Maximum possible size of textures affects graphics quality
-    score += deviceProperties.limits.maxImageDimension2D;
-
-    // Application can't function without geometry shaders
-    // TODO remove this
-    // TODO long term: change device requirements as engine develops
-    /*if (!deviceFeatures.geometryShader) {
-    return 0;
-    }*/
-
-    return score;
-}
-
 void VulkanQueue::GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, VulkanQueue& vulkanQueue) {
     vkGetDeviceQueue(device, queueFamilyIndex, 0, &(vulkanQueue.queue));
 }

@@ -19,7 +19,6 @@ struct QueueFamilyIndices {
 };
 
 QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physDevice, VkSurfaceKHR surface);
-int RateDeviceSuitability(VkPhysicalDevice physDevice, const VulkanWindow& vulkanWindow);
 
 class VulkanQueue {
 protected:
