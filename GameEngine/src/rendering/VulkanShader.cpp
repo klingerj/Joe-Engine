@@ -1,6 +1,6 @@
 #include "VulkanShader.h"
 
-std::vector<char> VulkanShader::ReadFile(const std::string& filename) {
+std::vector<char> VulkanShader::ReadFile(const std::string& filename) const {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
     if (!file.is_open()) {
@@ -31,7 +31,7 @@ VkShaderModule VulkanShader::CreateShaderModule(const std::vector<char>& code) {
 }
 
 // Warning:: long function
-void VulkanShader::CreateGraphicsPipeline(const VulkanSwapChain& swapChain) {
+void VulkanShader::CreateGraphicsPipeline(const VkShaderModule& vertShaderModule, const VkShaderModule& fragShaderModule, const VulkanSwapChain& swapChain) {
     // Shader stages
     VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
