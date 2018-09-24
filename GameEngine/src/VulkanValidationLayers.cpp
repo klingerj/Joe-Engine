@@ -1,12 +1,12 @@
 #include "VulkanValidationLayers.h"
 
-// Static variable initializations
-const std::vector<const char*> VulkanValidationLayers::validationLayers = { "VK_LAYER_LUNARG_standard_validation" };
-#ifdef _DEBUG
-const bool VulkanValidationLayers::enableValidationLayers = true;
-#else
-const bool VulkanValidationLayers::enableValidationLayers = false;
-#endif
+bool VulkanValidationLayers::EnableLayers() {
+    #ifdef _DEBUG
+    return true;
+    #else
+    return false;
+    #endif
+}
 
 bool VulkanValidationLayers::CheckValidationLayerSupport() const {
     uint32_t layerCount;
@@ -33,42 +33,39 @@ bool VulkanValidationLayers::CheckValidationLayerSupport() const {
     return true;
 }
 
-// Destroy the VkDebugUtilsMessengerEXT object
-void VulkanValidationLayers::DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT callback, const VkAllocationCallbacks* pAllocator) {
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+// Proxy functions for creating/destroying the VkDebugUtilsMessengerEXT object
+VkResult CreateDebugReportCallbackEXT(const VkInstance& instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback) {
+    auto func = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
+    if (func != nullptr) {
+        return func(instance, pCreateInfo, pAllocator, pCallback);
+    } else {
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+}
+
+void DestroyDebugReportCallbackEXT(const VkInstance& instance, VkDebugReportCallbackEXT callback, const VkAllocationCallbacks* pAllocator) {
+    auto func = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
     if (func != nullptr) {
         func(instance, callback, pAllocator);
     }
 }
 
+// Destroy the VkDebugReportCallbackEXT object
 void VulkanValidationLayers::DestroyDebugCallback(const VkInstance& instance) {
     if (enableValidationLayers) {
-        DestroyDebugUtilsMessengerEXT(instance, callback, nullptr);
-    }
-}
-
-// Proxy function for creating creating the VkDebugUtilsMessengerEXT object
-VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pCallback) {
-    auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-    if (func != nullptr) {
-        return func(instance, pCreateInfo, pAllocator, pCallback);
-    }
-    else {
-        return VK_ERROR_EXTENSION_NOT_PRESENT;
+        DestroyDebugReportCallbackEXT(instance, callback, nullptr);
     }
 }
 
 // Creates the debug callback function
 void VulkanValidationLayers::SetupDebugCallback(const VkInstance& instance) {
     if (!enableValidationLayers) return;
-    VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-    createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-    createInfo.pfnUserCallback = debugCallback;
-    createInfo.pUserData = nullptr;
+    VkDebugReportCallbackCreateInfoEXT createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+    createInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
+    createInfo.pfnCallback = debugCallback;
 
-    if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &callback) != VK_SUCCESS) {
+    if (CreateDebugReportCallbackEXT(instance, &createInfo, nullptr, &callback) != VK_SUCCESS) {
         throw std::runtime_error("failed to set up debug callback!");
     }
 }

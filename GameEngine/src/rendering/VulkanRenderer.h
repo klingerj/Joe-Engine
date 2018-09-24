@@ -5,28 +5,24 @@
 #include "vulkan/vulkan.h"
 
 #include "VulkanDevice.h"
+#include "VulkanShader.h"
+#include "..\GlobalInfo.h"
 
 // Class that manages all Vulkan resources and rendering
 
 class VulkanRenderer {
 private:
     // Wrapper for Vulkan physical/logical device, window, and swap chain
-    VulkanDevice vulkanDevice;
+    //VulkanDevice vulkanDevice;
 
     // Graphics stuff
-
+    VulkanShader shaders[1];
 
 public:
-    VulkanRenderer() : vulkanDevice() {
-        CreateGraphicsPipeline();
-    }
+    VulkanRenderer(const VulkanDevice& vulkanDevice) :
+                   shaders{ VulkanShader(&vulkanDevice.GetDevice(), vulkanDevice.GetSwapChain(),
+                   SHADER_DIRECTORY + "vert_basic.spv", SHADER_DIRECTORY + "frag_basic.spv") } {}
     ~VulkanRenderer() {}
 
-    // Vulkan Creation
-    void CreateGraphicsPipeline();
-
-    // Getters
-    const VulkanDevice& GetDevice() {
-        return vulkanDevice;
-    }
+    //void Initialize(const VulkanDevice& VulkanDevice);
 };

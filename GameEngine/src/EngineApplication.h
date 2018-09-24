@@ -6,6 +6,10 @@
 
 class EngineApplication {
 private:
+    // Vulkan Device wrapper class for managing Vulkan application resources
+    // Listed first, so it will be constructed first and will destruct last
+    VulkanDevice vulkanDevice;
+
     // Subsystems
     VulkanRenderer vulkanRenderer;
 
@@ -13,10 +17,9 @@ private:
     void InitializeEngine();
 
 public:
-
     // Initialize
-    EngineApplication() : vulkanRenderer() {
-        InitializeEngine();
+    EngineApplication() : vulkanDevice(), vulkanRenderer(vulkanDevice) {
+        //InitializeEngine();
     }
 
     // Destroy resources/subsystems

@@ -3,7 +3,6 @@
 
 #include "VulkanDevice.h"
 
-
 std::vector<const char*> VulkanDevice::GetRequiredExtensions() {
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions;
@@ -12,7 +11,7 @@ std::vector<const char*> VulkanDevice::GetRequiredExtensions() {
     std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
     if (vulkanValidationLayers.AreValidationLayersEnabled()) {
-        extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
     }
 
     return extensions;
@@ -38,21 +37,21 @@ void VulkanDevice::CreateVulkanInstance() {
     auto extensions = GetRequiredExtensions();
     createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
     createInfo.ppEnabledExtensionNames = extensions.data();
-
+    
     if (vulkanValidationLayers.AreValidationLayersEnabled()) {
-        createInfo.enabledLayerCount = static_cast<uint32_t>(vulkanValidationLayers.GetValidationLayers().size());
-        createInfo.ppEnabledLayerNames = vulkanValidationLayers.GetValidationLayers().data();
-    }
-    else {
+        const std::vector<const char*>& validationLayers = vulkanValidationLayers.GetValidationLayers();
+        createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+        createInfo.ppEnabledLayerNames = validationLayers.data();
+    } else {
         createInfo.enabledLayerCount = 0;
     }
-
+    
     if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
         throw std::runtime_error("failed to create instance!");
     }
 }
 
-int VulkanDevice::RateDeviceSuitability(VkPhysicalDevice physDevice, const VulkanWindow& vulkanWindow) {
+int VulkanDevice::RateDeviceSuitability(const VkPhysicalDevice& physDevice, const VulkanWindow& vulkanWindow) {
     VkPhysicalDeviceProperties deviceProperties;
     VkPhysicalDeviceFeatures deviceFeatures;
     vkGetPhysicalDeviceProperties(physDevice, &deviceProperties);
@@ -82,11 +81,11 @@ int VulkanDevice::RateDeviceSuitability(VkPhysicalDevice physDevice, const Vulka
     return 0;
     }*/
 
-    bool extensionsSupported = swapChain.CheckDeviceExtensionSupport(physDevice);
+    bool extensionsSupported = vulkanSwapChain.CheckDeviceExtensionSupport(physDevice);
 
     bool swapChainAdequate = false;
     if (extensionsSupported) {
-        SwapChainSupportDetails swapChainSupport = swapChain.QuerySwapChainSupport(physDevice, vulkanWindow.GetSurface());
+        SwapChainSupportDetails swapChainSupport = vulkanSwapChain.QuerySwapChainSupport(physDevice, vulkanWindow.GetSurface());
         swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     } else {
         return 0;
@@ -144,10 +143,10 @@ void VulkanDevice::CreateLogicalDevice() {
     createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
     if (vulkanValidationLayers.AreValidationLayersEnabled()) {
-        createInfo.enabledLayerCount = static_cast<uint32_t>(vulkanValidationLayers.GetValidationLayers().size());
-        createInfo.ppEnabledLayerNames = vulkanValidationLayers.GetValidationLayers().data();
-    }
-    else {
+        const std::vector<const char*>& validationLayers = vulkanValidationLayers.GetValidationLayers();
+        createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+        createInfo.ppEnabledLayerNames = validationLayers.data();
+    } else {
         createInfo.enabledLayerCount = 0;
     }
 

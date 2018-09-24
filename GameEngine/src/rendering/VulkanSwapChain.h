@@ -20,8 +20,9 @@ private:
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
     std::vector<VkImageView> swapChainImageViews;
+
 public:
-    VulkanSwapChain() : swapChain() {}
+    VulkanSwapChain() : swapChain(), swapChainImages(), swapChainImageFormat(), swapChainExtent(), swapChainImageViews() {}
     ~VulkanSwapChain() {}
     
     // Creates the swap chain
@@ -34,9 +35,13 @@ public:
     }
 
     // Swap chain support checking/choosing
-    bool CheckDeviceExtensionSupport(VkPhysicalDevice physDevice) const;
-    SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice physDevice, const VkSurfaceKHR& surface) const;
+    bool CheckDeviceExtensionSupport(const VkPhysicalDevice& physDevice) const;
+    SwapChainSupportDetails QuerySwapChainSupport(const VkPhysicalDevice& physDevice, const VkSurfaceKHR& surface) const;
     VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) const;
-    VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes) const;
+    VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) const;
     VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, const uint32_t width, const uint32_t height) const;
+
+    VkExtent2D GetExtent() const {
+        return swapChainExtent;
+    }
 };

@@ -9,12 +9,16 @@
 // Callback for printing validation layers messages
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData) {
+    VkDebugReportFlagsEXT flags,
+    VkDebugReportObjectTypeEXT objType,
+    uint64_t obj,
+    size_t location,
+    int32_t code,
+    const char* layerPrefix,
+    const char* msg,
+    void* userData) {
 
-    std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+    std::cerr << "validation layer: " << msg << std::endl;
 
     return VK_FALSE;
 }
@@ -24,26 +28,23 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 
 class VulkanValidationLayers {
 private:
-    VkDebugUtilsMessengerEXT callback;
-    void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT callback, const VkAllocationCallbacks* pAllocator);
+    VkDebugReportCallbackEXT callback;
+    const std::vector<const char*> validationLayers;
+    const bool enableValidationLayers;
+    bool EnableLayers();
 public:
-    static const std::vector<const char*> validationLayers;
-    static const bool enableValidationLayers;
-
     // Construction and setup
-    VulkanValidationLayers() {
-    }
-    ~VulkanValidationLayers() {
-    }
+    VulkanValidationLayers() : validationLayers{ "VK_LAYER_LUNARG_standard_validation" }, enableValidationLayers(EnableLayers()) {}
+    ~VulkanValidationLayers() {}
     void SetupDebugCallback(const VkInstance& instance);
     void DestroyDebugCallback(const VkInstance& instance);
 
     // Getters
     bool CheckValidationLayerSupport() const;
-    static bool AreValidationLayersEnabled() {
+    const bool AreValidationLayersEnabled() const {
         return enableValidationLayers;
     }
-    static const std::vector<const char*>& GetValidationLayers() {
+    const std::vector<const char*>& GetValidationLayers() const {
         return validationLayers;
     }
 };

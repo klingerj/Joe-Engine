@@ -1,7 +1,7 @@
 #include "EngineApplication.h"
 #include <exception>
 void EngineApplication::Run() {
-    const VulkanWindow& window = vulkanRenderer.GetDevice().GetWindow();
+    const VulkanWindow& window = vulkanDevice.GetWindow();
     while (!window.ShouldClose()) {
         window.PollEvents();
         break;
@@ -9,5 +9,5 @@ void EngineApplication::Run() {
 }
 
 void EngineApplication::InitializeEngine() {
-    // Initialize stuff
+    // Initialize subsystems?
 }

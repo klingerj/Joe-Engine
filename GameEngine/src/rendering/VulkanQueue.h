@@ -13,12 +13,12 @@ struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
     std::optional<uint32_t> presentFamily;
 
-    bool IsComplete() {
+    bool IsComplete() const {
         return graphicsFamily.has_value() && presentFamily.has_value();
     }
 };
 
-QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physDevice, VkSurfaceKHR surface);
+QueueFamilyIndices FindQueueFamilies(const VkPhysicalDevice& physDevice, const VkSurfaceKHR& surface);
 
 class VulkanQueue {
 protected:
@@ -27,5 +27,5 @@ public:
     VulkanQueue() : queue(VK_NULL_HANDLE) {}
     ~VulkanQueue() {}
     static void GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, VulkanQueue& vulkanQueue);
-    static std::vector<VkDeviceQueueCreateInfo> GetQueueCreateInfos(const QueueFamilyIndices indices);
+    static std::vector<VkDeviceQueueCreateInfo> GetQueueCreateInfos(const QueueFamilyIndices& indices);
 };

@@ -3,7 +3,7 @@
 #include <set>
 #include <algorithm>
 
-bool VulkanSwapChain::CheckDeviceExtensionSupport(VkPhysicalDevice physDevice) const {
+bool VulkanSwapChain::CheckDeviceExtensionSupport(const VkPhysicalDevice& physDevice) const {
     uint32_t extensionCount;
     vkEnumerateDeviceExtensionProperties(physDevice, nullptr, &extensionCount, nullptr);
 
@@ -20,7 +20,7 @@ bool VulkanSwapChain::CheckDeviceExtensionSupport(VkPhysicalDevice physDevice) c
     return requiredExtensions.empty();
 }
 
-SwapChainSupportDetails VulkanSwapChain::QuerySwapChainSupport(VkPhysicalDevice physDevice, const VkSurfaceKHR& surface) const {
+SwapChainSupportDetails VulkanSwapChain::QuerySwapChainSupport(const VkPhysicalDevice& physDevice, const VkSurfaceKHR& surface) const {
     SwapChainSupportDetails details;
 
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physDevice, surface, &details.capabilities);
@@ -59,7 +59,7 @@ VkSurfaceFormatKHR VulkanSwapChain::ChooseSwapSurfaceFormat(const std::vector<Vk
     return availableFormats[0];
 }
 
-VkPresentModeKHR VulkanSwapChain::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes) const {
+VkPresentModeKHR VulkanSwapChain::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) const {
     VkPresentModeKHR bestMode = VK_PRESENT_MODE_FIFO_KHR;
 
     for (const auto& availablePresentMode : availablePresentModes) {
@@ -107,7 +107,7 @@ void VulkanSwapChain::Create(const VkPhysicalDevice& physDevice, const VkDevice&
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    QueueFamilyIndices indices = FindQueueFamilies(physDevice, surface);
+    const QueueFamilyIndices indices = FindQueueFamilies(physDevice, surface);
     uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
     if (indices.graphicsFamily != indices.presentFamily) {

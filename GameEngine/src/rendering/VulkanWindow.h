@@ -29,6 +29,8 @@ public:
 
     void SetupVulkanSurface(const VkInstance& instance);
     void CleanupVulkanSurface(const VkInstance& instance);
+
+    // Getters
     const VkSurfaceKHR& GetSurface() const {
         return surface;
     }

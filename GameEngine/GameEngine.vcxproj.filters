@@ -23,6 +23,12 @@
     <Filter Include="src\Source Files\Scripts">
       <UniqueIdentifier>{88906d0b-4f7a-45bc-87de-76d61c1f47d0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Source Files\Shaders\Vertex Shaders">
+      <UniqueIdentifier>{6636cc56-290e-470f-b734-c0b37c9ab8ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Source Files\Shaders\Fragment Shaders">
+      <UniqueIdentifier>{e0305b7b-c7d1-4779-9a36-a2b57404c64c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -49,6 +55,9 @@
     <ClCompile Include="src\rendering\VulkanDevice.cpp">
       <Filter>src\Source Files\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="src\rendering\VulkanShader.cpp">
+      <Filter>src\Source Files\Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\rendering\VulkanWindow.h">
@@ -72,10 +81,24 @@
     <ClInclude Include="src\rendering\VulkanDevice.h">
       <Filter>src\Header Files\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="src\rendering\VulkanShader.h">
+      <Filter>src\Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GlobalInfo.h">
+      <Filter>src\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\scripts\compileShaders.bat">
-      <Filter>src\Source Files\Scripts</Filter>
+    <None Include="src\shaders\vert_basic.vert">
+      <Filter>src\Source Files\Shaders\Vertex Shaders</Filter>
     </None>
+    <None Include="src\shaders\frag_basic.frag">
+      <Filter>src\Source Files\Shaders\Fragment Shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="src\scripts\compileShaders.bat">
+      <Filter>src\Source Files\Scripts</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

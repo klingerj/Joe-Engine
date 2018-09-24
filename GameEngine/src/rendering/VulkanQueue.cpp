@@ -3,7 +3,7 @@
 
 #include <vector>
 
-QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physDevice, VkSurfaceKHR surface) {
+QueueFamilyIndices FindQueueFamilies(const VkPhysicalDevice& physDevice, const VkSurfaceKHR& surface) {
     QueueFamilyIndices indices;
 
     uint32_t queueFamilyCount = 0;
@@ -39,7 +39,7 @@ void VulkanQueue::GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, Vul
     vkGetDeviceQueue(device, queueFamilyIndex, 0, &(vulkanQueue.queue));
 }
 
-std::vector<VkDeviceQueueCreateInfo> VulkanQueue::GetQueueCreateInfos(const QueueFamilyIndices indices) {
+std::vector<VkDeviceQueueCreateInfo> VulkanQueue::GetQueueCreateInfos(const QueueFamilyIndices& indices) {
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 

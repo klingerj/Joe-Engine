@@ -2,14 +2,11 @@
 
 #include "vulkan/vulkan.h"
 
+#include "VulkanWindow.h"
 #include "../VulkanValidationLayers.h"
 #include "VulkanQueue.h"
-#include "VulkanWindow.h"
 #include "VulkanSwapChain.h"
-
-
-#define DEFAULT_SCREEN_WIDTH 800
-#define DEFAULT_SCREEN_HEIGHT 600
+#include "..\GlobalInfo.h"
 
 // Wrapper for Vulkan physical/logical device, window, and swap chain
 
@@ -17,6 +14,9 @@ class VulkanDevice {
 protected:
     // Wrapper for GLFW window
     VulkanWindow vulkanWindow;
+
+    // Wrapper for Validation Layers
+    VulkanValidationLayers vulkanValidationLayers;
 
     // Application width and height
     uint32_t width;
@@ -26,10 +26,7 @@ protected:
     VkInstance instance;
     void CreateVulkanInstance();
     std::vector<const char*> GetRequiredExtensions();
-    int RateDeviceSuitability(VkPhysicalDevice physDevice, const VulkanWindow& vulkanWindow);
-
-    // Wrapper for Validation Layers
-    VulkanValidationLayers vulkanValidationLayers;
+    int RateDeviceSuitability(const VkPhysicalDevice& physDevice, const VulkanWindow& vulkanWindow);
 
     // Vulkan physical/logical devices and creation functions
     VkPhysicalDevice physicalDevice;
@@ -42,23 +39,23 @@ protected:
     VulkanQueue presentationQueue;
 
     // Swap chain
-    VulkanSwapChain swapChain;
+    VulkanSwapChain vulkanSwapChain;
 
 public:
-    VulkanDevice() : vulkanWindow(DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT, "VulkanWindow"), width(DEFAULT_SCREEN_WIDTH), height(DEFAULT_SCREEN_HEIGHT),
-                     instance(), vulkanValidationLayers(), physicalDevice(), device(), graphicsQueue(), presentationQueue(), swapChain() {
+    VulkanDevice() : vulkanWindow(DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT, "VulkanWindow"), width(DEFAULT_SCREEN_WIDTH), height(DEFAULT_SCREEN_HEIGHT) {
         CreateVulkanInstance();
         vulkanValidationLayers.SetupDebugCallback(instance);
         vulkanWindow.SetupVulkanSurface(instance);
         PickPhysicalDevice();
         CreateLogicalDevice();
-        swapChain.Create(physicalDevice, device, vulkanWindow.GetSurface(), width, height);
+        vulkanSwapChain.Create(physicalDevice, device, vulkanWindow.GetSurface(), width, height);
     }
 
     ~VulkanDevice() {
-        swapChain.Cleanup(device);
+        vulkanSwapChain.Cleanup(device);
+        
         vkDestroyDevice(device, nullptr);
-        if (VulkanValidationLayers::AreValidationLayersEnabled()) {
+        if (vulkanValidationLayers.AreValidationLayersEnabled()) {
             vulkanValidationLayers.DestroyDebugCallback(instance);
         }
         vulkanWindow.CleanupVulkanSurface(instance);
@@ -69,7 +66,13 @@ public:
     const VkInstance& GetInstance() const {
         return instance;
     }
+    const VkDevice& GetDevice() const {
+        return device;
+    }
     const VulkanWindow& GetWindow() const {
         return vulkanWindow;
+    }
+    const VulkanSwapChain& GetSwapChain() const {
+        return vulkanSwapChain;
     }
 };
