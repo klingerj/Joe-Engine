@@ -143,7 +143,7 @@ void VulkanSwapChain::Create(const VkPhysicalDevice& physDevice, const VkDevice&
 void VulkanSwapChain::CreateImageViews(const VkPhysicalDevice& physDevice, const VkDevice& device, const VkSurfaceKHR& surface, const int width, const int height) {
     swapChainImageViews.resize(swapChainImages.size());
 
-    for (size_t i = 0; i < swapChainImages.size(); i++) {
+    for (size_t i = 0; i < swapChainImages.size(); ++i) {
         VkImageViewCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         createInfo.image = swapChainImages[i];
@@ -161,28 +161,6 @@ void VulkanSwapChain::CreateImageViews(const VkPhysicalDevice& physDevice, const
 
         if (vkCreateImageView(device, &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) {
             throw std::runtime_error("failed to create image views!");
-        }
-    }
-}
-
-void VulkanSwapChain::CreateFramebuffers(const VkDevice& device, const VkRenderPass& renderPass) {
-    swapChainFramebuffers.resize(swapChainImageViews.size());
-    for (size_t i = 0; i < swapChainImageViews.size(); i++) {
-        VkImageView attachments[] = {
-            swapChainImageViews[i]
-        };
-
-        VkFramebufferCreateInfo framebufferInfo = {};
-        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebufferInfo.renderPass = renderPass;
-        framebufferInfo.attachmentCount = 1;
-        framebufferInfo.pAttachments = attachments;
-        framebufferInfo.width = swapChainExtent.width;
-        framebufferInfo.height = swapChainExtent.height;
-        framebufferInfo.layers = 1;
-
-        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create framebuffer!");
         }
     }
 }

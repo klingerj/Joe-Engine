@@ -8,8 +8,6 @@
 #include "../VulkanValidationLayers.h"
 #include "../GlobalInfo.h"
 
-#define NUM_VULKAN_SHADERS 1
-
 // Class that manages all Vulkan resources and rendering
 
 class VulkanRenderer {
@@ -21,8 +19,8 @@ private:
     VulkanValidationLayers vulkanValidationLayers;
 
     // Application width and height
-    uint32_t width;
-    uint32_t height;
+    const uint32_t width;
+    const uint32_t height;
 
     // Vulkan Instance creation
     VkInstance instance;
@@ -39,15 +37,35 @@ private:
     VulkanSwapChain vulkanSwapChain;
 
     // Shaders and rendering
-    VulkanShader shaders[NUM_VULKAN_SHADERS];
+    std::vector<VulkanShader> shaders;
     VkRenderPass renderPass;
+    
+    // Framebuffers
+    std::vector<VkFramebuffer> swapChainFramebuffers;
+
+    // Command pool(s) and buffer(s)
+    VkCommandPool commandPool;
+    std::vector<VkCommandBuffer> commandBuffers;
+
+    // Semaphores and Fences
+    size_t currentFrame;
+    const int MAX_FRAMES_IN_FLIGHT;
+    std::vector<VkSemaphore> imageAvailableSemaphores;
+    std::vector<VkSemaphore> renderFinishedSemaphores;
+    std::vector<VkFence> inFlightFences;
 
 public:
-    VulkanRenderer() {}
+    VulkanRenderer() : width(DEFAULT_SCREEN_WIDTH), height(DEFAULT_SCREEN_HEIGHT), MAX_FRAMES_IN_FLIGHT(DEFAULT_MAX_FRAMES_IN_FLIGHT), currentFrame(0) {}
     ~VulkanRenderer() {}
 
+    // Vulkan setup
     void Initialize();
+
+    // Vulkan cleanup
     void Cleanup();
+
+    // Draw a frame
+    void DrawFrame();
 
     // Setup functions
     void CreateVulkanInstance();
@@ -56,9 +74,16 @@ public:
     void PickPhysicalDevice();
     void CreateLogicalDevice();
     void CreateRenderPass(const VulkanSwapChain& swapChain);
+    void CreateFramebuffers();
+    void CreateCommandPool();
+    void CreateCommandBuffers();
+    void CreateSemaphoresAndFences();
 
     // Getters
     const VulkanWindow& GetWindow() const {
         return vulkanWindow;
+    }
+    const VkDevice& GetDevice() const {
+        return device;
     }
 };

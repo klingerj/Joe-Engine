@@ -20,17 +20,14 @@ private:
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
     std::vector<VkImageView> swapChainImageViews;
-    std::vector<VkFramebuffer> swapChainFramebuffers;
 
 public:
-    VulkanSwapChain() : swapChain(), swapChainImages(), swapChainImageFormat(), swapChainExtent(),
-                        swapChainImageViews(), swapChainFramebuffers() {}
+    VulkanSwapChain() {}
     ~VulkanSwapChain() {}
     
     // Creates the swap chain
     void Create(const VkPhysicalDevice& physDevice, const VkDevice& device, const VkSurfaceKHR& surface, const int width, const int height);
     void CreateImageViews(const VkPhysicalDevice& physDevice, const VkDevice& device, const VkSurfaceKHR& surface, const int width, const int height);
-    void CreateFramebuffers(const VkDevice& device, const VkRenderPass& renderPass);
     void Cleanup(const VkDevice& device);
 
     static std::vector<const char*> GetDeviceExtensions() {
@@ -44,10 +41,16 @@ public:
     VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) const;
     VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, const uint32_t width, const uint32_t height) const;
 
+    const VkSwapchainKHR& GetSwapChain() const {
+        return swapChain;
+    }
     VkExtent2D GetExtent() const {
         return swapChainExtent;
     }
     VkFormat GetFormat() const {
         return swapChainImageFormat;
+    }
+    const std::vector<VkImageView>& GetImageViews() const {
+        return swapChainImageViews;
     }
 };

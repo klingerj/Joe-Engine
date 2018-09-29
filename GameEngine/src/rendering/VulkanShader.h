@@ -35,4 +35,9 @@ public:
                                 const VulkanSwapChain& swapChain, const VkRenderPass& renderPass);
     VkShaderModule CreateShaderModule(const VkDevice& device, const std::vector<char>& code);
     std::vector<char> VulkanShader::ReadFile(const std::string& filename) const;
+
+    // Getters
+    const VkPipeline& GetPipeline() {
+        return graphicsPipeline;
+    }
 };

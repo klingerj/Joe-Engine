@@ -19,6 +19,7 @@ struct QueueFamilyIndices {
 };
 
 QueueFamilyIndices FindQueueFamilies(const VkPhysicalDevice& physDevice, const VkSurfaceKHR& surface);
+std::vector<VkDeviceQueueCreateInfo> GetQueueCreateInfos(const QueueFamilyIndices& indices);
 
 class VulkanQueue {
 protected:
@@ -26,6 +27,12 @@ protected:
 public:
     VulkanQueue() : queue(VK_NULL_HANDLE) {}
     ~VulkanQueue() {}
-    static void GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, VulkanQueue& vulkanQueue);
-    static std::vector<VkDeviceQueueCreateInfo> GetQueueCreateInfos(const QueueFamilyIndices& indices);
+
+    // Setup
+    void GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex);
+
+    // Getters
+    const VkQueue& GetQueue() const {
+        return queue;
+    }
 };

@@ -29,17 +29,13 @@ QueueFamilyIndices FindQueueFamilies(const VkPhysicalDevice& physDevice, const V
             break;
         }
 
-        i++;
+        ++i;
     }
 
     return indices;
 }
 
-void VulkanQueue::GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, VulkanQueue& vulkanQueue) {
-    vkGetDeviceQueue(device, queueFamilyIndex, 0, &(vulkanQueue.queue));
-}
-
-std::vector<VkDeviceQueueCreateInfo> VulkanQueue::GetQueueCreateInfos(const QueueFamilyIndices& indices) {
+std::vector<VkDeviceQueueCreateInfo> GetQueueCreateInfos(const QueueFamilyIndices& indices) {
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
@@ -53,4 +49,8 @@ std::vector<VkDeviceQueueCreateInfo> VulkanQueue::GetQueueCreateInfos(const Queu
         queueCreateInfos.push_back(queueCreateInfo);
     }
     return queueCreateInfos;
+}
+
+void VulkanQueue::GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex) {
+    vkGetDeviceQueue(device, queueFamilyIndex, 0, &(queue));
 }
