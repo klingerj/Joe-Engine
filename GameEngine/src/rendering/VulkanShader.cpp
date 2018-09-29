@@ -1,5 +1,10 @@
 #include "VulkanShader.h"
 
+void VulkanShader::Cleanup(const VkDevice& device) {
+    vkDestroyPipeline(device, graphicsPipeline, nullptr);
+    vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+}
+
 std::vector<char> VulkanShader::ReadFile(const std::string& filename) const {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
@@ -16,22 +21,23 @@ std::vector<char> VulkanShader::ReadFile(const std::string& filename) const {
     return buffer;
 }
 
-VkShaderModule VulkanShader::CreateShaderModule(const std::vector<char>& code) {
+VkShaderModule VulkanShader::CreateShaderModule(const VkDevice& device, const std::vector<char>& code) {
     VkShaderModuleCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = code.size();
     createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
     VkShaderModule shaderModule;
-    if (vkCreateShaderModule(*device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+    if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
         throw std::runtime_error("failed to create shader module!");
     }
 
     return shaderModule;
 }
 
-// Warning:: long function
-void VulkanShader::CreateGraphicsPipeline(const VkShaderModule& vertShaderModule, const VkShaderModule& fragShaderModule, const VulkanSwapChain& swapChain) {
+// Warning: long function
+void VulkanShader::CreateGraphicsPipeline(const VkDevice& device, const VkShaderModule& vertShaderModule, const VkShaderModule& fragShaderModule,
+                                          const VulkanSwapChain& swapChain, const VkRenderPass& renderPass) {
     // Shader stages
     VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -165,10 +171,35 @@ void VulkanShader::CreateGraphicsPipeline(const VkShaderModule& vertShaderModule
     pipelineLayoutInfo.pushConstantRangeCount = 0;
     pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
-    if (vkCreatePipelineLayout(*device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
 
-    vkDestroyShaderModule(*device, fragShaderModule, nullptr);
-    vkDestroyShaderModule(*device, vertShaderModule, nullptr);
+    VkGraphicsPipelineCreateInfo pipelineInfo = {};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipelineInfo.stageCount = 2;
+    pipelineInfo.pStages = shaderStages;
+
+    pipelineInfo.pVertexInputState = &vertexInputInfo;
+    pipelineInfo.pInputAssemblyState = &inputAssembly;
+    pipelineInfo.pViewportState = &viewportState;
+    pipelineInfo.pRasterizationState = &rasterizer;
+    pipelineInfo.pMultisampleState = &multisampling;
+    pipelineInfo.pDepthStencilState = nullptr;
+    pipelineInfo.pColorBlendState = &colorBlending;
+    pipelineInfo.pDynamicState = nullptr;
+
+    pipelineInfo.layout = pipelineLayout;
+    pipelineInfo.renderPass = renderPass;
+    pipelineInfo.subpass = 0;
+
+    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+    pipelineInfo.basePipelineIndex = -1;
+
+    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create graphics pipeline!");
+    }
+
+    vkDestroyShaderModule(device, fragShaderModule, nullptr);
+    vkDestroyShaderModule(device, vertShaderModule, nullptr);
 }

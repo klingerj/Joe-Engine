@@ -13,22 +13,12 @@ private:
     GLFWwindow* window;
     VkSurfaceKHR surface;
 public:
-    VulkanWindow(const int w, const int h, const std::string& n) {
-        glfwInit();
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-        window = glfwCreateWindow(w, h, n.c_str(), nullptr, nullptr);
-    }
+    VulkanWindow() {}
+    ~VulkanWindow() {}
 
-    ~VulkanWindow() {
-        if (window != nullptr) {
-            glfwDestroyWindow(window);
-            glfwTerminate();
-        }
-    }
-
+    void Initialize(const int w, const int h, const std::string& n, const VkInstance& instance);
+    void Cleanup(const VkInstance& instance);
     void SetupVulkanSurface(const VkInstance& instance);
-    void CleanupVulkanSurface(const VkInstance& instance);
 
     // Getters
     const VkSurfaceKHR& GetSurface() const {

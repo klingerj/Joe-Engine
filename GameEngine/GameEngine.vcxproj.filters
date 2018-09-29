@@ -52,9 +52,6 @@
     <ClCompile Include="src\rendering\VulkanSwapChain.cpp">
       <Filter>src\Source Files\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="src\rendering\VulkanDevice.cpp">
-      <Filter>src\Source Files\Rendering</Filter>
-    </ClCompile>
     <ClCompile Include="src\rendering\VulkanShader.cpp">
       <Filter>src\Source Files\Rendering</Filter>
     </ClCompile>
@@ -76,9 +73,6 @@
       <Filter>src\Header Files\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\rendering\VulkanSwapChain.h">
-      <Filter>src\Header Files\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="src\rendering\VulkanDevice.h">
       <Filter>src\Header Files\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\rendering\VulkanShader.h">
