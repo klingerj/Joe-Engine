@@ -35,6 +35,7 @@ private:
 
     // Swap chain
     VulkanSwapChain vulkanSwapChain;
+    bool framebufferResized;
 
     // Shaders and rendering
     std::vector<VulkanShader> shaders;
@@ -55,7 +56,8 @@ private:
     std::vector<VkFence> inFlightFences;
 
 public:
-    VulkanRenderer() : width(DEFAULT_SCREEN_WIDTH), height(DEFAULT_SCREEN_HEIGHT), MAX_FRAMES_IN_FLIGHT(DEFAULT_MAX_FRAMES_IN_FLIGHT), currentFrame(0) {}
+    VulkanRenderer() : width(DEFAULT_SCREEN_WIDTH), height(DEFAULT_SCREEN_HEIGHT), MAX_FRAMES_IN_FLIGHT(DEFAULT_MAX_FRAMES_IN_FLIGHT),
+                       currentFrame(0), framebufferResized(false) {}
     ~VulkanRenderer() {}
 
     // Vulkan setup
@@ -63,6 +65,11 @@ public:
 
     // Vulkan cleanup
     void Cleanup();
+    void CleanupSwapChain();
+
+    // Swap chain recreation
+    void RecreateSwapChain();
+    void FramebufferResized() { framebufferResized = true; }
 
     // Draw a frame
     void DrawFrame();
@@ -87,3 +94,8 @@ public:
         return device;
     }
 };
+
+static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+    auto app = reinterpret_cast<VulkanRenderer*>(glfwGetWindowUserPointer(window));
+    app->FramebufferResized();
+}

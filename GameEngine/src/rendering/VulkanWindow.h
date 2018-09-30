@@ -8,6 +8,8 @@
 
 #include <string>
 
+class VulkanRenderer;
+
 class VulkanWindow {
 private:
     GLFWwindow* window;
@@ -24,6 +26,9 @@ public:
     const VkSurfaceKHR& GetSurface() const {
         return surface;
     }
+    GLFWwindow* GetWindow() const {
+        return window;
+    }
     
     // Somewhat useless wrapping, but makes calls to the equivalent GLFW functions (needed for main game/render loop)
     bool ShouldClose() const {
@@ -34,5 +39,15 @@ public:
     }
     const char** GetRequiredInstanceExtensions(uint32_t* count) const {
         return glfwGetRequiredInstanceExtensions(count);
+    }
+    void SetFrameBufferCallback(GLFWframebuffersizefun framebufferResizeCallback) const {
+        glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+    }
+    void SetWindowUserPointer(VulkanRenderer* renderer) {
+        glfwSetWindowUserPointer(window, renderer);
+    }
+    void AwaitMaximize(int* width, int* height) const {
+        glfwGetFramebufferSize(window, width, height);
+        glfwWaitEvents();
     }
 };

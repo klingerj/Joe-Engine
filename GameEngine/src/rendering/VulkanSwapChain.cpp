@@ -41,7 +41,6 @@ SwapChainSupportDetails VulkanSwapChain::QuerySwapChainSupport(const VkPhysicalD
         vkGetPhysicalDeviceSurfacePresentModesKHR(physDevice, surface, &presentModeCount, details.presentModes.data());
     }
 
-
     return details;
 }
 
@@ -73,11 +72,17 @@ VkPresentModeKHR VulkanSwapChain::ChooseSwapPresentMode(const std::vector<VkPres
     return bestMode;
 }
 
-VkExtent2D VulkanSwapChain::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, const uint32_t width, const uint32_t height) const {
+VkExtent2D VulkanSwapChain::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow* window) const {
     if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
         return capabilities.currentExtent;
     } else {
-        VkExtent2D actualExtent = { width, height };
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+
+        VkExtent2D actualExtent = {
+            static_cast<uint32_t>(width),
+            static_cast<uint32_t>(height)
+        };
 
         actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
         actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
@@ -86,11 +91,11 @@ VkExtent2D VulkanSwapChain::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& cap
     }
 }
 
-void VulkanSwapChain::Create(const VkPhysicalDevice& physDevice, const VkDevice& device, const VkSurfaceKHR& surface, const int width, const int height) {
-    SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(physDevice, surface);
+void VulkanSwapChain::Create(const VkPhysicalDevice& physDevice, const VkDevice& device, const VulkanWindow& vulkanWindow, const int width, const int height) {
+    SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(physDevice, vulkanWindow.GetSurface());
     VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
     VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
-    VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities, width, height);
+    VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities, vulkanWindow.GetWindow());
 
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
     if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
@@ -99,7 +104,7 @@ void VulkanSwapChain::Create(const VkPhysicalDevice& physDevice, const VkDevice&
 
     VkSwapchainCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = surface;
+    createInfo.surface = vulkanWindow.GetSurface();
     createInfo.minImageCount = imageCount;
     createInfo.imageFormat = surfaceFormat.format;
     createInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -107,7 +112,7 @@ void VulkanSwapChain::Create(const VkPhysicalDevice& physDevice, const VkDevice&
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    const QueueFamilyIndices indices = FindQueueFamilies(physDevice, surface);
+    const QueueFamilyIndices indices = FindQueueFamilies(physDevice, vulkanWindow.GetSurface());
     uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
     if (indices.graphicsFamily != indices.presentFamily) {
@@ -137,7 +142,7 @@ void VulkanSwapChain::Create(const VkPhysicalDevice& physDevice, const VkDevice&
     swapChainImageFormat = surfaceFormat.format;
     swapChainExtent = extent;
 
-    CreateImageViews(physDevice, device, surface, width, height);
+    CreateImageViews(physDevice, device, vulkanWindow.GetSurface(), width, height);
 }
 
 void VulkanSwapChain::CreateImageViews(const VkPhysicalDevice& physDevice, const VkDevice& device, const VkSurfaceKHR& surface, const int width, const int height) {

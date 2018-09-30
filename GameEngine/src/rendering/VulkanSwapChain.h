@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "GLFW\glfw3.h"
 #include "vulkan/vulkan.h"
 
 #include "VulkanWindow.h"
@@ -26,7 +27,7 @@ public:
     ~VulkanSwapChain() {}
     
     // Creates the swap chain
-    void Create(const VkPhysicalDevice& physDevice, const VkDevice& device, const VkSurfaceKHR& surface, const int width, const int height);
+    void Create(const VkPhysicalDevice& physDevice, const VkDevice& device, const VulkanWindow& vulkanWindow, const int width, const int height);
     void CreateImageViews(const VkPhysicalDevice& physDevice, const VkDevice& device, const VkSurfaceKHR& surface, const int width, const int height);
     void Cleanup(const VkDevice& device);
 
@@ -39,7 +40,7 @@ public:
     SwapChainSupportDetails QuerySwapChainSupport(const VkPhysicalDevice& physDevice, const VkSurfaceKHR& surface) const;
     VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) const;
     VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) const;
-    VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, const uint32_t width, const uint32_t height) const;
+    VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow* window) const;
 
     const VkSwapchainKHR& GetSwapChain() const {
         return swapChain;

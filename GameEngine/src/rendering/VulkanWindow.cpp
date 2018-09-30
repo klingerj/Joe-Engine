@@ -3,7 +3,6 @@
 void VulkanWindow::Initialize(const int w, const int h, const std::string& n, const VkInstance& instance) {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     window = glfwCreateWindow(w, h, n.c_str(), nullptr, nullptr);
 }
 

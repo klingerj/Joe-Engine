@@ -17,20 +17,22 @@ void VulkanRenderer::Initialize() {
 
     // Window surface
     vulkanWindow.SetupVulkanSurface(instance);
+    vulkanWindow.SetFrameBufferCallback(framebufferResizeCallback);
+    vulkanWindow.SetWindowUserPointer(this);
 
     // Devices
     PickPhysicalDevice();
     CreateLogicalDevice();
 
     // Swap Chain
-    vulkanSwapChain.Create(physicalDevice, device, vulkanWindow.GetSurface(), width, height);
+    vulkanSwapChain.Create(physicalDevice, device, vulkanWindow, width, height);
 
     // Render pass(es)
     CreateRenderPass(vulkanSwapChain);
 
     // Shaders
     shaders.emplace_back(VulkanShader(device, vulkanSwapChain, renderPass,
-        SHADER_DIR + "vert_basic.spv", SHADER_DIR + "frag_basic.spv"));
+                                      SHADER_DIR + "vert_basic.spv", SHADER_DIR + "frag_basic.spv"));
 
     // Framebuffers
     CreateFramebuffers();
@@ -44,20 +46,16 @@ void VulkanRenderer::Initialize() {
 }
 
 void VulkanRenderer::Cleanup() {
+    CleanupSwapChain();
+
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
         vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
         vkDestroyFence(device, inFlightFences[i], nullptr);
     }
+
     vkDestroyCommandPool(device, commandPool, nullptr);
-    for (auto framebuffer : swapChainFramebuffers) {
-        vkDestroyFramebuffer(device, framebuffer, nullptr);
-    }
-    for (int i = 0; i < shaders.size(); ++i) {
-        shaders[i].Cleanup(device);
-    }
-    vkDestroyRenderPass(device, renderPass, nullptr);
-    vulkanSwapChain.Cleanup(device);
+
     vkDestroyDevice(device, nullptr);
     if (vulkanValidationLayers.AreValidationLayersEnabled()) {
         vulkanValidationLayers.DestroyDebugCallback(instance);
@@ -375,10 +373,16 @@ void VulkanRenderer::CreateSemaphoresAndFences() {
 
 void VulkanRenderer::DrawFrame() {
     vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
-    vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
     uint32_t imageIndex;
-    vkAcquireNextImageKHR(device, vulkanSwapChain.GetSwapChain(), std::numeric_limits<uint64_t>::max(), imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+    VkResult result = vkAcquireNextImageKHR(device, vulkanSwapChain.GetSwapChain(), std::numeric_limits<uint64_t>::max(), imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+        RecreateSwapChain();
+        return;
+    } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+        throw std::runtime_error("failed to acquire swap chain image!");
+    }
 
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -396,6 +400,8 @@ void VulkanRenderer::DrawFrame() {
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
+    vkResetFences(device, 1, &inFlightFences[currentFrame]);
+
     if (vkQueueSubmit(graphicsQueue.GetQueue(), 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
@@ -412,7 +418,44 @@ void VulkanRenderer::DrawFrame() {
     presentInfo.pImageIndices = &imageIndex;
     presentInfo.pResults = nullptr;
 
-    vkQueuePresentKHR(presentationQueue.GetQueue(), &presentInfo);
+    result = vkQueuePresentKHR(presentationQueue.GetQueue(), &presentInfo);
+
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
+        framebufferResized = false;
+        RecreateSwapChain();
+    } else if (result != VK_SUCCESS) {
+        throw std::runtime_error("failed to present swap chain image!");
+    }
 
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
+void VulkanRenderer::CleanupSwapChain() {
+    for (auto framebuffer : swapChainFramebuffers) {
+        vkDestroyFramebuffer(device, framebuffer, nullptr);
+    }
+    vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+    for (int i = 0; i < shaders.size(); ++i) {
+        shaders[i].Cleanup(device);
+    }
+    shaders.clear();
+    vkDestroyRenderPass(device, renderPass, nullptr);
+    vulkanSwapChain.Cleanup(device);
+}
+
+void VulkanRenderer::RecreateSwapChain() {
+    int width = 0, height = 0;
+    while (width == 0 || height == 0) {
+        vulkanWindow.AwaitMaximize(&width, &height);
+    }
+
+    vkDeviceWaitIdle(device);
+
+    CleanupSwapChain();
+    vulkanSwapChain.Create(physicalDevice, device, vulkanWindow, width, height);
+    CreateRenderPass(vulkanSwapChain);
+    shaders.emplace_back(VulkanShader(device, vulkanSwapChain, renderPass,
+                                      SHADER_DIR + "vert_basic.spv", SHADER_DIR + "frag_basic.spv"));
+    CreateFramebuffers();
+    CreateCommandBuffers();
 }
