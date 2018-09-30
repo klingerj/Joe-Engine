@@ -19,8 +19,38 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\EngineApplication.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\rendering\Renderer.cpp" />
+    <ClCompile Include="src\rendering\VulkanQueue.cpp" />
+    <ClCompile Include="src\rendering\VulkanRenderer.cpp" />
+    <ClCompile Include="src\rendering\VulkanShader.cpp" />
+    <ClCompile Include="src\rendering\VulkanSwapChain.cpp" />
+    <ClCompile Include="src\rendering\VulkanWindow.cpp" />
+    <ClCompile Include="src\VulkanValidationLayers.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\EngineApplication.h" />
+    <ClInclude Include="src\GlobalInfo.h" />
+    <ClInclude Include="src\rendering\VulkanQueue.h" />
+    <ClInclude Include="src\rendering\VulkanRenderer.h" />
+    <ClInclude Include="src\rendering\VulkanShader.h" />
+    <ClInclude Include="src\rendering\VulkanSwapChain.h" />
+    <ClInclude Include="src\rendering\VulkanWindow.h" />
+    <ClInclude Include="src\VulkanValidationLayers.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="src\scripts\compileShaders.bat">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Solution_Dir)..\GameEngine\src\scripts\compileShaders.bat</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">placeholder</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Solution_Dir)..\GameEngine\src\scripts\compileShaders.bat</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">placeholder</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\shaders\frag_basic.frag" />
+    <None Include="src\shaders\vert_basic.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -73,7 +103,7 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -88,12 +118,28 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\include;$(Solution_Dir)..\Libraries\glm-0.9.9.2\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalOptions>/arch:AVX %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/arch:AVX /W3 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+    </CustomBuildStep>
+    <CustomBuild>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
+    </CustomBuild>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -117,6 +163,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\include;$(Solution_Dir)..\Libraries\glm-0.9.9.2\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/arch:AVX /W3 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -124,6 +171,16 @@
       <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CustomBuild>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
+    </CustomBuild>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
