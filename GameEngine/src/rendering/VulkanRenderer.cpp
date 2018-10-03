@@ -30,6 +30,11 @@ void VulkanRenderer::Initialize() {
     // Render pass(es)
     CreateRenderPass(vulkanSwapChain);
 
+    // Meshes
+    Mesh m = Mesh();
+    m.CreateVertexBuffer(device, physicalDevice);
+    meshes.push_back(m);
+
     // Shaders
     shaders.emplace_back(VulkanShader(device, vulkanSwapChain, renderPass,
                                       SHADER_DIR + "vert_basic.spv", SHADER_DIR + "frag_basic.spv"));
@@ -48,6 +53,9 @@ void VulkanRenderer::Initialize() {
 void VulkanRenderer::Cleanup() {
     CleanupSwapChain();
 
+    for (Mesh m : meshes) {
+        m.Cleanup(device);
+    }
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
         vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
@@ -340,7 +348,10 @@ void VulkanRenderer::CreateCommandBuffers() {
         vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
         vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, shaders[0].GetPipeline());
-        vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
+
+        for (Mesh m : meshes) {
+            m.Draw(commandBuffers[i]);
+        }
 
         vkCmdEndRenderPass(commandBuffers[i]);
 

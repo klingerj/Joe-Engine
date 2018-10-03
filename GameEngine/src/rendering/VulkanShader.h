@@ -6,6 +6,8 @@
 #include "vulkan/vulkan.h"
 #include "VulkanSwapChain.h"
 
+#include "Mesh.h" // TODO: make separate shader classes, this class shouldn't be limited to MeshVertex's binding/attribute description
+
 class VulkanShader {
 private:
     VkPipeline graphicsPipeline;

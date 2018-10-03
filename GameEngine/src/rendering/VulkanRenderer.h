@@ -37,6 +37,9 @@ private:
     VulkanSwapChain vulkanSwapChain;
     bool framebufferResized;
 
+    // Meshes
+    std::vector<Mesh> meshes;
+
     // Shaders and rendering
     std::vector<VulkanShader> shaders;
     VkRenderPass renderPass;

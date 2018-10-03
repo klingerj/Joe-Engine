@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="src\EngineApplication.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\rendering\Mesh.cpp" />
     <ClCompile Include="src\rendering\VulkanQueue.cpp" />
     <ClCompile Include="src\rendering\VulkanRenderer.cpp" />
     <ClCompile Include="src\rendering\VulkanShader.cpp" />
@@ -31,6 +32,7 @@
   <ItemGroup>
     <ClInclude Include="src\EngineApplication.h" />
     <ClInclude Include="src\GlobalInfo.h" />
+    <ClInclude Include="src\rendering\Mesh.h" />
     <ClInclude Include="src\rendering\VulkanQueue.h" />
     <ClInclude Include="src\rendering\VulkanRenderer.h" />
     <ClInclude Include="src\rendering\VulkanShader.h" />
@@ -116,7 +118,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\include;$(Solution_Dir)..\Libraries\glm-0.9.9.2\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\include;$(Solution_Dir)..\Libraries\glm-0.9.9.2\glm;$(Solution_Dir)..\Libraries\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/arch:AVX /W3 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -161,7 +163,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\include;$(Solution_Dir)..\Libraries\glm-0.9.9.2\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\include;$(Solution_Dir)..\Libraries\glm-0.9.9.2\glm;$(Solution_Dir)..\Libraries\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/arch:AVX /W3 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
