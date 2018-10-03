@@ -5,3 +5,4 @@
 [Vulkan SDK](https://www.lunarg.com/vulkan-sdk/)  
 [GLFW](http://www.glfw.org/)  
 [GLM](https://github.com/g-truc/glm/releases)  
+[Tiny OBJ Loader](https://github.com/syoyo/tinyobjloader)
