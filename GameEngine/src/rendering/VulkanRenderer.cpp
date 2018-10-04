@@ -30,9 +30,13 @@ void VulkanRenderer::Initialize() {
     // Render pass(es)
     CreateRenderPass(vulkanSwapChain);
 
+    // Command Pool
+    CreateCommandPool();
+
     // Meshes
     Mesh m = Mesh();
-    m.CreateVertexBuffer(device, physicalDevice);
+    m.CreateVertexBuffer(device, physicalDevice, commandPool, graphicsQueue);
+    m.CreateIndexBuffer(device, physicalDevice, commandPool, graphicsQueue);
     meshes.push_back(m);
 
     // Shaders
@@ -42,8 +46,7 @@ void VulkanRenderer::Initialize() {
     // Framebuffers
     CreateFramebuffers();
     
-    // Command pool(s) and buffer(s)
-    CreateCommandPool();
+    // Command buffers
     CreateCommandBuffers();
 
     // Sync objects
@@ -327,7 +330,7 @@ void VulkanRenderer::CreateCommandBuffers() {
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-        beginInfo.pInheritanceInfo = nullptr; // Optional
+        beginInfo.pInheritanceInfo = nullptr;
 
         if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS) {
             throw std::runtime_error("failed to begin recording command buffer!");

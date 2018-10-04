@@ -7,6 +7,8 @@
 #include "vulkan\vulkan.h"
 #include "glm\glm.hpp"
 
+#include "VulkanQueue.h"
+
 struct MeshVertex {
     glm::vec3 pos;
     glm::vec3 color;
@@ -43,12 +45,17 @@ class Mesh {
 private:
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexBufferMemory;
     std::vector<MeshVertex> vertices;
+    std::vector<uint16_t> indices;
 public:
     Mesh() {
-        vertices = { { { 0.0f, -0.5f, 0.0f }, { 1.0f, 1.0f, 0.0f } },
-                     { { 0.5f, 0.5f, 0.0f },  { 0.0f, 1.0f, 1.0f } },
-                     { { -0.5f, 0.5f, 0.0f }, { 1.0f, 0.0f, 1.0f } } };
+        vertices = { { { -0.5f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+                     { { -0.5f, 0.5f, 0.0f },  { 0.0f, 1.0f, 0.0f } },
+                     { { 0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
+                     { { 0.5f, 0.5f, 0.0f },{ 1.0f, 1.0f, 1.0f } } };
+        indices = { 2, 1, 0, 2, 3, 1 };
     }
     ~Mesh() {}
 
@@ -56,6 +63,9 @@ public:
 
     // Creation
     void LoadModelFromFile(const std::string& filepath);
-    void CreateVertexBuffer(const VkDevice& device, const VkPhysicalDevice& physDevice);
+    void CreateBuffer(const VkDevice& device, const VkPhysicalDevice& physDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+    void CopyBuffer(VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+    void CreateVertexBuffer(const VkDevice& device, const VkPhysicalDevice& physDevice, VkCommandPool commandPool, const VulkanQueue& graphicsQueue);
+    void CreateIndexBuffer(const VkDevice& device, const VkPhysicalDevice& physDevice, VkCommandPool commandPool, const VulkanQueue& graphicsQueue);
     void Draw(const VkCommandBuffer& commandBuffer);
 };
