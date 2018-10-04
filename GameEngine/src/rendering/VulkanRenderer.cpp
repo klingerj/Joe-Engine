@@ -35,6 +35,7 @@ void VulkanRenderer::Initialize() {
 
     // Meshes
     Mesh m = Mesh();
+    m.LoadModelFromFile(MODELS_OBJ_DIR + "plane.obj");
     m.CreateVertexBuffer(device, physicalDevice, commandPool, graphicsQueue);
     m.CreateIndexBuffer(device, physicalDevice, commandPool, graphicsQueue);
     meshes.push_back(m);
