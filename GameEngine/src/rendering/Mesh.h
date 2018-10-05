@@ -4,8 +4,8 @@
 #include <vector>
 #include <array>
 
-#include "vulkan\vulkan.h"
-#include "glm\glm.hpp"
+#include "vulkan/vulkan.h"
+#include "glm/glm.hpp"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
@@ -78,7 +78,12 @@ public:
     Mesh() {}
     ~Mesh() {}
 
+    
     void Cleanup(const VkDevice& device);
+    // TODO: Move these to a header common with Texture
+    VkCommandBuffer BeginSingleTimeCommands(VkDevice device, VkCommandPool commandPool);
+    void EndSingleTimeCommands(VkDevice device, VkCommandBuffer commandBuffer, const VulkanQueue& graphicsQueue, VkCommandPool commandPool);
+    uint32_t FindMemoryType(const VkPhysicalDevice& physDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
     // Creation
     void LoadModelFromFile(const std::string& filepath);

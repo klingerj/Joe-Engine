@@ -5,6 +5,7 @@
 #include "vulkan/vulkan.h"
 
 #include "VulkanShader.h"
+#include "Texture.h"
 #include "../VulkanValidationLayers.h"
 #include "../GlobalInfo.h"
 
@@ -39,6 +40,9 @@ private:
 
     // Meshes
     std::vector<Mesh> meshes;
+
+    // Textures
+    std::vector<Texture> textures;
 
     // Shaders and rendering
     std::vector<VulkanShader> shaders;

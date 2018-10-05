@@ -40,6 +40,10 @@ void VulkanRenderer::Initialize() {
     m.CreateIndexBuffer(device, physicalDevice, commandPool, graphicsQueue);
     meshes.push_back(m);
 
+    // Textures
+    Texture t = Texture();
+    t.CreateTextureImage(device, physicalDevice, graphicsQueue, commandPool, TEXTURES_DIR + "ducreux.jpg");
+
     // Shaders
     shaders.emplace_back(VulkanShader(device, vulkanSwapChain, renderPass,
                                       SHADER_DIR + "vert_basic.spv", SHADER_DIR + "frag_basic.spv"));
