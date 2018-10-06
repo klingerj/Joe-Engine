@@ -61,6 +61,9 @@
     <ClCompile Include="src\rendering\Texture.cpp">
       <Filter>src\Source Files\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="src\Common.cpp">
+      <Filter>src\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\rendering\VulkanWindow.h">
@@ -84,14 +87,17 @@
     <ClInclude Include="src\rendering\VulkanShader.h">
       <Filter>src\Header Files\Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="src\GlobalInfo.h">
-      <Filter>src\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\rendering\Mesh.h">
       <Filter>src\Header Files\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\rendering\Texture.h">
       <Filter>src\Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\Camera.h">
+      <Filter>src\Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Common.h">
+      <Filter>src\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -10,6 +10,7 @@
 #include <glm/gtx/hash.hpp>
 
 #include "VulkanQueue.h"
+#include "../Common.h"
 
 struct MeshVertex {
     glm::vec3 pos;
@@ -72,18 +73,12 @@ private:
     std::vector<MeshVertex> vertices;
     std::vector<uint32_t> indices;
 
-    void CreateBuffer(const VkDevice& device, const VkPhysicalDevice& physDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-    void CopyBuffer(VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 public:
     Mesh() {}
     ~Mesh() {}
 
     
     void Cleanup(const VkDevice& device);
-    // TODO: Move these to a header common with Texture
-    VkCommandBuffer BeginSingleTimeCommands(VkDevice device, VkCommandPool commandPool);
-    void EndSingleTimeCommands(VkDevice device, VkCommandBuffer commandBuffer, const VulkanQueue& graphicsQueue, VkCommandPool commandPool);
-    uint32_t FindMemoryType(const VkPhysicalDevice& physDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
     // Creation
     void LoadModelFromFile(const std::string& filepath);

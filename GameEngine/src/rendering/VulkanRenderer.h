@@ -6,8 +6,8 @@
 
 #include "VulkanShader.h"
 #include "Texture.h"
+#include "Camera.h"
 #include "../VulkanValidationLayers.h"
-#include "../GlobalInfo.h"
 
 // Class that manages all Vulkan resources and rendering
 
@@ -38,6 +38,9 @@ private:
     VulkanSwapChain vulkanSwapChain;
     bool framebufferResized;
 
+    // Camera
+    Camera camera;
+
     // Meshes
     std::vector<Mesh> meshes;
 
@@ -64,7 +67,7 @@ private:
 
 public:
     VulkanRenderer() : width(DEFAULT_SCREEN_WIDTH), height(DEFAULT_SCREEN_HEIGHT), MAX_FRAMES_IN_FLIGHT(DEFAULT_MAX_FRAMES_IN_FLIGHT),
-                       currentFrame(0), framebufferResized(false) {}
+                       currentFrame(0), framebufferResized(false), camera() {}
     ~VulkanRenderer() {}
 
     // Vulkan setup

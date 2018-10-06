@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Common.cpp" />
     <ClCompile Include="src\EngineApplication.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\rendering\Mesh.cpp" />
@@ -31,8 +32,9 @@
     <ClCompile Include="src\VulkanValidationLayers.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Common.h" />
     <ClInclude Include="src\EngineApplication.h" />
-    <ClInclude Include="src\GlobalInfo.h" />
+    <ClInclude Include="src\rendering\Camera.h" />
     <ClInclude Include="src\rendering\Mesh.h" />
     <ClInclude Include="src\rendering\Texture.h" />
     <ClInclude Include="src\rendering\VulkanQueue.h" />
