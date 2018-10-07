@@ -35,23 +35,20 @@ void VulkanRenderer::Initialize() {
 
     // Meshes
     Mesh m = Mesh();
-    m.LoadModelFromFile(MODELS_OBJ_DIR + "sphere.obj");
+    m.LoadModelFromFile(MODELS_OBJ_DIR + "plane.obj");
     m.CreateVertexBuffer(device, physicalDevice, commandPool, graphicsQueue);
     m.CreateIndexBuffer(device, physicalDevice, commandPool, graphicsQueue);
     meshes.push_back(m);
 
     // Textures
-    Texture t = Texture();
-    t.CreateTextureImage(device, physicalDevice, graphicsQueue, commandPool, TEXTURES_DIR + "ducreux.jpg");
-    t.CreateTextureImageView(device);
-    t.CreateTextureSampler(device);
+    Texture t = Texture(device, physicalDevice, graphicsQueue, commandPool, TEXTURES_DIR + "ducreux.jpg");
     textures.push_back(t);
 
     // Camera setup
-    camera = Camera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height);
-
+    camera = Camera(glm::vec3(0.0f, 0.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height);
+    
     // Shaders
-    shaders.emplace_back(VulkanShader(device, physicalDevice, vulkanSwapChain, renderPass,
+    shaders.emplace_back(VulkanShader(device, physicalDevice, vulkanSwapChain, renderPass, textures[0],
                                       SHADER_DIR + "vert_basic.spv", SHADER_DIR + "frag_basic.spv"));
 
     // Framebuffers
@@ -491,7 +488,7 @@ void VulkanRenderer::RecreateSwapChain() {
     CleanupSwapChain();
     vulkanSwapChain.Create(physicalDevice, device, vulkanWindow, width, height);
     CreateRenderPass(vulkanSwapChain);
-    shaders.emplace_back(VulkanShader(device, physicalDevice, vulkanSwapChain, renderPass,
+    shaders.emplace_back(VulkanShader(device, physicalDevice, vulkanSwapChain, renderPass, textures[0],
                                       SHADER_DIR + "vert_basic.spv", SHADER_DIR + "frag_basic.spv"));
     CreateFramebuffers();
     CreateCommandBuffers();

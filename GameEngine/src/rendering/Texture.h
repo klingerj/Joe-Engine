@@ -12,7 +12,12 @@ private:
     VkImageView textureImageView;
     VkSampler textureSampler;
 public:
-    Texture() {}
+    Texture(VkDevice device, VkPhysicalDevice physicalDevice, const VulkanQueue& graphicsQueue,
+            VkCommandPool commandPool, const std::string& filepath) {
+        CreateTextureImage(device, physicalDevice, graphicsQueue, commandPool, filepath);
+        CreateTextureImageView(device);
+        CreateTextureSampler(device);
+    }
     ~Texture() {}
 
     void Cleanup(VkDevice device);
@@ -24,4 +29,12 @@ public:
     void CopyBufferToImage(VkDevice device, const VulkanQueue& graphicsQueue, VkCommandPool commandPool, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
     void CreateTextureImageView(VkDevice device);
     void CreateTextureSampler(VkDevice device);
+
+    // Getters
+    VkImageView GetImageView() const {
+        return textureImageView;
+    }
+    VkSampler GetSampler() const {
+        return textureSampler;
+    }
 };
