@@ -20,7 +20,7 @@ public:
     ~Camera() {}
 
     void ComputeAttributes() {
-        look = glm::normalize(ref - eye);
+        look = glm::normalize(eye - ref);
         right = glm::normalize(glm::cross(look, WORLD_UP));
         up = glm::normalize(glm::cross(right, look));
     }

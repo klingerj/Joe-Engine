@@ -10,9 +10,7 @@
 #include "Camera.h"
 
 struct UBO_MVP {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
+    glm::mat4 mvp;
 };
 
 // Class to wrap pipelines and descriptors

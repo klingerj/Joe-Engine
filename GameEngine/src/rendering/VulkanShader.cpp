@@ -311,11 +311,11 @@ void VulkanShader::UpdateUniformBuffer(VkDevice device, uint32_t currentImage, c
     float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
     UBO_MVP ubo_mvp = {};
-    ubo_mvp.model = glm::rotate(glm::mat4(1.0f), time * 1.5708f, glm::vec3(0.0f, 0.0f, 1.0f)); // that's pi/2
-    ubo_mvp.view = glm::mat4(1.0f); //camera.GetView();
-    ubo_mvp.proj = glm::mat4(1.0f); //camera.GetProj();
-    ubo_mvp.proj[1][1] *= -1.0f;
-    ubo_mvp.model = ubo_mvp.model * ubo_mvp.view * ubo_mvp.proj;
+    glm::mat4 model = glm::rotate(glm::mat4(1.0f), time * 1.5708f, glm::vec3(0.0f, 0.0f, 1.0f)); // that's pi/2
+    glm::mat4 view = camera.GetView();
+    glm::mat4 proj = camera.GetProj();
+    proj[1][1] *= -1.0f;
+    ubo_mvp.mvp = proj * view * model;
 
     void* data;
     vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo_mvp), 0, &data);
