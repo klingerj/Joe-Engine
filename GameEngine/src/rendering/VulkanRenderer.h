@@ -87,7 +87,7 @@ public:
     // Setup functions
     void CreateVulkanInstance();
     std::vector<const char*> GetRequiredExtensions();
-    int RateDeviceSuitability(const VkPhysicalDevice& physDevice, const VulkanWindow& vulkanWindow);
+    int RateDeviceSuitability(VkPhysicalDevice physicalDevice, const VulkanWindow& vulkanWindow);
     void PickPhysicalDevice();
     void CreateLogicalDevice();
     void CreateRenderPass(const VulkanSwapChain& swapChain);
@@ -100,7 +100,7 @@ public:
     const VulkanWindow& GetWindow() const {
         return vulkanWindow;
     }
-    const VkDevice& GetDevice() const {
+    VkDevice GetDevice() const {
         return device;
     }
 };

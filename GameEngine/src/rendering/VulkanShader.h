@@ -31,7 +31,7 @@ private:
     std::vector<VkDeviceMemory> uniformBuffersMemory;
 public:
     VulkanShader() {}
-    VulkanShader(const VkDevice& device, const VkPhysicalDevice physDevice, const VulkanSwapChain& swapChain, const VkRenderPass& renderPass,
+    VulkanShader(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& swapChain, VkRenderPass renderPass,
                  const Texture& texture, const std::string& vertShader, const std::string& fragShader) {
         // Read in shader code
         auto vertShaderCode = ReadFile(vertShader);
@@ -42,7 +42,7 @@ public:
         VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
 
         size_t numSwapChainImages = swapChain.GetImageViews().size();
-        CreateUniformBuffer(device, physDevice, numSwapChainImages);
+        CreateUniformBuffer(physicalDevice, device, numSwapChainImages);
         CreateDescriptorSetLayout(device);
         CreateDescriptorPool(device, numSwapChainImages);
         CreateDescriptorSets(device, texture, numSwapChainImages);
@@ -52,21 +52,21 @@ public:
 
     ~VulkanShader() {}
 
-    void Cleanup(const VkDevice& device);
+    void Cleanup(VkDevice device);
     
     // Creation functions
-    void CreateGraphicsPipeline(const VkDevice& device, const VkShaderModule& vertShaderModule, const VkShaderModule& fragShaderModule,
-                                const VulkanSwapChain& swapChain, const VkRenderPass& renderPass);
-    VkShaderModule CreateShaderModule(const VkDevice& device, const std::vector<char>& code);
+    void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
+                                const VulkanSwapChain& swapChain, VkRenderPass renderPass);
+    VkShaderModule CreateShaderModule(VkDevice device, const std::vector<char>& code);
     std::vector<char> VulkanShader::ReadFile(const std::string& filename) const;
 
     // Descriptors
     void CreateDescriptorPool(VkDevice device, size_t numSwapChainImages);
     void CreateDescriptorSetLayout(VkDevice device);
     void CreateDescriptorSets(VkDevice device, const Texture& texture, size_t numSwapChainImages);
-    void CreateUniformBuffer(VkDevice device, VkPhysicalDevice physDevice, size_t numSwapChainImages);
+    void CreateUniformBuffer(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages);
     void UpdateUniformBuffer(VkDevice device, uint32_t currentImage, const Camera& camera);
-    void BindDescriptorSets(const VkCommandBuffer& commandBuffer, size_t descriptorSetIndex);
+    void BindDescriptorSets(VkCommandBuffer commandBuffer, size_t descriptorSetIndex);
 
     // Getters
     const VkPipeline& GetPipeline() {

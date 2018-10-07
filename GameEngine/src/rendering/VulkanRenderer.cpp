@@ -35,9 +35,7 @@ void VulkanRenderer::Initialize() {
 
     // Meshes
     Mesh m = Mesh();
-    m.LoadModelFromFile(MODELS_OBJ_DIR + "plane.obj");
-    m.CreateVertexBuffer(device, physicalDevice, commandPool, graphicsQueue);
-    m.CreateIndexBuffer(device, physicalDevice, commandPool, graphicsQueue);
+    m.Create(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "plane.obj");
     meshes.push_back(m);
 
     // Textures
@@ -48,7 +46,7 @@ void VulkanRenderer::Initialize() {
     camera = Camera(glm::vec3(0.0f, 0.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height);
     
     // Shaders
-    shaders.emplace_back(VulkanShader(device, physicalDevice, vulkanSwapChain, renderPass, textures[0],
+    shaders.emplace_back(VulkanShader(physicalDevice, device, vulkanSwapChain, renderPass, textures[0],
                                       SHADER_DIR + "vert_basic.spv", SHADER_DIR + "frag_basic.spv"));
 
     // Framebuffers
@@ -100,15 +98,15 @@ std::vector<const char*> VulkanRenderer::GetRequiredExtensions() {
     return extensions;
 }
 
-int VulkanRenderer::RateDeviceSuitability(const VkPhysicalDevice& physDevice, const VulkanWindow& vulkanWindow) {
+int VulkanRenderer::RateDeviceSuitability(VkPhysicalDevice physicalDevice, const VulkanWindow& vulkanWindow) {
     VkPhysicalDeviceProperties deviceProperties;
     VkPhysicalDeviceFeatures deviceFeatures;
-    vkGetPhysicalDeviceProperties(physDevice, &deviceProperties);
-    vkGetPhysicalDeviceFeatures(physDevice, &deviceFeatures);
+    vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+    vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
 
     int score = 0;
 
-    QueueFamilyIndices indices = FindQueueFamilies(physDevice, vulkanWindow.GetSurface());
+    QueueFamilyIndices indices = FindQueueFamilies(physicalDevice, vulkanWindow.GetSurface());
     if (indices.IsComplete()) {
         score += 10000;
     } else {
@@ -130,11 +128,11 @@ int VulkanRenderer::RateDeviceSuitability(const VkPhysicalDevice& physDevice, co
     return 0;
     }*/
 
-    bool extensionsSupported = vulkanSwapChain.CheckDeviceExtensionSupport(physDevice);
+    bool extensionsSupported = vulkanSwapChain.CheckDeviceExtensionSupport(physicalDevice);
 
     bool swapChainAdequate = false;
     if (extensionsSupported) {
-        SwapChainSupportDetails swapChainSupport = vulkanSwapChain.QuerySwapChainSupport(physDevice, vulkanWindow.GetSurface());
+        SwapChainSupportDetails swapChainSupport = vulkanSwapChain.QuerySwapChainSupport(physicalDevice, vulkanWindow.GetSurface());
         swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     } else {
         return 0;
@@ -296,7 +294,7 @@ void VulkanRenderer::CreateFramebuffers() {
             swapChainImageViews[i]
         };
 
-        const VkExtent2D& extent = vulkanSwapChain.GetExtent();
+        VkExtent2D extent = vulkanSwapChain.GetExtent();
 
         VkFramebufferCreateInfo framebufferInfo = {};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -488,7 +486,7 @@ void VulkanRenderer::RecreateSwapChain() {
     CleanupSwapChain();
     vulkanSwapChain.Create(physicalDevice, device, vulkanWindow, width, height);
     CreateRenderPass(vulkanSwapChain);
-    shaders.emplace_back(VulkanShader(device, physicalDevice, vulkanSwapChain, renderPass, textures[0],
+    shaders.emplace_back(VulkanShader(physicalDevice, device, vulkanSwapChain, renderPass, textures[0],
                                       SHADER_DIR + "vert_basic.spv", SHADER_DIR + "frag_basic.spv"));
     CreateFramebuffers();
     CreateCommandBuffers();

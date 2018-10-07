@@ -1,9 +1,8 @@
 #include <chrono>
-#include <iostream>
 
 #include "VulkanShader.h"
 
-void VulkanShader::Cleanup(const VkDevice& device) {
+void VulkanShader::Cleanup(VkDevice device) {
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);
     vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
@@ -32,7 +31,7 @@ std::vector<char> VulkanShader::ReadFile(const std::string& filename) const {
     return buffer;
 }
 
-VkShaderModule VulkanShader::CreateShaderModule(const VkDevice& device, const std::vector<char>& code) {
+VkShaderModule VulkanShader::CreateShaderModule(VkDevice device, const std::vector<char>& code) {
     VkShaderModuleCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = code.size();
@@ -47,8 +46,8 @@ VkShaderModule VulkanShader::CreateShaderModule(const VkDevice& device, const st
 }
 
 // Warning: long function
-void VulkanShader::CreateGraphicsPipeline(const VkDevice& device, const VkShaderModule& vertShaderModule, const VkShaderModule& fragShaderModule,
-                                          const VulkanSwapChain& swapChain, const VkRenderPass& renderPass) {
+void VulkanShader::CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
+                                          const VulkanSwapChain& swapChain, VkRenderPass renderPass) {
     // Shader stages
     VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -314,14 +313,14 @@ void VulkanShader::CreateDescriptorSets(VkDevice device, const Texture& texture,
     }
 }
 
-void VulkanShader::CreateUniformBuffer(VkDevice device, VkPhysicalDevice physDevice, size_t numSwapChainImages) {
+void VulkanShader::CreateUniformBuffer(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages) {
     VkDeviceSize bufferSize = sizeof(UBO_MVP);
 
     uniformBuffers.resize(numSwapChainImages);
     uniformBuffersMemory.resize(numSwapChainImages);
 
     for (size_t i = 0; i < numSwapChainImages; i++) {
-        CreateBuffer(device, physDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
+        CreateBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
     }
 }
 
@@ -344,6 +343,6 @@ void VulkanShader::UpdateUniformBuffer(VkDevice device, uint32_t currentImage, c
     vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
 }
 
-void VulkanShader::BindDescriptorSets(const VkCommandBuffer& commandBuffer, size_t descriptorSetIndex) {
+void VulkanShader::BindDescriptorSets(VkCommandBuffer commandBuffer, size_t descriptorSetIndex) {
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[descriptorSetIndex], 0, nullptr);
 }

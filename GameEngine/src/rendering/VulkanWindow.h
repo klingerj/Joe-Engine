@@ -18,12 +18,12 @@ public:
     VulkanWindow() {}
     ~VulkanWindow() {}
 
-    void Initialize(const int w, const int h, const std::string& n, const VkInstance& instance);
-    void Cleanup(const VkInstance& instance);
-    void SetupVulkanSurface(const VkInstance& instance);
+    void Initialize(const int w, const int h, const std::string& n, VkInstance instance);
+    void Cleanup(VkInstance instance);
+    void SetupVulkanSurface(VkInstance instance);
 
     // Getters
-    const VkSurfaceKHR& GetSurface() const {
+    VkSurfaceKHR GetSurface() const {
         return surface;
     }
     GLFWwindow* GetWindow() const {

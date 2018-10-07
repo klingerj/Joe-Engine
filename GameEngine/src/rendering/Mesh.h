@@ -73,16 +73,19 @@ private:
     std::vector<MeshVertex> vertices;
     std::vector<uint32_t> indices;
 
+    // Creation
+    void LoadModelFromFile(const std::string& filepath);
+    void CreateVertexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue);
+    void CreateIndexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue);
+
 public:
     Mesh() {}
     ~Mesh() {}
 
     
-    void Cleanup(const VkDevice& device);
+    void Cleanup(VkDevice device);
 
     // Creation
-    void LoadModelFromFile(const std::string& filepath);
-    void CreateVertexBuffer(const VkDevice& device, const VkPhysicalDevice& physDevice, VkCommandPool commandPool, const VulkanQueue& graphicsQueue);
-    void CreateIndexBuffer(const VkDevice& device, const VkPhysicalDevice& physDevice, VkCommandPool commandPool, const VulkanQueue& graphicsQueue);
-    void Draw(const VkCommandBuffer& commandBuffer);
+    void Create(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::string& filepath);
+    void Draw(VkCommandBuffer commandBuffer);
 };
