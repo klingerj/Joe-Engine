@@ -30,15 +30,31 @@ void VulkanRenderer::Initialize() {
     // Render pass(es)
     CreateRenderPass(vulkanSwapChain);
 
+    // Command Pool
+    CreateCommandPool();
+
+    // Meshes
+    Mesh m = Mesh();
+    m.LoadModelFromFile(MODELS_OBJ_DIR + "plane.obj");
+    m.CreateVertexBuffer(device, physicalDevice, commandPool, graphicsQueue);
+    m.CreateIndexBuffer(device, physicalDevice, commandPool, graphicsQueue);
+    meshes.push_back(m);
+
+    // Textures
+    Texture t = Texture(device, physicalDevice, graphicsQueue, commandPool, TEXTURES_DIR + "ducreux.jpg");
+    textures.push_back(t);
+
+    // Camera setup
+    camera = Camera(glm::vec3(0.0f, 0.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height);
+    
     // Shaders
-    shaders.emplace_back(VulkanShader(device, vulkanSwapChain, renderPass,
+    shaders.emplace_back(VulkanShader(device, physicalDevice, vulkanSwapChain, renderPass, textures[0],
                                       SHADER_DIR + "vert_basic.spv", SHADER_DIR + "frag_basic.spv"));
 
     // Framebuffers
     CreateFramebuffers();
     
-    // Command pool(s) and buffer(s)
-    CreateCommandPool();
+    // Command buffers
     CreateCommandBuffers();
 
     // Sync objects
@@ -48,6 +64,12 @@ void VulkanRenderer::Initialize() {
 void VulkanRenderer::Cleanup() {
     CleanupSwapChain();
 
+    for (Mesh m : meshes) {
+        m.Cleanup(device);
+    }
+    for (Texture t : textures) {
+        t.Cleanup(device);
+    }
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
         vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
@@ -119,6 +141,10 @@ int VulkanRenderer::RateDeviceSuitability(const VkPhysicalDevice& physDevice, co
     }
 
     if (!swapChainAdequate) {
+        return 0;
+    }
+
+    if (!deviceFeatures.samplerAnisotropy) {
         return 0;
     }
 
@@ -196,6 +222,7 @@ void VulkanRenderer::CreateLogicalDevice() {
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
 
     VkPhysicalDeviceFeatures deviceFeatures = {};
+    deviceFeatures.samplerAnisotropy = VK_TRUE;
     createInfo.pEnabledFeatures = &deviceFeatures;
 
     std::vector<const char*> deviceExtensions = VulkanSwapChain::GetDeviceExtensions();
@@ -319,7 +346,7 @@ void VulkanRenderer::CreateCommandBuffers() {
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-        beginInfo.pInheritanceInfo = nullptr; // Optional
+        beginInfo.pInheritanceInfo = nullptr;
 
         if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS) {
             throw std::runtime_error("failed to begin recording command buffer!");
@@ -340,7 +367,12 @@ void VulkanRenderer::CreateCommandBuffers() {
         vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
         vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, shaders[0].GetPipeline());
-        vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
+
+        shaders[0].BindDescriptorSets(commandBuffers[i], i);
+
+        for (Mesh m : meshes) {
+            m.Draw(commandBuffers[i]);
+        }
 
         vkCmdEndRenderPass(commandBuffers[i]);
 
@@ -383,6 +415,8 @@ void VulkanRenderer::DrawFrame() {
     } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("failed to acquire swap chain image!");
     }
+
+    shaders[0].UpdateUniformBuffer(device, imageIndex, camera);
 
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -454,8 +488,9 @@ void VulkanRenderer::RecreateSwapChain() {
     CleanupSwapChain();
     vulkanSwapChain.Create(physicalDevice, device, vulkanWindow, width, height);
     CreateRenderPass(vulkanSwapChain);
-    shaders.emplace_back(VulkanShader(device, vulkanSwapChain, renderPass,
+    shaders.emplace_back(VulkanShader(device, physicalDevice, vulkanSwapChain, renderPass, textures[0],
                                       SHADER_DIR + "vert_basic.spv", SHADER_DIR + "frag_basic.spv"));
     CreateFramebuffers();
     CreateCommandBuffers();
+    camera.SetAspect(vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height);
 }
