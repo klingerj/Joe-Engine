@@ -6,6 +6,9 @@ In its current state, the project is nothing more than code from vulkan-tutorial
 * The master branch is currently a "Hello Triangle" application.
 * This branch is capable of loading and rendering OBJ files. Texture loading and sampling is also in progress on this branch.
 * The multithreading branch has some sample code regarding multithreading and will serve as a playground for multithreading-related features, such as resource loading. It will ultimately be used for things like command buffer creation, UI, and potentially things like terrain generation.  
+(Quick update 10/7/18):  
+* Texture loading is now complete.
+* Camera class has been added with view/projection matrices
 
 # Resources
 [Vulkan code setup and introduction](https://vulkan-tutorial.com/)  
