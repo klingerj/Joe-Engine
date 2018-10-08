@@ -3,6 +3,7 @@
 #include <string>
 #include <future>
 #include <thread>
+#include <chrono>
 #include "EngineApplication.h"
 
 #define GLM_FORCE_RADIANS
@@ -34,7 +35,9 @@ struct sample_data_t {
 void ManipulateData(void* data) {
     sample_data_t* sampleData = static_cast<sample_data_t*>(data);
     sampleData->name = "Work done";
-    sampleData->id++;
+    for (int i = 0; i < 1000000; ++i) {
+        sampleData->id++;
+    }
 }
 
 struct thread_job_t {
@@ -55,8 +58,48 @@ int main() {
     sample_data_t data = { "Work not done yet", -1 };
     void* dataPtr = &data;
     thread_job_t job = { &ManipulateData, dataPtr };
-    
-    std::future<void> f = std::async(std::launch::async, ThreadDoJob, job);
+    constexpr int numTimes = 10000;
+
+    // just async
+    std::future<void> futures_async[numTimes];
+    auto startTime = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < numTimes; ++i) {
+        futures_async[i] = std::async(std::launch::async, ThreadDoJob, job);
+    }
+    for (int i = 0; i < numTimes; ++i) {
+        futures_async[i].wait();
+    }
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+    std::cout << "Async time: " << time << std::endl;
+
+    /*
+    // threads
+    std::future<void> futures_threads[numTimes];
+    startTime = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < numTimes; ++i) {
+        futures_threads[i] = std::async(std::launch::async, ThreadDoJob, job);
+        std::packaged_task<void(thread_job_t)> task(ThreadDoJob); // wrap the function
+        futures_threads[i] = task.get_future();  // get a future
+        std::thread t(std::move(task), job); // launch on a thread
+        t.join();
+    }
+    for (int i = 0; i < numTimes; ++i) {
+        futures_threads[i].wait();
+    }
+    currentTime = std::chrono::high_resolution_clock::now();
+    time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+    std::cout << "Thread time: " << time << std::endl;
+    */
+
+    // single thread
+    startTime = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < numTimes; ++i) {
+        ThreadDoJob(job);
+    }
+    currentTime = std::chrono::high_resolution_clock::now();
+    time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+    std::cout << "Single thread time: " << time << std::endl;
 
 
     /*
@@ -81,7 +124,7 @@ int main() {
         << f2.get() << ' ' << f3.get() << '\n';
     t.join();*/
 
-    f.wait();
+    //f.wait();
     std::cout << "Result: " << data.name << ", " << data.id << std::endl;
 
     return EXIT_SUCCESS;
