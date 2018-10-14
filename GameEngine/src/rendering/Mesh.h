@@ -10,7 +10,7 @@
 #include <glm/gtx/hash.hpp>
 
 #include "VulkanQueue.h"
-#include "../Common.h"
+#include "../utils/Common.h"
 
 struct MeshVertex {
     glm::vec3 pos;

@@ -7,7 +7,7 @@
 
 #include "VulkanWindow.h"
 #include "VulkanQueue.h"
-#include "../Common.h"
+#include "../utils/Common.h"
 
 struct SwapChainSupportDetails {
     VkSurfaceCapabilitiesKHR capabilities;

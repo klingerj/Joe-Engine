@@ -7,7 +7,7 @@
 #include "VulkanShader.h"
 #include "Texture.h"
 #include "Camera.h"
-#include "../VulkanValidationLayers.h"
+#include "../utils/VulkanValidationLayers.h"
 
 // Class that manages all Vulkan resources and rendering
 

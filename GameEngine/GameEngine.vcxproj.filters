@@ -29,6 +29,12 @@
     <Filter Include="src\Source Files\Shaders\Fragment Shaders">
       <UniqueIdentifier>{e0305b7b-c7d1-4779-9a36-a2b57404c64c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Header Files\Utils">
+      <UniqueIdentifier>{97ed85d1-2de4-4142-bb71-4fb2b808b068}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Source Files\Utils">
+      <UniqueIdentifier>{acbe2f49-7bcd-4400-934d-d32c1ab52d3b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -39,9 +45,6 @@
     </ClCompile>
     <ClCompile Include="src\rendering\VulkanRenderer.cpp">
       <Filter>src\Source Files\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="src\VulkanValidationLayers.cpp">
-      <Filter>src\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\rendering\VulkanWindow.cpp">
       <Filter>src\Source Files\Rendering</Filter>
@@ -61,8 +64,14 @@
     <ClCompile Include="src\rendering\Texture.cpp">
       <Filter>src\Source Files\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="src\Common.cpp">
-      <Filter>src\Source Files</Filter>
+    <ClCompile Include="src\utils\Common.cpp">
+      <Filter>src\Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\VulkanValidationLayers.cpp">
+      <Filter>src\Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\ThreadPool.cpp">
+      <Filter>src\Source Files\Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -74,9 +83,6 @@
     </ClInclude>
     <ClInclude Include="src\rendering\VulkanRenderer.h">
       <Filter>src\Header Files\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VulkanValidationLayers.h">
-      <Filter>src\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\rendering\VulkanQueue.h">
       <Filter>src\Header Files\Rendering</Filter>
@@ -96,8 +102,14 @@
     <ClInclude Include="src\rendering\Camera.h">
       <Filter>src\Header Files\Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="src\Common.h">
-      <Filter>src\Header Files</Filter>
+    <ClInclude Include="src\utils\Common.h">
+      <Filter>src\Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\VulkanValidationLayers.h">
+      <Filter>src\Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\ThreadPool.h">
+      <Filter>src\Header Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

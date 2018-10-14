@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vulkan/vulkan.h"
-#include "../Common.h"
+#include "../utils/Common.h"
 
 #include "VulkanQueue.h"
 
