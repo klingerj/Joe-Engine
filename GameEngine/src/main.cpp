@@ -31,13 +31,14 @@ struct sample_data_t {
     int id;
 };
 
+std::atomic<long long int> sumSum = 0;
 void ManipulateData(void* data) {
     sample_data_t* sampleData = static_cast<sample_data_t*>(data);
     long long int sum = 0;
-    for (int i = 0; i < 10000000; ++i) {
-        sum += sampleData->id;
+    for (int i = 0; i < 8000000; ++i) {
+        sum += sampleData->id * i;
     }
-    return (void)sum;
+    sumSum += sum;
 }
 
 struct thread_job_t {
@@ -66,7 +67,7 @@ private:
 
 public:
     ThreadPool() : quit(false) {
-        for (unsigned int t = 0; t < std::thread::hardware_concurrency() - 1; ++t) { // one less than main thread?
+        for (unsigned int t = 0; t < std::thread::hardware_concurrency(); ++t) { // one less than main thread?
             threads.emplace_back(std::thread([this] { ThreadFunction(); }));
         }
     }
@@ -150,9 +151,10 @@ void DoThreadStuff() {
     sample_data_t data = { "Work not done yet", -1 };
     void* dataPtr = &data;
     thread_job_t job = { &ManipulateData, dataPtr };
-    constexpr int numTimes = 1000;
+    constexpr int numTimes = 10000;
 
     // just async
+    std::cout << "Starting Async benchmark" << std::endl;
     std::future<void> futures_async[numTimes];
     auto startTime = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < numTimes; ++i) {
@@ -165,12 +167,23 @@ void DoThreadStuff() {
     float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
     std::cout << "Async time: " << time << std::endl;
 
+    std::vector<int> numjobs = std::vector<int>();
+    std::vector<int> numjobs_during = std::vector<int>();
     // threads
+    std::cout << "Starting threadpool benchmark" << std::endl;
     startTime = std::chrono::high_resolution_clock::now();
     ThreadPool threadPool = ThreadPool();
     for (int i = 0; i < numTimes; ++i) {
         threadPool.EnqueueJob(job);
+        if (i % 200 == 0) {
+            numjobs.push_back(threadPool.NumJobsRemaining());
+        }
     }
+    /*std::this_thread::sleep_for(std::chrono::seconds(1));
+    for (int i = 0; i < 4; ++i) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        numjobs_during.push_back(threadPool.NumJobsRemaining());
+    }*/
     {
         std::unique_lock<std::mutex> lock(mutex_threadsFinished);
         cv_threadsFinished.wait(lock);
@@ -181,7 +194,8 @@ void DoThreadStuff() {
     std::cout << "Thread time: " << time << std::endl;
 
     // single thread
-    /*startTime = std::chrono::high_resolution_clock::now();
+    /*std::cout << "Starting single thread benchmark" << std::endl;
+    startTime = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < numTimes; ++i) {
         ThreadDoJob_NoClass(job);
     }
@@ -189,31 +203,11 @@ void DoThreadStuff() {
     time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
     std::cout << "Single thread time: " << time << std::endl;*/
 
-
-    /*
-    // future from a packaged_task
-    std::packaged_task<void()> task([] { return 7; }); // wrap the function
-    std::future<void> f1 = task.get_future();  // get a future
-    std::thread t(std::move(task)); // launch on a thread
-
-    // future from an async()
-    std::future<int> f2 = std::async(std::launch::async, [] { return 8; });
-
-    // future from a promise
-    std::promise<int> p;
-    std::future<int> f3 = p.get_future();
-    std::thread([&p] { p.set_value_at_thread_exit(9); }).detach();
-
-    std::cout << "Waiting..." << std::flush;
-    f1.wait();
-    f2.wait();
-    f3.wait();
-    std::cout << "Done!\nResults are: "
-        << f2.get() << ' ' << f3.get() << '\n';
-    t.join();*/
-
-    //f.wait();
-    std::cout << "Result: " << data.name << ", " << data.id << std::endl;
+    std::cout << "Result: " << sumSum << std::endl;
+    std::cout << "Jobs: " << std::endl;
+    for (int j : numjobs_during) {
+        std::cout << "NumJobs: " << j << std::endl;
+    }
 }
 
 int main() {
