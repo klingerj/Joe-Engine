@@ -1,6 +1,8 @@
 # GameEngine
 
 # Weekly Update
+10/13/18
+The project has been updated to include a thread pool that allows for the queueing up of workloads and efficient dispatching of them. Currently, it outperforms std::async. It still needs to be cleanly refactored into a file and then properly merged in a pull request. No other modifications were made to the Vulkan renderer.  
 10/5/18   
 In its current state, the project is nothing more than code from vulkan-tutorial.com.  
 * The master branch is currently a "Hello Triangle" application.
