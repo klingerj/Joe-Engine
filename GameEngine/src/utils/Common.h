@@ -3,7 +3,7 @@
 #include <string>
 
 #include "vulkan/vulkan.h"
-#include "rendering/VulkanQueue.h"
+#include "../rendering/VulkanQueue.h"
 #include "glm/glm.hpp"
 
 #define GLM_FORCE_RADIANS

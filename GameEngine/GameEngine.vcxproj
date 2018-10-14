@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Common.cpp" />
     <ClCompile Include="src\EngineApplication.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\rendering\Mesh.cpp" />
@@ -29,10 +28,11 @@
     <ClCompile Include="src\rendering\VulkanShader.cpp" />
     <ClCompile Include="src\rendering\VulkanSwapChain.cpp" />
     <ClCompile Include="src\rendering\VulkanWindow.cpp" />
-    <ClCompile Include="src\VulkanValidationLayers.cpp" />
+    <ClCompile Include="src\utils\Common.cpp" />
+    <ClCompile Include="src\utils\ThreadPool.cpp" />
+    <ClCompile Include="src\utils\VulkanValidationLayers.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Common.h" />
     <ClInclude Include="src\EngineApplication.h" />
     <ClInclude Include="src\rendering\Camera.h" />
     <ClInclude Include="src\rendering\Mesh.h" />
@@ -42,7 +42,9 @@
     <ClInclude Include="src\rendering\VulkanShader.h" />
     <ClInclude Include="src\rendering\VulkanSwapChain.h" />
     <ClInclude Include="src\rendering\VulkanWindow.h" />
-    <ClInclude Include="src\VulkanValidationLayers.h" />
+    <ClInclude Include="src\utils\Common.h" />
+    <ClInclude Include="src\utils\ThreadPool.h" />
+    <ClInclude Include="src\utils\VulkanValidationLayers.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="src\scripts\compileShaders.bat">

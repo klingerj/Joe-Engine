@@ -4,7 +4,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/norm.hpp"
 
-#include "../Common.h"
+#include "../utils/Common.h"
 
 class Camera {
 private:
