@@ -32,6 +32,7 @@ void ThreadPool::ThreadFunction() {
             job = DequeueJob();
         }
         ThreadDoJob(job);
+        job.complete = true;
     }
 }
 

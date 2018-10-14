@@ -18,11 +18,12 @@ struct sample_data_t {
  * Example usage:
    sample_data_t data = { "Work not done yet", -1 };
    void* dataPtr = &data;
-   thread_job_t job = { &f, dataPtr }; // where f looks like: void f(void*)
+   thread_job_t job = { &f, dataPtr, false }; // where f looks like: void f(void*)
 */
 struct thread_job_t {
     void(*function)(void*);
     void* data;
+    bool complete;
 };
 
 // https://stackoverflow.com/questions/15752659/thread-pooling-in-c11
