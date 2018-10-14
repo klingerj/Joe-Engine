@@ -29,13 +29,17 @@ struct thread_job_t {
 // Why not use std::async? https://eli.thegreenplace.net/2016/the-promises-and-challenges-of-stdasync-task-based-parallelism-in-c11/
 class ThreadPool {
 private:
-    bool quit;
+    bool quit; // marked true 
     std::mutex mutex_queue;
     std::condition_variable cv_queue;
     std::vector<std::thread> threads;
     std::queue<thread_job_t> jobs;
 
     void ThreadFunction(); // Runs threads on an infinite loop until a job
+    thread_job_t DequeueJob(); // Atomically pop a job from the queue
+    void ThreadDoJob(thread_job_t threadJob); // Call the thread function on the thread's data
+    void JoinThreads(); // All threads must rejoin the main thread before terminating the program
+    void StopThreads(); // All jobs will be removed from the queue, then all threads will return from ThreadFunction
 
 public:
     ThreadPool() : quit(false) {
@@ -43,11 +47,12 @@ public:
             threads.emplace_back(std::thread([this] { ThreadFunction(); }));
         }
     }
-    ~ThreadPool() {}
+    ~ThreadPool() {
+        StopThreads();
+        JoinThreads();
+    }
 
-    void EnqueueJob(thread_job_t job);
-    thread_job_t DequeueJob();
-    void ThreadDoJob(thread_job_t threadJob);
-    void JoinThreads();
-    void StopThreads();
+    void EnqueueJob(thread_job_t job); // Atomically queue up a new job
 };
+
+static ThreadPool threadPool = ThreadPool();
