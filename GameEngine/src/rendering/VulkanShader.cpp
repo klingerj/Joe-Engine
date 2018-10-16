@@ -379,14 +379,15 @@ void VulkanShader::UpdateUniformBuffers(VkDevice device, uint32_t currentImage, 
 
     size_t dynamicMemorySize = meshes.size() * uboDynamicAlignment;
     vkMapMemory(device, uniformBuffersMemory_Dynamic_Model[currentImage], 0, dynamicMemorySize, 0, &data);
-    memcpy(data, &ubo_Dynamic_ModelMat, dynamicMemorySize);
-    vkUnmapMemory(device, uniformBuffersMemory_Dynamic_Model[currentImage]);
+    memcpy(data, ubo_Dynamic_ModelMat.model, dynamicMemorySize);
 
     VkMappedMemoryRange mappedMemoryRange = {};
     mappedMemoryRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     mappedMemoryRange.memory = uniformBuffersMemory_Dynamic_Model[currentImage];
-    mappedMemoryRange.size = /*sizeof(ubo_Dynamic_ModelMat)*/dynamicMemorySize;
+    mappedMemoryRange.size = dynamicMemorySize;
+    mappedMemoryRange.offset = 0;
     vkFlushMappedMemoryRanges(device, 1, &mappedMemoryRange);
+    vkUnmapMemory(device, uniformBuffersMemory_Dynamic_Model[currentImage]); // TODO: check if i only have to map the memory once
 }
 
 void VulkanShader::BindDescriptorSets(VkCommandBuffer commandBuffer, size_t descriptorSetIndex, uint32_t dynamicOffset) {
