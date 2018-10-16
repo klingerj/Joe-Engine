@@ -371,7 +371,7 @@ void VulkanRenderer::CreateCommandBuffers() {
 
         vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, shaders[0].GetPipeline());
 
-        for (size_t j = 0; j < meshes.size(); ++j) {
+        for (uint32_t j = 0; j < meshes.size(); ++j) {
             uint32_t dynamicOffset = j * static_cast<uint32_t>(shaders[0].GetDynamicAlignment());
             shaders[0].BindDescriptorSets(commandBuffers[i], i, dynamicOffset);
             meshes[j].Draw(commandBuffers[i]);
