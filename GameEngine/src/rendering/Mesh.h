@@ -66,6 +66,7 @@ namespace std {
 
 class Mesh {
 private:
+    glm::mat4 modelMatrix;
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
     VkBuffer indexBuffer;
@@ -74,16 +75,24 @@ private:
     std::vector<uint32_t> indices;
 
     // Creation
-    void LoadModelFromFile(const std::string& filepath);
     void CreateVertexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue);
     void CreateIndexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue);
+    void LoadModelFromFile(const std::string& filepath);
 
 public:
-    Mesh() {}
+    Mesh() : modelMatrix(1.0f) {}
     ~Mesh() {}
-
     
     void Cleanup(VkDevice device);
+
+    void SetModelMatrix(glm::mat4 m) {
+        modelMatrix = m;
+    }
+
+    // Getters
+    const glm::mat4& GetModelMatrix() const {
+        return modelMatrix;
+    }
 
     // Creation
     void Create(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::string& filepath);

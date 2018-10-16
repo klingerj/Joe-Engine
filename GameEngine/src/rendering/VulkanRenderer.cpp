@@ -1,5 +1,6 @@
 #include <map>
 #include <vector>
+#include <chrono>
 
 #include "VulkanRenderer.h"
 
@@ -34,9 +35,13 @@ void VulkanRenderer::Initialize() {
     CreateCommandPool();
 
     // Meshes
-    Mesh m = Mesh();
-    m.Create(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "plane.obj");
-    meshes.push_back(m);
+    Mesh m1 = Mesh();
+    m1.Create(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "plane.obj");
+    Mesh m2 = Mesh();
+    m2.Create(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "plane.obj");
+    meshes.push_back(m1);
+    meshes.push_back(m2);
+
 
     // Textures
     Texture t = Texture(device, physicalDevice, graphicsQueue, commandPool, TEXTURES_DIR + "ducreux.jpg");
@@ -46,7 +51,7 @@ void VulkanRenderer::Initialize() {
     camera = Camera(glm::vec3(0.0f, 0.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height);
     
     // Shaders
-    shaders.emplace_back(VulkanShader(physicalDevice, device, vulkanSwapChain, renderPass, textures[0],
+    shaders.emplace_back(VulkanShader(physicalDevice, device, vulkanSwapChain, renderPass, meshes.size(), textures[0],
                                       SHADER_DIR + "vert_basic.spv", SHADER_DIR + "frag_basic.spv"));
 
     // Framebuffers
@@ -366,10 +371,10 @@ void VulkanRenderer::CreateCommandBuffers() {
 
         vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, shaders[0].GetPipeline());
 
-        shaders[0].BindDescriptorSets(commandBuffers[i], i);
-
-        for (Mesh m : meshes) {
-            m.Draw(commandBuffers[i]);
+        for (size_t j = 0; j < meshes.size(); ++j) {
+            uint32_t dynamicOffset = j * static_cast<uint32_t>(shaders[0].GetDynamicAlignment());
+            shaders[0].BindDescriptorSets(commandBuffers[i], i, dynamicOffset);
+            meshes[j].Draw(commandBuffers[i]);
         }
 
         vkCmdEndRenderPass(commandBuffers[i]);
@@ -401,6 +406,20 @@ void VulkanRenderer::CreateSemaphoresAndFences() {
     }
 }
 
+void VulkanRenderer::UpdateModelMatrices() {
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count(); // TODO: standardize this to 60 fps
+
+    const glm::mat4 mat1 = glm::rotate(glm::mat4(1.0f), time * 1.5708f, glm::vec3(0.0f, 0.0f, 1.0f));
+    meshes[0].SetModelMatrix(mat1);
+
+    glm::mat4 mat2 = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 1.0f));
+    mat2 = glm::translate(mat2, glm::vec3(0.5f, 0.0f, -0.1f));
+    mat2 = glm::rotate(mat2, time * -1.5708f, glm::vec3(0.0f, 0.0f, 1.0f));
+    meshes[1].SetModelMatrix(mat2);
+}
+
 void VulkanRenderer::DrawFrame() {
     vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
@@ -414,7 +433,8 @@ void VulkanRenderer::DrawFrame() {
         throw std::runtime_error("failed to acquire swap chain image!");
     }
 
-    shaders[0].UpdateUniformBuffer(device, imageIndex, camera);
+    UpdateModelMatrices();
+    shaders[0].UpdateUniformBuffers(device, imageIndex, camera, meshes);
 
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -486,7 +506,7 @@ void VulkanRenderer::RecreateSwapChain() {
     CleanupSwapChain();
     vulkanSwapChain.Create(physicalDevice, device, vulkanWindow, width, height);
     CreateRenderPass(vulkanSwapChain);
-    shaders.emplace_back(VulkanShader(physicalDevice, device, vulkanSwapChain, renderPass, textures[0],
+    shaders.emplace_back(VulkanShader(physicalDevice, device, vulkanSwapChain, renderPass, meshes.size(), textures[0],
                                       SHADER_DIR + "vert_basic.spv", SHADER_DIR + "frag_basic.spv"));
     CreateFramebuffers();
     CreateCommandBuffers();

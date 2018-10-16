@@ -43,6 +43,7 @@ private:
 
     // Meshes
     std::vector<Mesh> meshes;
+    void UpdateModelMatrices();
 
     // Textures
     std::vector<Texture> textures;
