@@ -73,6 +73,9 @@
     <ClCompile Include="src\utils\ThreadPool.cpp">
       <Filter>src\Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\rendering\VulkanDepthBuffer.cpp">
+      <Filter>src\Source Files\Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\rendering\VulkanWindow.h">
@@ -110,6 +113,9 @@
     </ClInclude>
     <ClInclude Include="src\utils\ThreadPool.h">
       <Filter>src\Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\VulkanDepthBuffer.h">
+      <Filter>src\Header Files\Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

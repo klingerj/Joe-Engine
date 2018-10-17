@@ -22,8 +22,9 @@ QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceK
 std::vector<VkDeviceQueueCreateInfo> GetQueueCreateInfos(const QueueFamilyIndices& indices);
 
 class VulkanQueue {
-protected:
+private:
     VkQueue queue;
+
 public:
     VulkanQueue() : queue(VK_NULL_HANDLE) {}
     ~VulkanQueue() {}
@@ -32,7 +33,7 @@ public:
     void GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex);
 
     // Getters
-    const VkQueue& GetQueue() const {
+    VkQueue GetQueue() const {
         return queue;
     }
 };
