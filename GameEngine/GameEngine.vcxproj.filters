@@ -35,6 +35,12 @@
     <Filter Include="src\Source Files\Utils">
       <UniqueIdentifier>{acbe2f49-7bcd-4400-934d-d32c1ab52d3b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Header Files\Scene">
+      <UniqueIdentifier>{cf8306a1-05d0-410c-b0b5-4f3f86238fea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Source Files\Scene">
+      <UniqueIdentifier>{bc96f262-6ec4-45ff-91c6-565485c6d1a3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -76,6 +82,9 @@
     <ClCompile Include="src\rendering\VulkanDepthBuffer.cpp">
       <Filter>src\Source Files\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="src\scene\SceneManager.cpp">
+      <Filter>src\Source Files\Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\rendering\VulkanWindow.h">
@@ -102,9 +111,6 @@
     <ClInclude Include="src\rendering\Texture.h">
       <Filter>src\Header Files\Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="src\rendering\Camera.h">
-      <Filter>src\Header Files\Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="src\utils\Common.h">
       <Filter>src\Header Files\Utils</Filter>
     </ClInclude>
@@ -116,6 +122,12 @@
     </ClInclude>
     <ClInclude Include="src\rendering\VulkanDepthBuffer.h">
       <Filter>src\Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scene\SceneManager.h">
+      <Filter>src\Header Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scene\Camera.h">
+      <Filter>src\Header Files\Scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

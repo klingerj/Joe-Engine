@@ -8,7 +8,7 @@
 
 #include "Mesh.h" // TODO: make separate shader classes, this class shouldn't be limited to MeshVertex's binding/attribute description
 #include "Texture.h"
-#include "Camera.h"
+#include "../scene/Camera.h"
 
 struct UBO_ViewProj {
     glm::mat4 viewProj;
