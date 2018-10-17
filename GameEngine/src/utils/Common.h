@@ -11,14 +11,14 @@
 #include "glm/glm.hpp"
 
 // Constants for rendering
-#define DEFAULT_SCREEN_WIDTH 800
-#define DEFAULT_SCREEN_HEIGHT 600
-#define DEFAULT_MAX_FRAMES_IN_FLIGHT 2
+constexpr int DEFAULT_SCREEN_WIDTH = 800;
+constexpr int DEFAULT_SCREEN_HEIGHT = 600;
+constexpr int DEFAULT_MAX_FRAMES_IN_FLIGHT = 2;
 
 // Camera attributes
 #define WORLD_UP glm::vec3(0.0f, 1.0f, 0.0f)
-constexpr float NEAR_PLANE = 0.1f;
-constexpr float FAR_PLANE = 100.0f;
+constexpr float NEAR_PLANE = 1.0f;
+constexpr float FAR_PLANE = 7.0f;
 #define FOVY glm::radians(45.0f)
 
 // Various project file paths
