@@ -14,6 +14,7 @@ class VulkanWindow {
 private:
     GLFWwindow* window;
     VkSurfaceKHR surface;
+
 public:
     VulkanWindow() {}
     ~VulkanWindow() {}

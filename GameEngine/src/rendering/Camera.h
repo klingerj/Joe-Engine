@@ -14,6 +14,7 @@ private:
     glm::vec3 right;
     glm::vec3 up;
     float aspect;
+
 public:
     Camera() : Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.0f) {}
     Camera(glm::vec3 e, glm::vec3 r, float a) : eye(e), ref(r), aspect(a) { ComputeAttributes();  }

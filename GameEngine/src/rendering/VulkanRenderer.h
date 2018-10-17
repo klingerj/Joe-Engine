@@ -7,6 +7,7 @@
 #include "VulkanShader.h"
 #include "Texture.h"
 #include "Camera.h"
+#include "VulkanDepthBuffer.h"
 #include "../utils/VulkanValidationLayers.h"
 
 // Class that manages all Vulkan resources and rendering
@@ -37,6 +38,9 @@ private:
     // Swap chain
     VulkanSwapChain vulkanSwapChain;
     bool framebufferResized;
+
+    // Depth buffer
+    VulkanDepthBuffer vulkanDepthBuffer;
 
     // Camera
     Camera camera;

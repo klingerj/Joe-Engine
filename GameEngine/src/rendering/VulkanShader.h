@@ -37,6 +37,7 @@ private:
     UBODynamic_ModelMat ubo_Dynamic_ModelMat;
     std::vector<VkBuffer> uniformBuffers_Dynamic_Model;
     std::vector<VkDeviceMemory> uniformBuffersMemory_Dynamic_Model;
+
 public:
     VulkanShader() : uboDynamicAlignment(0), ubo_Dynamic_ModelMat() {}
     VulkanShader(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& swapChain, VkRenderPass renderPass, size_t numModelMatrices,
