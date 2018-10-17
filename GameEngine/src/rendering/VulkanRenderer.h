@@ -70,25 +70,6 @@ private:
     std::vector<VkSemaphore> renderFinishedSemaphores;
     std::vector<VkFence> inFlightFences;
 
-public:
-    VulkanRenderer() : width(DEFAULT_SCREEN_WIDTH), height(DEFAULT_SCREEN_HEIGHT), MAX_FRAMES_IN_FLIGHT(DEFAULT_MAX_FRAMES_IN_FLIGHT),
-                       currentFrame(0), framebufferResized(false), camera() {}
-    ~VulkanRenderer() {}
-
-    // Vulkan setup
-    void Initialize();
-
-    // Vulkan cleanup
-    void Cleanup();
-    void CleanupSwapChain();
-
-    // Swap chain recreation
-    void RecreateSwapChain();
-    void FramebufferResized() { framebufferResized = true; }
-
-    // Draw a frame
-    void DrawFrame();
-
     // Setup functions
     void CreateVulkanInstance();
     std::vector<const char*> GetRequiredExtensions();
@@ -100,6 +81,26 @@ public:
     void CreateCommandPool();
     void CreateCommandBuffers();
     void CreateSemaphoresAndFences();
+
+    // Swap chain recreation
+    void CleanupSwapChain();
+    void RecreateSwapChain();
+
+public:
+    VulkanRenderer() : width(DEFAULT_SCREEN_WIDTH), height(DEFAULT_SCREEN_HEIGHT), MAX_FRAMES_IN_FLIGHT(DEFAULT_MAX_FRAMES_IN_FLIGHT),
+                       currentFrame(0), framebufferResized(false), camera() {}
+    ~VulkanRenderer() {}
+
+    // Vulkan setup
+    void Initialize();
+
+    // Vulkan cleanup
+    void Cleanup();
+    
+    void FramebufferResized() { framebufferResized = true; }
+
+    // Draw a frame
+    void DrawFrame();
 
     // Getters
     const VulkanWindow& GetWindow() const {

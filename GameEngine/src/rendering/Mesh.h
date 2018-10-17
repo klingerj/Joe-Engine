@@ -96,5 +96,5 @@ public:
 
     // Creation
     void Create(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::string& filepath);
-    void Draw(VkCommandBuffer commandBuffer);
+    void Draw(VkCommandBuffer commandBuffer) const;
 };

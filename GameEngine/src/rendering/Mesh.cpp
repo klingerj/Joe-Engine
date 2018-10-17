@@ -56,7 +56,7 @@ void Mesh::CreateIndexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, V
     vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
-void Mesh::Draw(VkCommandBuffer commandBuffer) {
+void Mesh::Draw(VkCommandBuffer commandBuffer) const {
     VkBuffer vertexBuffers[] = { vertexBuffer };
     VkDeviceSize offsets[] = { 0 };
 
