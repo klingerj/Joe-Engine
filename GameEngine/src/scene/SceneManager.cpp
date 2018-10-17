@@ -58,7 +58,7 @@ void SceneManager::UpdateModelMatrices() {
 
     const glm::mat4 mat1 = glm::rotate(glm::mat4(1.0f), time * 1.5708f, glm::vec3(0.0f, 0.0f, 1.0f));
     meshes[0].SetModelMatrix(mat1);
-
+    
     glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(1.5f, 0.0f, 0.1f));
     mat2 = glm::rotate(mat2, time * -1.5708f, glm::vec3(0.0f, 0.0f, 1.0f));
     mat2 = glm::scale(mat2, glm::vec3(1.0f, 1.0f, 1.0f));
