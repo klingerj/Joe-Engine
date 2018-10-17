@@ -44,7 +44,6 @@ void VulkanRenderer::Initialize() {
     meshes.push_back(m1);
     meshes.push_back(m2);
 
-
     // Textures
     Texture t = Texture(device, physicalDevice, graphicsQueue, commandPool, TEXTURES_DIR + "ducreux.jpg");
     textures.push_back(t);
