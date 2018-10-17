@@ -12,7 +12,7 @@ void EngineApplication::Run() {
 }
 
 void EngineApplication::InitializeEngine() {
-    vulkanRenderer.Initialize();
+    vulkanRenderer.Initialize(&sceneManager);
 }
 
 void EngineApplication::StopEngine() {

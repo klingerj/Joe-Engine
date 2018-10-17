@@ -5,12 +5,12 @@
 #include <array>
 
 #include "vulkan/vulkan.h"
+#include "../utils/Common.h"
 #include "glm/glm.hpp"
-#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
 #include "VulkanQueue.h"
-#include "../utils/Common.h"
+
 
 struct MeshVertex {
     glm::vec3 pos;

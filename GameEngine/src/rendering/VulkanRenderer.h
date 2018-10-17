@@ -4,11 +4,10 @@
 
 #include "vulkan/vulkan.h"
 
-#include "VulkanShader.h"
-#include "Texture.h"
-#include "Camera.h"
 #include "VulkanDepthBuffer.h"
 #include "../utils/VulkanValidationLayers.h"
+
+class SceneManager;
 
 // Class that manages all Vulkan resources and rendering
 
@@ -23,6 +22,9 @@ private:
     // Application width and height
     const uint32_t width;
     const uint32_t height;
+
+    // Scene Manager
+    SceneManager* sceneManager;
 
     // Vulkan Instance creation
     VkInstance instance;
@@ -42,18 +44,7 @@ private:
     // Depth buffer
     VulkanDepthBuffer vulkanDepthBuffer;
 
-    // Camera
-    Camera camera;
-
-    // Meshes
-    std::vector<Mesh> meshes;
-    void UpdateModelMatrices();
-
-    // Textures
-    std::vector<Texture> textures;
-
-    // Shaders and rendering
-    std::vector<VulkanShader> shaders;
+    // Renderpass(es)
     VkRenderPass renderPass;
     
     // Framebuffers
@@ -88,11 +79,11 @@ private:
 
 public:
     VulkanRenderer() : width(DEFAULT_SCREEN_WIDTH), height(DEFAULT_SCREEN_HEIGHT), MAX_FRAMES_IN_FLIGHT(DEFAULT_MAX_FRAMES_IN_FLIGHT),
-                       currentFrame(0), framebufferResized(false), camera() {}
+                       currentFrame(0), framebufferResized(false), sceneManager(nullptr) {}
     ~VulkanRenderer() {}
 
     // Vulkan setup
-    void Initialize();
+    void Initialize(SceneManager* sceneManager);
 
     // Vulkan cleanup
     void Cleanup();
