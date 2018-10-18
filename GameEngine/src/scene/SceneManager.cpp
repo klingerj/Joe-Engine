@@ -9,9 +9,9 @@ void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, V
     Mesh m3 = Mesh();
     Mesh m4 = Mesh();
     m1.Create(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "plane.obj");
-    m2.Create(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "plane.obj"); // TODO: instancing
+    m2.Create(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "wahoo.obj"); // TODO: instancing
     m3.Create(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "sphere.obj");
-    m4.Create(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "wahoo.obj");
+    m4.Create(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "alienModel_Small.obj");
     meshes.push_back(m1);
     meshes.push_back(m2);
     meshes.push_back(m3);
@@ -22,7 +22,7 @@ void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, V
     textures.push_back(t);
 
     // Camera
-    camera = Camera(glm::vec3(0.0f, 0.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height);
+    camera = Camera(glm::vec3(0.0f, 0.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height);
 
     // Shaders
     shaders.emplace_back(VulkanShader(physicalDevice, device, vulkanSwapChain, renderPass, meshes.size(), textures[0],
@@ -56,20 +56,21 @@ void SceneManager::UpdateModelMatrices() {
     auto currentTime = std::chrono::high_resolution_clock::now();
     float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count(); // TODO: standardize this to 60 fps
 
-    const glm::mat4 mat1 = glm::rotate(glm::mat4(1.0f), time * 1.5708f, glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::mat4 mat1 = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+    mat1 = glm::scale(mat1, glm::vec3(0.2f, 0.2f, 0.2f));
     meshes[0].SetModelMatrix(mat1);
     
-    glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, -0.1f));
-    mat2 = glm::rotate(mat2, time * -0.7853f, glm::vec3(0.0f, 0.0f, 1.0f));
-    mat2 = glm::scale(mat2, glm::vec3(1.0f, 1.0f, 1.0f));
+    glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, 0.0f));
+    mat2 = glm::rotate(mat2, /*time * -0.7853f*/0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+    mat2 = glm::scale(mat2, glm::vec3(0.05f, 0.05f, 0.05f));
     meshes[1].SetModelMatrix(mat2);
 
-    glm::mat4 mat3 = glm::translate(glm::mat4(1.0f), glm::vec3(-0.75f, std::sinf(time) * 0.5f, -1.0f));
+    glm::mat4 mat3 = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.0f, 0.05f));
     mat3 = glm::rotate(mat3, time * -1.5708f, glm::vec3(0.0f, 1.0f, 0.0f));
     mat3 = glm::scale(mat3, glm::vec3(0.15f, 0.15f, 0.15f));
     meshes[2].SetModelMatrix(mat3);
 
-    glm::mat4 mat4 = glm::translate(glm::mat4(1.0f), glm::vec3(0.75f, std::sinf(time) * 0.75f, -1.0f));
+    glm::mat4 mat4 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, std::sinf(time) * 0.75f, 0.75f));
     mat4 = glm::rotate(mat4, time * -1.5708f, glm::vec3(0.0f, 1.0f, 0.0f));
     mat4 = glm::scale(mat4, glm::vec3(0.15f, 0.15f, 0.15f));
     meshes[3].SetModelMatrix(mat4);

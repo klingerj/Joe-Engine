@@ -5,6 +5,7 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
+#define GLM_FORCE_LEFT_HANDED
 
 #include "vulkan/vulkan.h"
 #include "../rendering/VulkanQueue.h"
@@ -17,7 +18,7 @@ constexpr int DEFAULT_MAX_FRAMES_IN_FLIGHT = 2;
 
 // Camera attributes
 #define WORLD_UP glm::vec3(0.0f, 1.0f, 0.0f)
-constexpr float NEAR_PLANE = 1.0f;
+constexpr float NEAR_PLANE = 0.1f;
 constexpr float FAR_PLANE = 7.0f;
 #define FOVY glm::radians(45.0f)
 
