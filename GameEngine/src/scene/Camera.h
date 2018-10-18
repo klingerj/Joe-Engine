@@ -19,13 +19,17 @@ public:
     ~Camera() {}
 
     void ComputeAttributes() {
-        look = glm::normalize(eye - ref);
+        look = glm::normalize(ref - eye);
         right = glm::normalize(glm::cross(look, WORLD_UP));
         up = glm::normalize(glm::cross(right, look));
     }
 
     void SetAspect(float a) {
         aspect = a;
+    }
+    void SetEye(glm::vec3 e) {
+        eye = e;
+        ComputeAttributes();
     }
 
     // Getters
