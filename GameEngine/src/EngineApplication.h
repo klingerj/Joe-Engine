@@ -11,11 +11,14 @@ private:
     SceneManager sceneManager;
     VulkanRenderer vulkanRenderer;
 
+    double frameStartTime, frameEndTime; // timing for performance analysis
+    bool enableFrameCounter;
+
     // Initialize subsystems
     void InitializeEngine();
 
 public:
-    EngineApplication() {
+    EngineApplication() : enableFrameCounter(true), frameStartTime(0.0f), frameEndTime(0.0f) {
         InitializeEngine();
     }
 
