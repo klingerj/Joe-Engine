@@ -18,7 +18,7 @@ private:
     void InitializeEngine();
 
 public:
-    EngineApplication() : enableFrameCounter(true), frameStartTime(0.0f), frameEndTime(0.0f) {
+    EngineApplication() : enableFrameCounter(false), frameStartTime(0.0f), frameEndTime(0.0f) {
         InitializeEngine();
     }
 

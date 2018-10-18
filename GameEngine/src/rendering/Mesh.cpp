@@ -4,7 +4,6 @@
 #include <tiny_obj_loader.h>
 
 #include "Mesh.h"
-#include <iostream>
 
 void Mesh::Cleanup(VkDevice device) {
     vkDestroyBuffer(device, indexBuffer, nullptr);
@@ -88,7 +87,7 @@ void Mesh::LoadModelFromFile(const std::string& filepath) {
                 attrib.vertices[3 * index.vertex_index + 1],
                 attrib.vertices[3 * index.vertex_index + 2]
             };
-            //std::cout << vertex.pos.x << ", " << vertex.pos.y << ", " << vertex.pos.z << std::endl;
+            
             vertex.uv = {
                 attrib.texcoords[2 * index.texcoord_index + 0],
                 1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
