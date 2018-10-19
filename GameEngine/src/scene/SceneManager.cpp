@@ -56,21 +56,22 @@ void SceneManager::UpdateModelMatrices() {
     auto currentTime = std::chrono::high_resolution_clock::now();
     float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count(); // TODO: standardize this to 60 fps
 
-    glm::mat4 mat1 = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-    mat1 = glm::scale(mat1, glm::vec3(0.2f, 0.2f, 0.2f));
+    glm::mat4 mat1 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    mat1 = glm::rotate(mat1, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+    mat1 = glm::scale(mat1, glm::vec3(8.0f, 8.0f, 8.0f));
     meshes[0].SetModelMatrix(mat1);
     
-    glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, 0.0f));
+    glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, -0.75f, 0.0f));
     mat2 = glm::rotate(mat2, /*time * -0.7853f*/0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
     mat2 = glm::scale(mat2, glm::vec3(0.05f, 0.05f, 0.05f));
     meshes[1].SetModelMatrix(mat2);
 
-    glm::mat4 mat3 = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.0f, 0.05f));
+    glm::mat4 mat3 = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, -0.75f, 0.05f));
     mat3 = glm::rotate(mat3, time * -1.5708f, glm::vec3(0.0f, 1.0f, 0.0f));
     mat3 = glm::scale(mat3, glm::vec3(0.15f, 0.15f, 0.15f));
     meshes[2].SetModelMatrix(mat3);
 
-    glm::mat4 mat4 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, std::sinf(time) * 0.75f, 0.75f));
+    glm::mat4 mat4 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, std::sinf(time) * 0.05f - 0.75f, 0.75f));
     mat4 = glm::rotate(mat4, time * -1.5708f, glm::vec3(0.0f, 1.0f, 0.0f));
     mat4 = glm::scale(mat4, glm::vec3(0.15f, 0.15f, 0.15f));
     meshes[3].SetModelMatrix(mat4);
