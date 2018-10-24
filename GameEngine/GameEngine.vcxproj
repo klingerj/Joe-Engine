@@ -23,7 +23,6 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\rendering\Mesh.cpp" />
     <ClCompile Include="src\rendering\Texture.cpp" />
-    <ClCompile Include="src\rendering\VulkanDepthBuffer.cpp" />
     <ClCompile Include="src\rendering\VulkanQueue.cpp" />
     <ClCompile Include="src\rendering\VulkanRenderer.cpp" />
     <ClCompile Include="src\rendering\VulkanShader.cpp" />
@@ -38,7 +37,6 @@
     <ClInclude Include="src\EngineApplication.h" />
     <ClInclude Include="src\rendering\Mesh.h" />
     <ClInclude Include="src\rendering\Texture.h" />
-    <ClInclude Include="src\rendering\VulkanDepthBuffer.h" />
     <ClInclude Include="src\rendering\VulkanQueue.h" />
     <ClInclude Include="src\rendering\VulkanRenderer.h" />
     <ClInclude Include="src\rendering\VulkanShader.h" />

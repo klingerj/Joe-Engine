@@ -79,9 +79,6 @@
     <ClCompile Include="src\utils\ThreadPool.cpp">
       <Filter>src\Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\rendering\VulkanDepthBuffer.cpp">
-      <Filter>src\Source Files\Rendering</Filter>
-    </ClCompile>
     <ClCompile Include="src\scene\SceneManager.cpp">
       <Filter>src\Source Files\Scene</Filter>
     </ClCompile>
@@ -119,9 +116,6 @@
     </ClInclude>
     <ClInclude Include="src\utils\ThreadPool.h">
       <Filter>src\Header Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\rendering\VulkanDepthBuffer.h">
-      <Filter>src\Header Files\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\scene\SceneManager.h">
       <Filter>src\Header Files\Scene</Filter>

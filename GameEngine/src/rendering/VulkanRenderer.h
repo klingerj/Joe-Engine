@@ -4,10 +4,31 @@
 
 #include "vulkan/vulkan.h"
 
-#include "VulkanDepthBuffer.h"
+#include "VulkanWindow.h"
+#include "VulkanSwapChain.h"
+#include "../utils/Common.h"
 #include "../utils/VulkanValidationLayers.h"
 
 class SceneManager;
+
+// Rendering-related structs
+
+typedef struct framebuffer_attachment_t {
+    VkImage image;
+    VkDeviceMemory deviceMemory;
+    VkImageView imageView;
+} FramebufferAttachment;
+
+typedef struct offscreen_shadow_pass_t {
+    int32_t width, height;
+    VkFramebuffer framebuffer;
+    FramebufferAttachment depth;
+    VkRenderPass renderPass;
+    VkSampler depthSampler;
+    VkDescriptorImageInfo descriptor;
+    VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+    VkSemaphore semaphore = VK_NULL_HANDLE; // Semaphore used to synchronize between this and the next render pass
+} OffscreenShadowPass;
 
 // Class that manages all Vulkan resources and rendering
 
@@ -42,7 +63,7 @@ private:
     bool framebufferResized;
 
     // Depth buffer
-    VulkanDepthBuffer vulkanDepthBuffer;
+    FramebufferAttachment depthBuffer;
 
     // Renderpass(es)
     VkRenderPass renderPass;
@@ -67,7 +88,7 @@ private:
     int RateDeviceSuitability(VkPhysicalDevice physicalDevice, const VulkanWindow& vulkanWindow);
     void PickPhysicalDevice();
     void CreateLogicalDevice();
-    void CreateRenderPass(const VulkanSwapChain& swapChain);
+    void CreateRenderPass();
     void CreateFramebuffers();
     void CreateCommandPool();
     void CreateCommandBuffers();
@@ -76,6 +97,15 @@ private:
     // Swap chain recreation
     void CleanupSwapChain();
     void RecreateSwapChain();
+
+    // Rendering
+    OffscreenShadowPass shadowPass;
+    void CreateShadowPass();
+    void CreateShadowRenderPass();
+    void CreateShadowFramebuffer();
+    void CreateDepthAttachment(FramebufferAttachment& depth, VkImageUsageFlagBits usageBits);
+    void CreateDepthSampler(VkSampler sampler);
+    void CreateShadowCommandBuffer();
 
 public:
     VulkanRenderer() : width(DEFAULT_SCREEN_WIDTH), height(DEFAULT_SCREEN_HEIGHT), MAX_FRAMES_IN_FLIGHT(DEFAULT_MAX_FRAMES_IN_FLIGHT),
@@ -102,7 +132,4 @@ public:
     }
 };
 
-static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-    auto app = reinterpret_cast<VulkanRenderer*>(glfwGetWindowUserPointer(window));
-    app->FramebufferResized();
-}
+static void framebufferResizeCallback(GLFWwindow* window, int width, int height);

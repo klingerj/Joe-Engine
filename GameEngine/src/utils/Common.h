@@ -16,6 +16,9 @@ constexpr int DEFAULT_SCREEN_WIDTH = 800;
 constexpr int DEFAULT_SCREEN_HEIGHT = 600;
 constexpr int DEFAULT_MAX_FRAMES_IN_FLIGHT = 2;
 
+constexpr int DEFAULT_SHADOW_MAP_WIDTH = 1000;
+constexpr int DEFAULT_SHADOW_MAP_HEIGHT = 1000;
+
 // Camera attributes
 #define WORLD_UP glm::vec3(0.0f, 1.0f, 0.0f)
 constexpr float NEAR_PLANE = 0.1f;
@@ -38,3 +41,5 @@ void CopyBuffer(VkDevice device, VkCommandPool commandPool, const VulkanQueue& g
 void CreateImage(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 VkImageView CreateImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 void TransitionImageLayout(VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+VkFormat FindSupportedFormat(VkPhysicalDevice physicalDevice, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+VkFormat FindDepthFormat(VkPhysicalDevice physicalDevice);
