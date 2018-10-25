@@ -2,7 +2,7 @@
 
 #include "SceneManager.h"
 
-void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain) {
+void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass) {
     // Meshes
     Mesh m2 = Mesh();
     Mesh m1 = Mesh();
@@ -22,16 +22,22 @@ void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, V
     textures.push_back(t);
 
     // Camera
-    camera = Camera(glm::vec3(0.0f, 0.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height);
+    camera = Camera(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height);
+    shadowCamera = Camera(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPass.width / (float)shadowPass.height);
 
     // Shaders
-    shaders.emplace_back(VulkanShader(physicalDevice, device, vulkanSwapChain, renderPass, meshes.size(), textures[0],
-                                      SHADER_DIR + "vert_basic.spv", SHADER_DIR + "frag_basic.spv"));
+    CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass);
 }
 
-void SceneManager::RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass) {
-    shaders.emplace_back(VulkanShader(physicalDevice, device, vulkanSwapChain, renderPass, meshes.size(), textures[0],
-        SHADER_DIR + "vert_basic.spv", SHADER_DIR + "frag_basic.spv"));
+void SceneManager::CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass) {
+    meshShaders.emplace_back(VulkanMeshShader(physicalDevice, device, vulkanSwapChain, shadowPass, renderPass, meshes.size(), textures[0],
+                                              SHADER_DIR + "vert_mesh.spv", SHADER_DIR + "frag_mesh.spv"));
+    shadowPassShaders.emplace_back(VulkanShadowPassShader(physicalDevice, device, shadowPass.renderPass, { static_cast<uint32_t>(shadowPass.width), static_cast<uint32_t>(shadowPass.height) }, meshes.size(),
+                                              SHADER_DIR + "vert_shadow.spv", SHADER_DIR + "frag_shadow.spv"));
+}
+
+void SceneManager::RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass) {
+    CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass);
     camera.SetAspect(vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height);
 }
 
@@ -45,10 +51,14 @@ void SceneManager::CleanupMeshesAndTextures(VkDevice device) {
 }
 
 void SceneManager::CleanupShaders(VkDevice device) {
-    for (int i = 0; i < shaders.size(); ++i) {
-        shaders[i].Cleanup(device);
+    for (VulkanMeshShader meshShader : meshShaders) {
+        meshShader.Cleanup(device);
     }
-    shaders.clear();
+    for (VulkanShadowPassShader shadowPassShader : shadowPassShaders) {
+        shadowPassShader.Cleanup(device);
+    }
+    meshShaders.clear();
+    shadowPassShaders.clear();
 }
 
 void SceneManager::UpdateModelMatrices() {
@@ -78,15 +88,29 @@ void SceneManager::UpdateModelMatrices() {
 }
 
 void SceneManager::UpdateShaderUniformBuffers(VkDevice device, uint32_t imageIndex) {
-    shaders[0].UpdateUniformBuffers(device, imageIndex, camera, meshes);
+    for (VulkanMeshShader meshShader : meshShaders) {
+        meshShader.UpdateUniformBuffers(device, imageIndex, camera, shadowCamera, meshes);
+    }
+    for (VulkanShadowPassShader shadowPassShader : shadowPassShaders) {
+        shadowPassShader.UpdateUniformBuffers(device, shadowCamera, meshes);
+    }
 }
 
 void SceneManager::BindResources(VkCommandBuffer commandBuffer, size_t index) {
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaders[0].GetPipeline());
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshShaders[0].GetPipeline());
 
     for (uint32_t j = 0; j < meshes.size(); ++j) {
-        uint32_t dynamicOffset = j * static_cast<uint32_t>(shaders[0].GetDynamicAlignment());
-        shaders[0].BindDescriptorSets(commandBuffer, index, dynamicOffset);
+        uint32_t dynamicOffset = j * static_cast<uint32_t>(meshShaders[0].GetDynamicAlignment());
+        meshShaders[0].BindDescriptorSets(commandBuffer, index, dynamicOffset);
+        meshes[j].Draw(commandBuffer);
+    }
+}
+
+void SceneManager::BindShadowPassResources(VkCommandBuffer commandBuffer) {
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPassShaders[0].GetPipeline());
+    for (uint32_t j = 0; j < meshes.size(); ++j) {
+        uint32_t dynamicOffset = j * static_cast<uint32_t>(shadowPassShaders[0].GetDynamicAlignment());
+        shadowPassShaders[0].BindDescriptorSets(commandBuffer, dynamicOffset);
         meshes[j].Draw(commandBuffer);
     }
 }

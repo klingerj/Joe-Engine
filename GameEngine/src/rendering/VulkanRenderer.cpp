@@ -41,19 +41,20 @@ void VulkanRenderer::Initialize(SceneManager* sceneManager) {
 
     // Create main scene depth buffer
     CreateDepthAttachment(depthBuffer, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
-
-    // Load Scene
-    this->sceneManager = sceneManager;
-    this->sceneManager->LoadScene(physicalDevice, device, commandPool, renderPass, graphicsQueue, vulkanSwapChain);
-
+    
     // Framebuffers
     CreateFramebuffers();
     
+    // Shadow Pass(es)
+    CreateShadowPassResources();
+
+    // Load Scene
+    this->sceneManager = sceneManager;
+    this->sceneManager->LoadScene(physicalDevice, device, commandPool, renderPass, graphicsQueue, vulkanSwapChain, shadowPass);
+
     // Command buffers
     CreateCommandBuffers();
-
-    // Shadow Pass(es)
-    CreateShadowPass();
+    CreateShadowCommandBuffer();
 
     // Sync objects
     CreateSemaphoresAndFences();
@@ -67,8 +68,11 @@ void VulkanRenderer::Cleanup() {
     vkDestroyImage(device, shadowPass.depth.image, nullptr);
     vkFreeMemory(device, shadowPass.depth.deviceMemory, nullptr);
     vkDestroyImageView(device, shadowPass.depth.imageView, nullptr);
+    vkDestroySampler(device, shadowPass.depthSampler, nullptr);
     vkDestroyRenderPass(device, shadowPass.renderPass, nullptr);
     vkDestroyFramebuffer(device, shadowPass.framebuffer, nullptr);
+    vkFreeCommandBuffers(device, commandPool, 1, &shadowPass.commandBuffer);
+    vkDestroySemaphore(device, shadowPass.semaphore, nullptr);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
@@ -472,13 +476,13 @@ void VulkanRenderer::CreateShadowRenderPass() {
 
 void VulkanRenderer::CreateDepthAttachment(FramebufferAttachment& depth, VkImageUsageFlagBits usageBits) {
     VkFormat depthFormat = FindDepthFormat(physicalDevice);
-    VkExtent2D extent = vulkanSwapChain.GetExtent();
+    VkExtent2D extent = { static_cast<uint32_t>(shadowPass.width), static_cast<uint32_t>(shadowPass.height) };
     CreateImage(physicalDevice, device, extent.width, extent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, usageBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth.image, depth.deviceMemory);
     depth.imageView = CreateImageView(device, depth.image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
     TransitionImageLayout(device, commandPool, graphicsQueue, depth.image, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 }
 
-void VulkanRenderer::CreateDepthSampler(VkSampler sampler) {
+void VulkanRenderer::CreateDepthSampler(VkSampler& sampler) {
     VkSamplerCreateInfo samplerInfo = {};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -530,49 +534,54 @@ void VulkanRenderer::CreateShadowCommandBuffer() {
     allocInfo.commandBufferCount = 1;
 
     if (vkAllocateCommandBuffers(device, &allocInfo, &shadowPass.commandBuffer) != VK_SUCCESS) {
-        throw std::runtime_error("failed to allocate command buffers!");
+        throw std::runtime_error("failed to allocate shadow pass command buffer!");
     }
 
-    for (size_t i = 0; i < commandBuffers.size(); ++i) {
-        VkCommandBufferBeginInfo beginInfo = {};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-        beginInfo.pInheritanceInfo = nullptr;
+    VkSemaphoreCreateInfo semaphoreInfo = {};
+    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-        if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS) {
-            throw std::runtime_error("failed to begin recording command buffer!");
-        }
+    if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &shadowPass.semaphore) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create shadowpass semaphore!");
+    }
 
-        // Begin render pass
-        VkRenderPassBeginInfo renderPassInfo = {};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = shadowPass.renderPass;
-        renderPassInfo.framebuffer = shadowPass.framebuffer;
-        renderPassInfo.renderArea.offset = { 0, 0 };
-        renderPassInfo.renderArea.extent = { shadowPass.width, shadowPass.height };
+    VkCommandBufferBeginInfo beginInfo = {};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+    beginInfo.pInheritanceInfo = nullptr;
 
-        VkClearValue clearValue = { 1.0f, 0 };
-        renderPassInfo.clearValueCount = 1;
-        renderPassInfo.pClearValues = &clearValue;
+    if (vkBeginCommandBuffer(shadowPass.commandBuffer, &beginInfo) != VK_SUCCESS) {
+        throw std::runtime_error("failed to begin recording command buffer!");
+    }
 
-        vkCmdBeginRenderPass(shadowPass.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    // Begin render pass
 
-        sceneManager->BindResources(shadowPass.commandBuffer, i);
+    VkRenderPassBeginInfo renderPassInfo = {};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = shadowPass.renderPass;
+    renderPassInfo.framebuffer = shadowPass.framebuffer;
+    renderPassInfo.renderArea.offset = { 0, 0 };
+    renderPassInfo.renderArea.extent = { static_cast<uint32_t>(shadowPass.width), static_cast<uint32_t>(shadowPass.height) };
 
-        vkCmdEndRenderPass(shadowPass.commandBuffer);
+    VkClearValue clearValue = { 1.0f, 0 };
+    renderPassInfo.clearValueCount = 1;
+    renderPassInfo.pClearValues = &clearValue;
 
-        if (vkEndCommandBuffer(shadowPass.commandBuffer) != VK_SUCCESS) {
-            throw std::runtime_error("failed to record command buffer!");
-        }
+    vkCmdBeginRenderPass(shadowPass.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    sceneManager->BindShadowPassResources(shadowPass.commandBuffer);
+
+    vkCmdEndRenderPass(shadowPass.commandBuffer);
+
+    if (vkEndCommandBuffer(shadowPass.commandBuffer) != VK_SUCCESS) {
+        throw std::runtime_error("failed to record command buffer!");
     }
 }
 
-void VulkanRenderer::CreateShadowPass() {
+void VulkanRenderer::CreateShadowPassResources() {
     CreateDepthAttachment(shadowPass.depth, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT));
     CreateDepthSampler(shadowPass.depthSampler);
     CreateShadowRenderPass();
     CreateShadowFramebuffer();
-    CreateShadowCommandBuffer();
 }
 
 void VulkanRenderer::DrawFrame() {
@@ -591,15 +600,32 @@ void VulkanRenderer::DrawFrame() {
     sceneManager->UpdateModelMatrices();
     sceneManager->UpdateShaderUniformBuffers(device, imageIndex);
 
+    // Submit shadow pass command buffer
+
+    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+
+    VkSubmitInfo submitInfo_shadowPass = {};
+    submitInfo_shadowPass.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo_shadowPass.pWaitSemaphores = &imageAvailableSemaphores[currentFrame];
+    submitInfo_shadowPass.waitSemaphoreCount = 1;
+    submitInfo_shadowPass.pWaitDstStageMask = waitStages;
+    submitInfo_shadowPass.pSignalSemaphores = &shadowPass.semaphore;
+    submitInfo_shadowPass.signalSemaphoreCount = 1;
+    submitInfo_shadowPass.commandBufferCount = 1;
+    submitInfo_shadowPass.pCommandBuffers = &shadowPass.commandBuffer;
+
+    vkResetFences(device, 1, &inFlightFences[currentFrame]);
+
+    if (vkQueueSubmit(graphicsQueue.GetQueue(), 1, &submitInfo_shadowPass, inFlightFences[currentFrame]) != VK_SUCCESS) {
+        throw std::runtime_error("failed to submit draw command buffer!");
+    }
+    
+    VkSemaphore waitSemaphores[] = { shadowPass.semaphore };
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-    VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrame] };
-    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = waitSemaphores;
     submitInfo.pWaitDstStageMask = waitStages;
-
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
 
@@ -607,6 +633,7 @@ void VulkanRenderer::DrawFrame() {
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
+    vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
     vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
     if (vkQueueSubmit(graphicsQueue.GetQueue(), 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
@@ -662,7 +689,7 @@ void VulkanRenderer::RecreateSwapChain() {
     vulkanSwapChain.Create(physicalDevice, device, vulkanWindow, width, height);
     CreateDepthAttachment(depthBuffer, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
     CreateRenderPass();
-    sceneManager->RecreateResources(physicalDevice, device, vulkanSwapChain, renderPass);
+    sceneManager->RecreateResources(physicalDevice, device, vulkanSwapChain, renderPass, {shadowPass.width, shadowPass.height});
     CreateFramebuffers();
     CreateCommandBuffers();
 }

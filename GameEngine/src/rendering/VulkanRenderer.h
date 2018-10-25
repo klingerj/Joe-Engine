@@ -20,7 +20,7 @@ typedef struct framebuffer_attachment_t {
 } FramebufferAttachment;
 
 typedef struct offscreen_shadow_pass_t {
-    int32_t width, height;
+    int32_t width = DEFAULT_SHADOW_MAP_WIDTH, height = DEFAULT_SHADOW_MAP_HEIGHT;
     VkFramebuffer framebuffer;
     FramebufferAttachment depth;
     VkRenderPass renderPass;
@@ -100,11 +100,11 @@ private:
 
     // Rendering
     OffscreenShadowPass shadowPass;
-    void CreateShadowPass();
+    void CreateShadowPassResources();
     void CreateShadowRenderPass();
     void CreateShadowFramebuffer();
     void CreateDepthAttachment(FramebufferAttachment& depth, VkImageUsageFlagBits usageBits);
-    void CreateDepthSampler(VkSampler sampler);
+    void CreateDepthSampler(VkSampler& sampler);
     void CreateShadowCommandBuffer();
 
 public:

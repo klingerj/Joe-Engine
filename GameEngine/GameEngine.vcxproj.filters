@@ -125,11 +125,14 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\shaders\vert_basic.vert">
+    <None Include="src\shaders\frag_mesh.frag">
+      <Filter>src\Source Files\Shaders\Fragment Shaders</Filter>
+    </None>
+    <None Include="src\shaders\vert_mesh.vert">
       <Filter>src\Source Files\Shaders\Vertex Shaders</Filter>
     </None>
-    <None Include="src\shaders\frag_basic.frag">
-      <Filter>src\Source Files\Shaders\Fragment Shaders</Filter>
+    <None Include="src\shaders\vert_shadow.vert">
+      <Filter>src\Source Files\Shaders\Vertex Shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
