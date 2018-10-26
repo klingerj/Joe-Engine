@@ -9,6 +9,7 @@ layout(location = 1) in vec2 fragUV;
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    vec3 texColor = texture(albedo, fragUV).xyz;
-    outColor = vec4(fragColor * texColor, 1.0);
+    vec3 albedoColor = texture(albedo, fragUV).xyz;
+    float shadowColor = texture(shadowMap, fragUV).r;
+    outColor = vec4(vec3(shadowColor), 1.0);
 }

@@ -432,7 +432,7 @@ void VulkanMeshShader::UpdateUniformBuffers(VkDevice device, uint32_t currentIma
     view = shadowCamera.GetView();
     proj = shadowCamera.GetProj();
     proj[1][1] *= -1.0f;
-    ubo_vp.viewProj = proj * view;
+    ubo_vp_shadow.viewProj = proj * view;
 
     for (unsigned int i = 0; i < meshes.size(); ++i) {
         // Aligned offset
@@ -644,7 +644,7 @@ void VulkanShadowPassShader::CreateGraphicsPipeline(VkDevice device, VkShaderMod
     pipelineInfo.pRasterizationState = &rasterizer;
     pipelineInfo.pMultisampleState = &multisampling;
     pipelineInfo.pDepthStencilState = &depthStencil;
-    pipelineInfo.pColorBlendState = &colorBlending;
+    pipelineInfo.pColorBlendState = nullptr; // &colorBlending;
     pipelineInfo.pDynamicState = nullptr;
 
     pipelineInfo.layout = pipelineLayout;

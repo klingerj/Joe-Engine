@@ -40,7 +40,7 @@ void VulkanRenderer::Initialize(SceneManager* sceneManager) {
     CreateCommandPool();
 
     // Create main scene depth buffer
-    CreateDepthAttachment(depthBuffer, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+    CreateDepthAttachment(depthBuffer, { static_cast<uint32_t>(width), static_cast<uint32_t>(height) }, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
     
     // Framebuffers
     CreateFramebuffers();
@@ -451,7 +451,7 @@ void VulkanRenderer::CreateShadowRenderPass() {
     dependencies[0].srcAccessMask = 0;
     dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
     dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
+    
     dependencies[1].srcSubpass = 0;
     dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
     dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
@@ -474,9 +474,8 @@ void VulkanRenderer::CreateShadowRenderPass() {
     }
 }
 
-void VulkanRenderer::CreateDepthAttachment(FramebufferAttachment& depth, VkImageUsageFlagBits usageBits) {
+void VulkanRenderer::CreateDepthAttachment(FramebufferAttachment& depth, VkExtent2D extent, VkImageUsageFlagBits usageBits) {
     VkFormat depthFormat = FindDepthFormat(physicalDevice);
-    VkExtent2D extent = { static_cast<uint32_t>(shadowPass.width), static_cast<uint32_t>(shadowPass.height) };
     CreateImage(physicalDevice, device, extent.width, extent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, usageBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth.image, depth.deviceMemory);
     depth.imageView = CreateImageView(device, depth.image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
     TransitionImageLayout(device, commandPool, graphicsQueue, depth.image, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
@@ -578,7 +577,7 @@ void VulkanRenderer::CreateShadowCommandBuffer() {
 }
 
 void VulkanRenderer::CreateShadowPassResources() {
-    CreateDepthAttachment(shadowPass.depth, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT));
+    CreateDepthAttachment(shadowPass.depth, { static_cast<uint32_t>(shadowPass.width), static_cast<uint32_t>(shadowPass.height) }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT));
     CreateDepthSampler(shadowPass.depthSampler);
     CreateShadowRenderPass();
     CreateShadowFramebuffer();
@@ -687,7 +686,7 @@ void VulkanRenderer::RecreateSwapChain() {
 
     CleanupSwapChain();
     vulkanSwapChain.Create(physicalDevice, device, vulkanWindow, width, height);
-    CreateDepthAttachment(depthBuffer, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+    CreateDepthAttachment(depthBuffer, { static_cast<uint32_t>(width), static_cast<uint32_t>(height) }, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
     CreateRenderPass();
     sceneManager->RecreateResources(physicalDevice, device, vulkanSwapChain, renderPass, {shadowPass.width, shadowPass.height});
     CreateFramebuffers();

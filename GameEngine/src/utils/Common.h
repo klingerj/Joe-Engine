@@ -22,7 +22,7 @@ constexpr int DEFAULT_SHADOW_MAP_HEIGHT = 1000;
 // Camera attributes
 #define WORLD_UP glm::vec3(0.0f, 1.0f, 0.0f)
 constexpr float NEAR_PLANE = 0.1f;
-constexpr float FAR_PLANE = 7.0f;
+constexpr float FAR_PLANE = 100.0f;
 #define FOVY glm::radians(45.0f)
 
 // Various project file paths

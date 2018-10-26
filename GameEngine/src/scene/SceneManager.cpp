@@ -33,7 +33,7 @@ void SceneManager::CreateShaders(VkPhysicalDevice physicalDevice, VkDevice devic
     meshShaders.emplace_back(VulkanMeshShader(physicalDevice, device, vulkanSwapChain, shadowPass, renderPass, meshes.size(), textures[0],
                                               SHADER_DIR + "vert_mesh.spv", SHADER_DIR + "frag_mesh.spv"));
     shadowPassShaders.emplace_back(VulkanShadowPassShader(physicalDevice, device, shadowPass.renderPass, { static_cast<uint32_t>(shadowPass.width), static_cast<uint32_t>(shadowPass.height) }, meshes.size(),
-                                              SHADER_DIR + "vert_shadow.spv", SHADER_DIR + "frag_shadow.spv"));
+                                                          SHADER_DIR + "vert_shadow.spv", SHADER_DIR + "frag_shadow.spv"));
 }
 
 void SceneManager::RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass) {

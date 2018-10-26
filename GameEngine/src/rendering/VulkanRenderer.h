@@ -25,7 +25,6 @@ typedef struct offscreen_shadow_pass_t {
     FramebufferAttachment depth;
     VkRenderPass renderPass;
     VkSampler depthSampler;
-    VkDescriptorImageInfo descriptor;
     VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
     VkSemaphore semaphore = VK_NULL_HANDLE; // Semaphore used to synchronize between this and the next render pass
 } OffscreenShadowPass;
@@ -103,7 +102,7 @@ private:
     void CreateShadowPassResources();
     void CreateShadowRenderPass();
     void CreateShadowFramebuffer();
-    void CreateDepthAttachment(FramebufferAttachment& depth, VkImageUsageFlagBits usageBits);
+    void CreateDepthAttachment(FramebufferAttachment& depth, VkExtent2D extent, VkImageUsageFlagBits usageBits);
     void CreateDepthSampler(VkSampler& sampler);
     void CreateShadowCommandBuffer();
 
