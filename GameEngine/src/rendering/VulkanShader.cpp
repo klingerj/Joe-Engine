@@ -271,7 +271,7 @@ void VulkanMeshShader::CreateDescriptorSetLayout(VkDevice device) {
     uboLayoutBinding_vp_shadow.binding = 1;
     uboLayoutBinding_vp_shadow.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     uboLayoutBinding_vp_shadow.descriptorCount = 1;
-    uboLayoutBinding_vp_shadow.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    uboLayoutBinding_vp_shadow.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     uboLayoutBinding_vp_shadow.pImmutableSamplers = nullptr;
 
     VkDescriptorSetLayoutBinding uboDynamicLayoutBinding_model = {};
@@ -548,10 +548,10 @@ void VulkanShadowPassShader::CreateGraphicsPipeline(VkDevice device, VkShaderMod
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
     rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-    rasterizer.depthBiasEnable = VK_FALSE;
-    rasterizer.depthBiasConstantFactor = 0.0f;
+    rasterizer.depthBiasEnable = VK_TRUE;
+    rasterizer.depthBiasConstantFactor = DEFAULT_SHADOW_MAP_DEPTH_BIAS_CONSTANT;
     rasterizer.depthBiasClamp = 0.0f;
-    rasterizer.depthBiasSlopeFactor = 0.0f;
+    rasterizer.depthBiasSlopeFactor = DEFAULT_SHADOW_MAP_DEPTH_BIAS_SLOPE;
 
     // Multisampling
 

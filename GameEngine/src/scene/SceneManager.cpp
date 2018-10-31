@@ -22,8 +22,8 @@ void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, V
     textures.push_back(t);
 
     // Camera
-    camera = Camera(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height);
-    shadowCamera = Camera(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPass.width / (float)shadowPass.height);
+    camera = Camera(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height, SCENE_VIEW_NEAR_PLANE, SCENE_VIEW_FAR_PLANE);
+    shadowCamera = Camera(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPass.width / (float)shadowPass.height, SHADOW_VIEW_NEAR_PLANE, SHADOW_VIEW_FAR_PLANE);
 
     // Shaders
     CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass);
@@ -73,7 +73,7 @@ void SceneManager::UpdateModelMatrices() {
     
     glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, -0.75f, 0.0f));
     mat2 = glm::rotate(mat2, /*time * -0.7853f*/0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-    mat2 = glm::scale(mat2, glm::vec3(0.05f, 0.05f, 0.05f));
+    mat2 = glm::scale(mat2, glm::vec3(0.95f, 0.95f, 0.95f));
     meshes[1].SetModelMatrix(mat2);
 
     glm::mat4 mat3 = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, -0.75f, 0.05f));
