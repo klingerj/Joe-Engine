@@ -73,7 +73,7 @@ void SceneManager::UpdateModelMatrices() {
     
     glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, -0.75f, 0.0f));
     mat2 = glm::rotate(mat2, /*time * -0.7853f*/0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-    mat2 = glm::scale(mat2, glm::vec3(0.95f, 0.95f, 0.95f));
+    mat2 = glm::scale(mat2, glm::vec3(0.25f, 0.25f, 0.25f));
     meshes[1].SetModelMatrix(mat2);
 
     glm::mat4 mat3 = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, -0.75f, 0.05f));
