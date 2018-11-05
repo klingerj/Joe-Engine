@@ -79,9 +79,6 @@
     <ClCompile Include="src\utils\ThreadPool.cpp">
       <Filter>src\Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\rendering\VulkanDepthBuffer.cpp">
-      <Filter>src\Source Files\Rendering</Filter>
-    </ClCompile>
     <ClCompile Include="src\scene\SceneManager.cpp">
       <Filter>src\Source Files\Scene</Filter>
     </ClCompile>
@@ -120,9 +117,6 @@
     <ClInclude Include="src\utils\ThreadPool.h">
       <Filter>src\Header Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\rendering\VulkanDepthBuffer.h">
-      <Filter>src\Header Files\Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="src\scene\SceneManager.h">
       <Filter>src\Header Files\Scene</Filter>
     </ClInclude>
@@ -131,11 +125,14 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\shaders\vert_basic.vert">
+    <None Include="src\shaders\frag_mesh.frag">
+      <Filter>src\Source Files\Shaders\Fragment Shaders</Filter>
+    </None>
+    <None Include="src\shaders\vert_mesh.vert">
       <Filter>src\Source Files\Shaders\Vertex Shaders</Filter>
     </None>
-    <None Include="src\shaders\frag_basic.frag">
-      <Filter>src\Source Files\Shaders\Fragment Shaders</Filter>
+    <None Include="src\shaders\vert_shadow.vert">
+      <Filter>src\Source Files\Shaders\Vertex Shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

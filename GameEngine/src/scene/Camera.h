@@ -12,10 +12,11 @@ private:
     glm::vec3 right;
     glm::vec3 up;
     float aspect;
+    float nearPlane, farPlane;
 
 public:
-    Camera() : Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.0f) {}
-    Camera(glm::vec3 e, glm::vec3 r, float a) : eye(e), ref(r), aspect(a) { ComputeAttributes();  }
+    Camera() : Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, SCENE_VIEW_NEAR_PLANE, SCENE_VIEW_FAR_PLANE) {}
+    Camera(glm::vec3 e, glm::vec3 r, float a, float n, float f) : eye(e), ref(r), aspect(a), nearPlane(n), farPlane(f) { ComputeAttributes();  }
     ~Camera() {}
 
     void ComputeAttributes() {
@@ -45,6 +46,6 @@ public:
         return o * t;
     }
     glm::mat4 GetProj() const {
-        return glm::perspective(FOVY, aspect, NEAR_PLANE, FAR_PLANE);
+        return glm::perspective(FOVY, aspect, nearPlane, farPlane);
     }
 };
