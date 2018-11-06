@@ -59,7 +59,9 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\shaders\frag_deferred_geom.frag" />
     <None Include="src\shaders\frag_mesh.frag" />
+    <None Include="src\shaders\vert_deferred_geom.vert" />
     <None Include="src\shaders\vert_mesh.vert" />
     <None Include="src\shaders\vert_shadow.vert" />
   </ItemGroup>

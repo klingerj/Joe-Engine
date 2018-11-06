@@ -47,6 +47,9 @@ void VulkanRenderer::Initialize(SceneManager* sceneManager) {
     
     // Shadow Pass(es)
     CreateShadowPassResources();
+    
+    // Deferred Rendering Passes
+    CreateDeferredPassResources();
 
     // Load Scene
     this->sceneManager = sceneManager;
@@ -55,6 +58,7 @@ void VulkanRenderer::Initialize(SceneManager* sceneManager) {
     // Command buffers
     CreateCommandBuffers();
     CreateShadowCommandBuffer();
+    CreateDeferredPassCommandBuffer();
 
     // Sync objects
     CreateSemaphoresAndFences();
@@ -596,8 +600,7 @@ void VulkanRenderer::CreateDeferredPassRenderPass() {
         if (i == 2) {
             attachmentDescs[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             attachmentDescs[i].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        }
-        else {
+        } else {
             attachmentDescs[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             attachmentDescs[i].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         }
@@ -612,42 +615,35 @@ void VulkanRenderer::CreateDeferredPassRenderPass() {
     colorReferences.push_back({ 1, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
 
     VkAttachmentReference depthAttachmentRef = {};
-    depthAttachmentRef.attachment = 1;
+    depthAttachmentRef.attachment = 2;
     depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-
-    std::array< VkSubpassDescription, 2> subpassDescs = {};
+    std::array<VkSubpassDescription, 1> subpassDescs = {};
     subpassDescs[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpassDescs[0].colorAttachmentCount = static_cast<uint32_t>(colorReferences.size());
     subpassDescs[0].pColorAttachments = colorReferences.data();
     subpassDescs[0].pDepthStencilAttachment = &depthAttachmentRef;
-    subpassDescs[1].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpassDescs[1].inputAttachmentCount = 2;
-    subpassDescs[1].pInputAttachments = colorReferences.data();
-    subpassDescs[1].colorAttachmentCount = 1;
-    subpassDescs[1].pColorAttachments = &colorReferences[0];
-    subpassDescs[1].pDepthStencilAttachment = &depthAttachmentRef;
 
     std::array<VkSubpassDependency, 2> subpassDependencies;
-    /* This is from Sascha Willems
-    dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependencies[0].dstSubpass = 0;
-    dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-    dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-    dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+    // This is from Sascha Willems
+    subpassDependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+    subpassDependencies[0].dstSubpass = 0;
+    subpassDependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+    subpassDependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    subpassDependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+    subpassDependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    subpassDependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-    dependencies[1].srcSubpass = 0;
-    dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-    dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-    dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-    dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;*/
+    subpassDependencies[1].srcSubpass = 0;
+    subpassDependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+    subpassDependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    subpassDependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+    subpassDependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    subpassDependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+    subpassDependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
     // Taken from the ARM reference. TODO: understand why this works
-    subpassDependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+    /*subpassDependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
     subpassDependencies[0].dstSubpass = 0;
     subpassDependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
         VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
@@ -677,13 +673,13 @@ void VulkanRenderer::CreateDeferredPassRenderPass() {
         VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
         VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
         VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
-    subpassDependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+    subpassDependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;*/
 
     VkRenderPassCreateInfo renderPassInfo = {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     renderPassInfo.attachmentCount = 3;
     renderPassInfo.pAttachments = attachmentDescs.data();
-    renderPassInfo.subpassCount = 2;
+    renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = subpassDescs.data();
     renderPassInfo.dependencyCount = static_cast<uint32_t>(subpassDependencies.size());
     renderPassInfo.pDependencies = subpassDependencies.data();
@@ -813,7 +809,7 @@ void VulkanRenderer::CreateDeferredPassResources() {
     CreateDeferredPassAttachment(deferredPass.depth, { static_cast<uint32_t>(deferredPass.width), static_cast<uint32_t>(deferredPass.height) }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), FindDepthFormat(physicalDevice));
     CreateDeferredPassSampler(deferredPass.sampler);
     CreateDeferredPassRenderPass();
-    CreateDeferredPassCommandBuffer();
+    CreateDeferredPassFramebuffer();
 }
 
 void VulkanRenderer::DrawFrame() {

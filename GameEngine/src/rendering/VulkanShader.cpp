@@ -1069,8 +1069,6 @@ void VulkanDeferredPassGeometryShader::CreateDescriptorSetLayout(VkDevice device
 }
 
 void VulkanDeferredPassGeometryShader::CreateDescriptorSets(VkDevice device, const Texture& texture, const OffscreenShadowPass& shadowPass) {
-    VkDescriptorSetLayout descriptorSetLayout;
-
     VkDescriptorSetAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool = descriptorPool;

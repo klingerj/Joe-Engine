@@ -11,7 +11,7 @@ layout(binding = 4) uniform sampler2D shadowMap;
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec2 fragUV;
 layout(location = 2) in vec3 fragPos;
-layout(location = 0) out vec4 outColor;
+layout(location = 0) out vec4 gbuffers[2];
 
 void main() {
     vec3 albedoColor = texture(albedo, fragUV).xyz;
@@ -21,5 +21,7 @@ void main() {
     pointShadow.xy = pointShadow.xy * 0.5 + 0.5;
     float shadowColor = texture(shadowMap, pointShadow.xy).r;
     float shadow = step(pointShadow.z, shadowColor);
-    outColor = vec4(albedoColor * shadow, 1.0);
+    //outColor = vec4(albedoColor * shadow, 1.0);
+    gbuffers[0] = vec4(albedoColor, 1.0);
+    gbuffers[1] = vec4(vec3(0.5), 1.0);
 }
