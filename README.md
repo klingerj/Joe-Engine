@@ -1,7 +1,10 @@
 # GameEngine
 
 #### Weekly Update
-10/16/18
+11/6/18  
+A delayed update but the engine is now capable of shadow mapping. The branch dedicated to this feature has already been merged into master. This branch is dedicated to implementing a deferred renderer and is almost complete. Demo images will be available soon.
+
+10/16/18  
 Couple of things added so far:
 - some general code cleanup  
 - depth buffer  
@@ -23,6 +26,8 @@ In its current state, the project is nothing more than code from vulkan-tutorial
 # Resources
 [Vulkan code setup and introduction](https://vulkan-tutorial.com/)  
 [Vulkan SDK](https://www.lunarg.com/vulkan-sdk/)  
+[Sascha Willems Vulkan Examples](https://github.com/SaschaWillems/Vulkan)  
+[ARM Software Vulkan SDK Samples](https://github.com/ARM-software/vulkan-sdk)  
 [GLFW](http://www.glfw.org/)  
 [GLM](https://github.com/g-truc/glm/releases)  
 [Tiny OBJ Loader](https://github.com/syoyo/tinyobjloader)  
