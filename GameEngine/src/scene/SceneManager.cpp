@@ -2,7 +2,7 @@
 
 #include "SceneManager.h"
 
-void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass) {
+void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass) {
     // Meshes
     Mesh m2 = Mesh();
     Mesh m1 = Mesh();
@@ -26,18 +26,20 @@ void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, V
     shadowCamera = Camera(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPass.width / (float)shadowPass.height, SHADOW_VIEW_NEAR_PLANE, SHADOW_VIEW_FAR_PLANE);
 
     // Shaders
-    CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass);
+    CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass, deferredPass);
 }
 
-void SceneManager::CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass) {
+void SceneManager::CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass) {
     meshShaders.emplace_back(VulkanMeshShader(physicalDevice, device, vulkanSwapChain, shadowPass, renderPass, meshes.size(), textures[0],
                                               SHADER_DIR + "vert_mesh.spv", SHADER_DIR + "frag_mesh.spv"));
     shadowPassShaders.emplace_back(VulkanShadowPassShader(physicalDevice, device, shadowPass.renderPass, { static_cast<uint32_t>(shadowPass.width), static_cast<uint32_t>(shadowPass.height) }, meshes.size(),
                                                           SHADER_DIR + "vert_shadow.spv", SHADER_DIR + "frag_shadow.spv"));
+    /*deferredPassGeometryShaders.emplace_back(VulkanDeferredPassGeometryShader(physicalDevice, device, vulkanSwapChain, shadowPass, deferredPass.renderPass, meshes.size(), textures[0],
+                                                                              SHADER_DIR + "vert_deferred.spv", SHADER_DIR + "frag_deferred.spv"));*/
 }
 
-void SceneManager::RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass) {
-    CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass);
+void SceneManager::RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass) {
+    CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass, deferredPass);
     camera.SetAspect(vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height);
 }
 
@@ -111,6 +113,15 @@ void SceneManager::BindShadowPassResources(VkCommandBuffer commandBuffer) {
     for (uint32_t j = 0; j < meshes.size(); ++j) {
         uint32_t dynamicOffset = j * static_cast<uint32_t>(shadowPassShaders[0].GetDynamicAlignment());
         shadowPassShaders[0].BindDescriptorSets(commandBuffer, dynamicOffset);
+        meshes[j].Draw(commandBuffer);
+    }
+}
+
+void SceneManager::BindDeferredPassResources(VkCommandBuffer commandBuffer) {
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, deferredPassGeometryShaders[0].GetPipeline());
+    for (uint32_t j = 0; j < meshes.size(); ++j) {
+        uint32_t dynamicOffset = j * static_cast<uint32_t>(deferredPassGeometryShaders[0].GetDynamicAlignment());
+        deferredPassGeometryShaders[0].BindDescriptorSets(commandBuffer, dynamicOffset);
         meshes[j].Draw(commandBuffer);
     }
 }

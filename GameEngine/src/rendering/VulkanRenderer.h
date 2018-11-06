@@ -29,6 +29,18 @@ typedef struct offscreen_shadow_pass_t {
     VkSemaphore semaphore = VK_NULL_HANDLE; // Semaphore used to synchronize between this and the next render pass
 } OffscreenShadowPass;
 
+typedef struct offscreen_deferred_pass_t {
+    int32_t width = DEFAULT_SCREEN_WIDTH, height = DEFAULT_SCREEN_HEIGHT;
+    VkFramebuffer framebuffer;
+    FramebufferAttachment color;
+    FramebufferAttachment normal;
+    FramebufferAttachment depth;
+    VkRenderPass renderPass;
+    VkSampler sampler;
+    VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+    VkSemaphore semaphore = VK_NULL_HANDLE; // Semaphore used to synchronize between this and the next render pass
+} OffscreenDeferredPass;
+
 // Class that manages all Vulkan resources and rendering
 
 class VulkanRenderer {
@@ -105,6 +117,15 @@ private:
     void CreateDepthAttachment(FramebufferAttachment& depth, VkExtent2D extent, VkImageUsageFlagBits usageBits);
     void CreateDepthSampler(VkSampler& sampler);
     void CreateShadowCommandBuffer();
+
+    // Deferred Rendering 
+    OffscreenDeferredPass deferredPass;
+    void CreateDeferredPassResources();
+    void CreateDeferredPassRenderPass();
+    void CreateDeferredPassFramebuffer();
+    void CreateDeferredPassAttachment(FramebufferAttachment& attachment, VkExtent2D extent, VkImageUsageFlagBits usageBits, VkFormat format);
+    void CreateDeferredPassSampler(VkSampler& sampler);
+    void CreateDeferredPassCommandBuffer();
 
 public:
     VulkanRenderer() : width(DEFAULT_SCREEN_WIDTH), height(DEFAULT_SCREEN_HEIGHT), MAX_FRAMES_IN_FLIGHT(DEFAULT_MAX_FRAMES_IN_FLIGHT),

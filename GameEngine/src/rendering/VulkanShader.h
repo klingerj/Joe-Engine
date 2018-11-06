@@ -87,6 +87,8 @@ public:
     }
 };
 
+// Shadow pass Shadow: Render to depth from the perspective of a light source
+
 class VulkanShadowPassShader {
 private:
     VkPipeline graphicsPipeline;
@@ -136,6 +138,72 @@ public:
     void Cleanup(VkDevice device);
 
     void UpdateUniformBuffers(VkDevice device, const Camera& camera, const std::vector<Mesh>& meshes);
+    void BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t dynamicOffset);
+
+    // Getters
+    VkPipeline GetPipeline() const {
+        return graphicsPipeline;
+    }
+    size_t GetDynamicAlignment() const {
+        return uboDynamicAlignment;
+    }
+};
+
+// Mesh Shader: Draws meshes with model/view/projection matrices and a texture.
+
+class VulkanDeferredPassGeometryShader {
+private:
+    VkPipeline graphicsPipeline;
+    VkPipelineLayout pipelineLayout;
+    VkDescriptorPool descriptorPool;
+    VkDescriptorSetLayout descriptorSetLayout;
+    VkDescriptorSet descriptorSet;
+
+    // Buffer info
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexBufferMemory;
+    VkBuffer uniformBuffers_ViewProj;
+    VkDeviceMemory uniformBuffersMemory_ViewProj;
+    VkBuffer uniformBuffers_ViewProj_Shadow;
+    VkDeviceMemory uniformBuffersMemory_ViewProj_Shadow;
+    size_t uboDynamicAlignment;
+    UBODynamic_ModelMat ubo_Dynamic_ModelMat;
+    VkBuffer uniformBuffers_Dynamic_Model;
+    VkDeviceMemory uniformBuffersMemory_Dynamic_Model;
+
+    // Creation functions
+    void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
+        const VulkanSwapChain& swapChain, VkRenderPass renderPass);
+    void CreateDescriptorPool(VkDevice device);
+    void CreateDescriptorSetLayout(VkDevice device);
+    void CreateDescriptorSets(VkDevice device, const Texture& texture, const OffscreenShadowPass& shadowPass);
+    void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numModelMatrices);
+
+public:
+    VulkanDeferredPassGeometryShader() : uboDynamicAlignment(0), ubo_Dynamic_ModelMat() {}
+    VulkanDeferredPassGeometryShader(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& swapChain, const OffscreenShadowPass& shadowPass, VkRenderPass renderPass,
+        size_t numModelMatrices, const Texture& texture, const std::string& vertShader, const std::string& fragShader) {
+        // Read in shader code
+        auto vertShaderCode = ReadFile(vertShader);
+        auto fragShaderCode = ReadFile(fragShader);
+
+        // Create shader modules
+        VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
+        VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
+
+        size_t numSwapChainImages = swapChain.GetImageViews().size();
+        CreateUniformBuffers(physicalDevice, device, numModelMatrices);
+        CreateDescriptorSetLayout(device);
+        CreateDescriptorPool(device);
+        CreateDescriptorSets(device, texture, shadowPass);
+        CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain, renderPass);
+    }
+
+    ~VulkanDeferredPassGeometryShader() {}
+
+    void Cleanup(VkDevice device);
+
+    void UpdateUniformBuffers(VkDevice device, const Camera& camera, const Camera& shadowCamera, const std::vector<Mesh>& meshes);
     void BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t dynamicOffset);
 
     // Getters
