@@ -59,8 +59,12 @@ void SceneManager::CleanupShaders(VkDevice device) {
     for (VulkanShadowPassShader shadowPassShader : shadowPassShaders) {
         shadowPassShader.Cleanup(device);
     }
+    for (VulkanDeferredPassGeometryShader deferredPassGeomShader : deferredPassGeometryShaders) {
+        deferredPassGeomShader.Cleanup(device);
+    }
     meshShaders.clear();
     shadowPassShaders.clear();
+    deferredPassGeometryShaders.clear();
 }
 
 void SceneManager::UpdateModelMatrices() {
@@ -74,7 +78,7 @@ void SceneManager::UpdateModelMatrices() {
     meshes[0].SetModelMatrix(mat1);
     
     glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, -0.75f, 0.0f));
-    mat2 = glm::rotate(mat2, /*time * -0.7853f*/0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+    mat2 = glm::rotate(mat2, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
     mat2 = glm::scale(mat2, glm::vec3(0.25f, 0.25f, 0.25f));
     meshes[1].SetModelMatrix(mat2);
 
