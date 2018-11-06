@@ -138,6 +138,12 @@ private:
     void CreateDeferredPassGeometrySampler(VkSampler& sampler);
     void CreateDeferredPassGeometryCommandBuffer();
 
+    void CreateDeferredPassLightingResources();
+    void CreateDeferreDPassLightingRenderPass();
+    void CreateDeferredPassLightingFramebuffer();
+    void CreateDeferredPassLightingAttachment(FramebufferAttachment& attachment, VkExtent2D extent, VkImageUsageFlagBits usageBits, VkFormat format);
+    void CreateDeferredPassLightingCommandBuffer();
+
 public:
     VulkanRenderer() : width(DEFAULT_SCREEN_WIDTH), height(DEFAULT_SCREEN_HEIGHT), MAX_FRAMES_IN_FLIGHT(DEFAULT_MAX_FRAMES_IN_FLIGHT),
                        currentFrame(0), framebufferResized(false), sceneManager(nullptr) {}

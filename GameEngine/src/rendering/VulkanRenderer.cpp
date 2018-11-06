@@ -544,11 +544,13 @@ void VulkanRenderer::CreateShadowCommandBuffer() {
         throw std::runtime_error("failed to allocate shadow pass command buffer!");
     }
 
-    VkSemaphoreCreateInfo semaphoreInfo = {};
-    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    if (shadowPass.semaphore == VK_NULL_HANDLE) {
+        VkSemaphoreCreateInfo semaphoreInfo = {};
+        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-    if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &shadowPass.semaphore) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create shadow pass semaphore!");
+        if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &shadowPass.semaphore) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create shadow pass semaphore!");
+        }
     }
 
     VkCommandBufferBeginInfo beginInfo = {};
@@ -731,11 +733,13 @@ void VulkanRenderer::CreateDeferredPassGeometryCommandBuffer() {
         throw std::runtime_error("failed to allocate deferred pass command buffer!");
     }
 
-    VkSemaphoreCreateInfo semaphoreInfo = {};
-    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    if (deferredPass.semaphore == VK_NULL_HANDLE) {
+        VkSemaphoreCreateInfo semaphoreInfo = {};
+        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-    if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &deferredPass.semaphore) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create deferred pass semaphore!");
+        if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &deferredPass.semaphore) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create deferred pass semaphore!");
+        }
     }
 
     VkCommandBufferBeginInfo beginInfo = {};
@@ -779,6 +783,13 @@ void VulkanRenderer::CreateDeferredPassGeometryResources() {
     CreateDeferredPassGeometryAttachment(deferredPass.normal, { static_cast<uint32_t>(deferredPass.width), static_cast<uint32_t>(deferredPass.height) }, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_FORMAT_R16G16B16A16_SFLOAT);
     CreateDeferredPassGeometryAttachment(deferredPass.depth, { static_cast<uint32_t>(deferredPass.width), static_cast<uint32_t>(deferredPass.height) }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), FindDepthFormat(physicalDevice));
     CreateDeferredPassGeometrySampler(deferredPass.sampler);
+    CreateDeferredPassGeometryRenderPass();
+    CreateDeferredPassGeometryFramebuffer();
+}
+
+// Deferred Pass - Lighting
+
+void VulkanRenderer::CreateDeferredPassLightingResources() {
     CreateDeferredPassGeometryRenderPass();
     CreateDeferredPassGeometryFramebuffer();
 }
