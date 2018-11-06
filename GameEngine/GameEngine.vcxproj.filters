@@ -140,6 +140,12 @@
     <None Include="src\shaders\frag_deferred_geom.frag">
       <Filter>src\Source Files\Shaders\Fragment Shaders</Filter>
     </None>
+    <None Include="src\shaders\vert_deferred_lighting.vert">
+      <Filter>src\Source Files\Shaders\Vertex Shaders</Filter>
+    </None>
+    <None Include="src\shaders\frag_deferred_lighting.frag">
+      <Filter>src\Source Files\Shaders\Fragment Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="src\scripts\compileShaders.bat">

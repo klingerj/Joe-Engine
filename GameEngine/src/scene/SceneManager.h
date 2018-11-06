@@ -24,6 +24,7 @@ private:
     std::vector<VulkanMeshShader> meshShaders;
     std::vector<VulkanShadowPassShader> shadowPassShaders;
     std::vector<VulkanDeferredPassGeometryShader> deferredPassGeometryShaders;
+    std::vector<VulkanDeferredPassLightingShader> deferredPassLightingShaders;
 
 public:
     SceneManager() {}
@@ -38,5 +39,6 @@ public:
     void UpdateShaderUniformBuffers(VkDevice device, uint32_t imageIndex);
     void BindResources(VkCommandBuffer commandBuffer, size_t index);
     void BindShadowPassResources(VkCommandBuffer commandBuffer);
-    void BindDeferredPassResources(VkCommandBuffer commandBuffer);
+    void BindDeferredPassGeometryResources(VkCommandBuffer commandBuffer);
+    void BindDeferredPassLightingResources(VkCommandBuffer commandBuffer, size_t index);
 };

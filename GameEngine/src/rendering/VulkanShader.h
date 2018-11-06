@@ -6,7 +6,7 @@
 #include "vulkan/vulkan.h"
 #include "VulkanSwapChain.h"
 #include "VulkanRenderer.h"
-#include "Mesh.h" // TODO: make separate shader classes, this class shouldn't be limited to MeshVertex's binding/attribute description
+#include "Mesh.h"
 #include "Texture.h"
 #include "../scene/Camera.h"
 
@@ -149,7 +149,7 @@ public:
     }
 };
 
-// Mesh Shader: Draws meshes with model/view/projection matrices and a texture.
+// Deferred Geometry Pass Shader: Renders meshes to g-buffers
 
 class VulkanDeferredPassGeometryShader {
 private:
@@ -205,6 +205,72 @@ public:
 
     void UpdateUniformBuffers(VkDevice device, const Camera& camera, const Camera& shadowCamera, const std::vector<Mesh>& meshes);
     void BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t dynamicOffset);
+
+    // Getters
+    VkPipeline GetPipeline() const {
+        return graphicsPipeline;
+    }
+    size_t GetDynamicAlignment() const {
+        return uboDynamicAlignment;
+    }
+};
+
+// Deferred Lighting Pass: Renders a scene using G-buffers
+
+class VulkanDeferredPassLightingShader {
+private:
+    VkPipeline graphicsPipeline;
+    VkPipelineLayout pipelineLayout;
+    VkDescriptorPool descriptorPool;
+    VkDescriptorSetLayout descriptorSetLayout;
+    std::vector<VkDescriptorSet> descriptorSets;
+
+    // Buffer info
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexBufferMemory;
+    std::vector<VkBuffer> uniformBuffers_ViewProj;
+    std::vector<VkDeviceMemory> uniformBuffersMemory_ViewProj;
+    std::vector<VkBuffer> uniformBuffers_ViewProj_Shadow;
+    std::vector<VkDeviceMemory> uniformBuffersMemory_ViewProj_Shadow;
+    size_t uboDynamicAlignment;
+    UBODynamic_ModelMat ubo_Dynamic_ModelMat;
+    std::vector<VkBuffer> uniformBuffers_Dynamic_Model;
+    std::vector<VkDeviceMemory> uniformBuffersMemory_Dynamic_Model;
+
+    // Creation functions
+    void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
+        const VulkanSwapChain& swapChain, VkRenderPass renderPass);
+    void CreateDescriptorPool(VkDevice device, size_t numSwapChainImages);
+    void CreateDescriptorSetLayout(VkDevice device);
+    void CreateDescriptorSets(VkDevice device, const Texture& texture, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass, size_t numSwapChainImages);
+    void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages, size_t numModelMatrices);
+
+public:
+    VulkanDeferredPassLightingShader() : uboDynamicAlignment(0), ubo_Dynamic_ModelMat() {}
+    VulkanDeferredPassLightingShader(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& swapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass,
+        VkRenderPass renderPass, size_t numModelMatrices, const Texture& texture, const std::string& vertShader, const std::string& fragShader) {
+        // Read in shader code
+        auto vertShaderCode = ReadFile(vertShader);
+        auto fragShaderCode = ReadFile(fragShader);
+
+        // Create shader modules
+        VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
+        VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
+
+        size_t numSwapChainImages = swapChain.GetImageViews().size();
+        CreateUniformBuffers(physicalDevice, device, numSwapChainImages, numModelMatrices);
+        CreateDescriptorSetLayout(device);
+        CreateDescriptorPool(device, numSwapChainImages);
+        CreateDescriptorSets(device, texture, shadowPass, deferredPass, numSwapChainImages);
+        CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain, renderPass);
+    }
+
+    ~VulkanDeferredPassLightingShader() {}
+
+    void Cleanup(VkDevice device);
+
+    void UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const Camera& camera, const Camera& shadowCamera, const std::vector<Mesh>& meshes);
+    void BindDescriptorSets(VkCommandBuffer commandBuffer, size_t descriptorSetIndex, uint32_t dynamicOffset);
 
     // Getters
     VkPipeline GetPipeline() const {

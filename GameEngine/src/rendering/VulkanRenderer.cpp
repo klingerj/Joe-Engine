@@ -396,7 +396,8 @@ void VulkanRenderer::CreateCommandBuffers() {
 
         vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        sceneManager->BindResources(commandBuffers[i], i);
+        sceneManager->BindDeferredPassLightingResources(commandBuffers[i], i);
+        //sceneManager->BindResources(commandBuffers[i], i);
 
         vkCmdEndRenderPass(commandBuffers[i]);
 
@@ -631,7 +632,6 @@ void VulkanRenderer::CreateDeferredPassGeometryRenderPass() {
     subpassDescs[0].pDepthStencilAttachment = &depthAttachmentRef;
 
     std::array<VkSubpassDependency, 2> subpassDependencies;
-    // This is from Sascha Willems
     subpassDependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
     subpassDependencies[0].dstSubpass = 0;
     subpassDependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
@@ -769,7 +769,7 @@ void VulkanRenderer::CreateDeferredPassGeometryCommandBuffer() {
 
     vkCmdBeginRenderPass(deferredPass.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    sceneManager->BindDeferredPassResources(deferredPass.commandBuffer);
+    sceneManager->BindDeferredPassGeometryResources(deferredPass.commandBuffer);
 
     vkCmdEndRenderPass(deferredPass.commandBuffer);
 
@@ -779,17 +779,10 @@ void VulkanRenderer::CreateDeferredPassGeometryCommandBuffer() {
 }
 
 void VulkanRenderer::CreateDeferredPassGeometryResources() {
-    CreateDeferredPassGeometryAttachment(deferredPass.color, { static_cast<uint32_t>(deferredPass.width), static_cast<uint32_t>(deferredPass.height) }, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_FORMAT_R16G16B16A16_SFLOAT);
-    CreateDeferredPassGeometryAttachment(deferredPass.normal, { static_cast<uint32_t>(deferredPass.width), static_cast<uint32_t>(deferredPass.height) }, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_FORMAT_R16G16B16A16_SFLOAT);
+    CreateDeferredPassGeometryAttachment(deferredPass.color, { static_cast<uint32_t>(deferredPass.width), static_cast<uint32_t>(deferredPass.height) }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
+    CreateDeferredPassGeometryAttachment(deferredPass.normal, { static_cast<uint32_t>(deferredPass.width), static_cast<uint32_t>(deferredPass.height) }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
     CreateDeferredPassGeometryAttachment(deferredPass.depth, { static_cast<uint32_t>(deferredPass.width), static_cast<uint32_t>(deferredPass.height) }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), FindDepthFormat(physicalDevice));
     CreateDeferredPassGeometrySampler(deferredPass.sampler);
-    CreateDeferredPassGeometryRenderPass();
-    CreateDeferredPassGeometryFramebuffer();
-}
-
-// Deferred Pass - Lighting
-
-void VulkanRenderer::CreateDeferredPassLightingResources() {
     CreateDeferredPassGeometryRenderPass();
     CreateDeferredPassGeometryFramebuffer();
 }
@@ -830,18 +823,36 @@ void VulkanRenderer::DrawFrame() {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
     
-    VkSemaphore waitSemaphores[] = { shadowPass.semaphore };
+    // Submit deferred render pass with g-buffers
+
+    VkSubmitInfo submitInfo_deferred_gBuffers = {};
+    submitInfo_deferred_gBuffers.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo_deferred_gBuffers.waitSemaphoreCount = 1;
+    submitInfo_deferred_gBuffers.pWaitSemaphores = &shadowPass.semaphore;
+    submitInfo_deferred_gBuffers.pWaitDstStageMask = waitStages;
+    submitInfo_deferred_gBuffers.commandBufferCount = 1;
+    submitInfo_deferred_gBuffers.pCommandBuffers = &deferredPass.commandBuffer;
+    submitInfo_deferred_gBuffers.signalSemaphoreCount = 1;
+    submitInfo_deferred_gBuffers.pSignalSemaphores = &deferredPass.semaphore;
+
+    vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
+    vkResetFences(device, 1, &inFlightFences[currentFrame]);
+
+    if (vkQueueSubmit(graphicsQueue.GetQueue(), 1, &submitInfo_deferred_gBuffers, inFlightFences[currentFrame]) != VK_SUCCESS) {
+        throw std::runtime_error("failed to submit draw command buffer!");
+    }
+
+    // Submit render-to-screen command buffer
+
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = waitSemaphores;
+    submitInfo.pWaitSemaphores = &deferredPass.semaphore;
     submitInfo.pWaitDstStageMask = waitStages;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
-
-    VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
     submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = signalSemaphores;
+    submitInfo.pSignalSemaphores = &renderFinishedSemaphores[currentFrame];
 
     vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
     vkResetFences(device, 1, &inFlightFences[currentFrame]);
@@ -854,7 +865,7 @@ void VulkanRenderer::DrawFrame() {
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
     presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = signalSemaphores;
+    presentInfo.pWaitSemaphores = &renderFinishedSemaphores[currentFrame];
 
     VkSwapchainKHR swapChains[] = { vulkanSwapChain.GetSwapChain() };
     presentInfo.swapchainCount = 1;
@@ -914,8 +925,8 @@ void VulkanRenderer::RecreateSwapChain() {
     vulkanSwapChain.Create(physicalDevice, device, vulkanWindow, width, height);
     CreateDepthAttachment(depthBuffer, { static_cast<uint32_t>(width), static_cast<uint32_t>(height) }, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
     // Recreate g-buffer info
-    CreateDeferredPassGeometryAttachment(deferredPass.color, { static_cast<uint32_t>(deferredPass.width), static_cast<uint32_t>(deferredPass.height) }, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_FORMAT_R16G16B16A16_SFLOAT);
-    CreateDeferredPassGeometryAttachment(deferredPass.normal, { static_cast<uint32_t>(deferredPass.width), static_cast<uint32_t>(deferredPass.height) }, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_FORMAT_R16G16B16A16_SFLOAT);
+    CreateDeferredPassGeometryAttachment(deferredPass.color, { static_cast<uint32_t>(deferredPass.width), static_cast<uint32_t>(deferredPass.height) }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
+    CreateDeferredPassGeometryAttachment(deferredPass.normal, { static_cast<uint32_t>(deferredPass.width), static_cast<uint32_t>(deferredPass.height) }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
     CreateDeferredPassGeometryAttachment(deferredPass.depth, { static_cast<uint32_t>(deferredPass.width), static_cast<uint32_t>(deferredPass.height) }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), FindDepthFormat(physicalDevice));
     CreateDeferredPassGeometryRenderPass();
     CreateRenderPass();
