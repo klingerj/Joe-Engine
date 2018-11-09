@@ -11,13 +11,14 @@
 
 #include "VulkanQueue.h"
 
-
 struct MeshVertex {
     glm::vec3 pos;
     glm::vec3 color;
     glm::vec2 uv;
 
-    // Necessary Vulkan functions
+    MeshVertex() : MeshVertex(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0, 0.0)) {}
+    MeshVertex(glm::vec3 p, glm::vec3 c, glm::vec2 u) : pos(p), color(c), uv(u) {}
+
     static VkVertexInputBindingDescription getBindingDescription() {
         VkVertexInputBindingDescription bindingDescription = {};
         bindingDescription.binding = 0;
@@ -96,5 +97,6 @@ public:
 
     // Creation
     void Create(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::string& filepath);
+    void Create(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::vector<MeshVertex>& vertices, const std::vector<uint32_t>& indices);
     void Draw(VkCommandBuffer commandBuffer) const;
 };

@@ -914,17 +914,19 @@ void VulkanRenderer::CleanupSwapChain() {
 }
 
 void VulkanRenderer::RecreateSwapChain() {
-    int width = 0, height = 0;
-    while (width == 0 || height == 0) {
-        vulkanWindow.AwaitMaximize(&width, &height);
+    int newWidth = 0, newHeight = 0;
+    while (newWidth == 0 || newHeight == 0) {
+        vulkanWindow.AwaitMaximize(&newWidth, &newHeight);
     }
 
     vkDeviceWaitIdle(device);
 
     CleanupSwapChain();
-    vulkanSwapChain.Create(physicalDevice, device, vulkanWindow, width, height);
-    CreateDepthAttachment(depthBuffer, { static_cast<uint32_t>(width), static_cast<uint32_t>(height) }, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+    vulkanSwapChain.Create(physicalDevice, device, vulkanWindow, newWidth, newHeight);
+    CreateDepthAttachment(depthBuffer, { static_cast<uint32_t>(newWidth), static_cast<uint32_t>(newHeight) }, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
     // Recreate g-buffer info
+    deferredPass.width = newWidth;
+    deferredPass.height = newHeight;
     CreateDeferredPassGeometryAttachment(deferredPass.color, { static_cast<uint32_t>(deferredPass.width), static_cast<uint32_t>(deferredPass.height) }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
     CreateDeferredPassGeometryAttachment(deferredPass.normal, { static_cast<uint32_t>(deferredPass.width), static_cast<uint32_t>(deferredPass.height) }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
     CreateDeferredPassGeometryAttachment(deferredPass.depth, { static_cast<uint32_t>(deferredPass.width), static_cast<uint32_t>(deferredPass.height) }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), FindDepthFormat(physicalDevice));

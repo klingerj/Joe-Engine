@@ -26,8 +26,9 @@ out gl_PerVertex {
 };
 
 void main() {
-    gl_Position = ubo_viewProj.viewProj * uboDynamicModelMatInstance.model * vec4(inPosition, 1.0);
-    fragPos = (uboDynamicModelMatInstance.model * vec4(inPosition, 1.0)).xyz;
+    vec3 pos = (uboDynamicModelMatInstance.model * vec4(inPosition, 1.0)).xyz;
+    fragPos = pos;
+    gl_Position = ubo_viewProj.viewProj * vec4(pos, 1.0);
     fragUV = inUV;
     fragColor = inColor;
 }

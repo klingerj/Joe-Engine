@@ -2,6 +2,8 @@
 
 #include "SceneManager.h"
 
+Mesh SceneManager::screenSpaceTriangle = Mesh();
+
 void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass) {
     // Meshes
     Mesh m2 = Mesh();
@@ -16,6 +18,13 @@ void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, V
     meshes.push_back(m2);
     meshes.push_back(m3);
     meshes.push_back(m4);
+
+    // Screen space triangle setup
+    const std::vector<MeshVertex> screenSpaceTriangleVertices = { { glm::vec3(-1.0, -1.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0, 0.0) },
+                                                        { glm::vec3(3.0, -1.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec2(2.0, 0.0) },
+                                                        { glm::vec3(-1.0, 3.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0, 2.0) } };
+    const std::vector<uint32_t> screenSpaceTriangleIndices = { 2, 1, 0 };
+    screenSpaceTriangle.Create(physicalDevice, device, commandPool, graphicsQueue, screenSpaceTriangleVertices, screenSpaceTriangleIndices);
 
     // Textures
     Texture t = Texture(device, physicalDevice, graphicsQueue, commandPool, TEXTURES_DIR + "ducreux.jpg");
@@ -36,7 +45,7 @@ void SceneManager::CreateShaders(VkPhysicalDevice physicalDevice, VkDevice devic
                                                           SHADER_DIR + "vert_shadow.spv", SHADER_DIR + "frag_shadow.spv"));
     deferredPassGeometryShaders.emplace_back(VulkanDeferredPassGeometryShader(physicalDevice, device, vulkanSwapChain, shadowPass, deferredPass.renderPass, meshes.size(), textures[0],
                                                                               SHADER_DIR + "vert_deferred_geom.spv", SHADER_DIR + "frag_deferred_geom.spv"));
-    deferredPassLightingShaders.emplace_back(VulkanDeferredPassLightingShader(physicalDevice, device, vulkanSwapChain, shadowPass, deferredPass, renderPass, meshes.size(), textures[0],
+    deferredPassLightingShaders.emplace_back(VulkanDeferredPassLightingShader(physicalDevice, device, vulkanSwapChain, shadowPass, deferredPass, renderPass, 1, textures[0],
                                                                               SHADER_DIR + "vert_deferred_lighting.spv", SHADER_DIR + "frag_deferred_lighting.spv"));
 }
 
@@ -49,22 +58,23 @@ void SceneManager::CleanupMeshesAndTextures(VkDevice device) {
     for (Mesh m : meshes) {
         m.Cleanup(device);
     }
+    screenSpaceTriangle.Cleanup(device);
     for (Texture t : textures) {
         t.Cleanup(device);
     }
 }
 
 void SceneManager::CleanupShaders(VkDevice device) {
-    for (VulkanMeshShader meshShader : meshShaders) {
+    for (auto& meshShader : meshShaders) {
         meshShader.Cleanup(device);
     }
-    for (VulkanShadowPassShader shadowPassShader : shadowPassShaders) {
+    for (auto& shadowPassShader : shadowPassShaders) {
         shadowPassShader.Cleanup(device);
     }
-    for (VulkanDeferredPassGeometryShader deferredPassGeomShader : deferredPassGeometryShaders) {
+    for (auto& deferredPassGeomShader : deferredPassGeometryShaders) {
         deferredPassGeomShader.Cleanup(device);
     }
-    for (VulkanDeferredPassLightingShader deferredPasslightShader : deferredPassLightingShaders) {
+    for (auto& deferredPasslightShader : deferredPassLightingShaders) {
         deferredPasslightShader.Cleanup(device);
     }
     meshShaders.clear();
@@ -100,17 +110,17 @@ void SceneManager::UpdateModelMatrices() {
 }
 
 void SceneManager::UpdateShaderUniformBuffers(VkDevice device, uint32_t imageIndex) {
-    for (VulkanMeshShader meshShader : meshShaders) {
+    for (auto& meshShader : meshShaders) {
         meshShader.UpdateUniformBuffers(device, imageIndex, camera, shadowCamera, meshes);
     }
-    for (VulkanShadowPassShader shadowPassShader : shadowPassShaders) {
+    for (auto& shadowPassShader : shadowPassShaders) {
         shadowPassShader.UpdateUniformBuffers(device, shadowCamera, meshes);
     }
-    for (VulkanDeferredPassGeometryShader deferredPassGeomShader : deferredPassGeometryShaders) {
+    for (auto& deferredPassGeomShader : deferredPassGeometryShaders) {
         deferredPassGeomShader.UpdateUniformBuffers(device, camera, shadowCamera, meshes);
     }
-    for (VulkanDeferredPassLightingShader deferredPasslightShader : deferredPassLightingShaders) {
-        deferredPasslightShader.UpdateUniformBuffers(device, imageIndex, camera, shadowCamera, meshes);
+    for (auto& deferredPasslightShader : deferredPassLightingShaders) {
+        deferredPasslightShader.UpdateUniformBuffers(device, imageIndex, camera, shadowCamera);
     }
 }
 
@@ -144,9 +154,11 @@ void SceneManager::BindDeferredPassGeometryResources(VkCommandBuffer commandBuff
 
 void SceneManager::BindDeferredPassLightingResources(VkCommandBuffer commandBuffer, size_t index) {
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, deferredPassLightingShaders[0].GetPipeline());
-    for (uint32_t j = 0; j < meshes.size(); ++j) {
-        uint32_t dynamicOffset = j * static_cast<uint32_t>(deferredPassLightingShaders[0].GetDynamicAlignment());
-        deferredPassLightingShaders[0].BindDescriptorSets(commandBuffer, index, dynamicOffset);
-        meshes[j].Draw(commandBuffer);
-    }
+    // TODO: change this to only draw the screen space triangle
+    // Also: update the deferred pass lighting shader dynamic ubo setup to only take one mesh
+    //for (uint32_t j = 0; j < meshes.size(); ++j) {
+    uint32_t dynamicOffset = 0; //j * static_cast<uint32_t>(deferredPassLightingShaders[0].GetDynamicAlignment());
+    deferredPassLightingShaders[0].BindDescriptorSets(commandBuffer, index, dynamicOffset);
+    screenSpaceTriangle.Draw(commandBuffer);
+    //}
 }

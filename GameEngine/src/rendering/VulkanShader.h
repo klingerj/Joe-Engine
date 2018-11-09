@@ -269,7 +269,7 @@ public:
 
     void Cleanup(VkDevice device);
 
-    void UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const Camera& camera, const Camera& shadowCamera, const std::vector<Mesh>& meshes);
+    void UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const Camera& camera, const Camera& shadowCamera);
     void BindDescriptorSets(VkCommandBuffer commandBuffer, size_t descriptorSetIndex, uint32_t dynamicOffset);
 
     // Getters

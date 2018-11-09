@@ -18,6 +18,13 @@ void Mesh::Create(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPoo
     CreateIndexBuffer(physicalDevice, device, commandPool, graphicsQueue);
 }
 
+void Mesh::Create(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::vector<MeshVertex>& vertices, const std::vector<uint32_t>& indices) {
+    this->vertices = std::vector<MeshVertex>(vertices);
+    this->indices = std::vector<uint32_t>(indices);
+    CreateVertexBuffer(physicalDevice, device, commandPool, graphicsQueue);
+    CreateIndexBuffer(physicalDevice, device, commandPool, graphicsQueue);
+}
+
 void Mesh::CreateVertexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue) {
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
     VkBuffer stagingBuffer;

@@ -16,6 +16,7 @@ private:
 
     // Meshes
     std::vector<Mesh> meshes;
+    static Mesh screenSpaceTriangle;
 
     // Textures
     std::vector<Texture> textures;

@@ -25,5 +25,4 @@ void main() {
     float shadowColor = texture(shadowMap, pointShadow.xy).r;
     float shadow = step(pointShadow.z, shadowColor);*/
     outColor = vec4(gBufferColor, 1.0);
-    //outColor = vec4(fragPos, 1.0);
 }
