@@ -2,7 +2,9 @@
 
 #include "SceneManager.h"
 
-void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass) {
+Mesh SceneManager::screenSpaceTriangle = Mesh();
+
+void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass) {
     // Meshes
     Mesh m2 = Mesh();
     Mesh m1 = Mesh();
@@ -17,6 +19,13 @@ void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, V
     meshes.push_back(m3);
     meshes.push_back(m4);
 
+    // Screen space triangle setup
+    const std::vector<MeshVertex> screenSpaceTriangleVertices = { { glm::vec3(-1.0, -1.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0, 0.0) },
+                                                        { glm::vec3(3.0, -1.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec2(2.0, 0.0) },
+                                                        { glm::vec3(-1.0, 3.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0, 2.0) } };
+    const std::vector<uint32_t> screenSpaceTriangleIndices = { 2, 1, 0 };
+    screenSpaceTriangle.Create(physicalDevice, device, commandPool, graphicsQueue, screenSpaceTriangleVertices, screenSpaceTriangleIndices);
+
     // Textures
     Texture t = Texture(device, physicalDevice, graphicsQueue, commandPool, TEXTURES_DIR + "ducreux.jpg");
     textures.push_back(t);
@@ -26,18 +35,22 @@ void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, V
     shadowCamera = Camera(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPass.width / (float)shadowPass.height, SHADOW_VIEW_NEAR_PLANE, SHADOW_VIEW_FAR_PLANE);
 
     // Shaders
-    CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass);
+    CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass, deferredPass);
 }
 
-void SceneManager::CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass) {
+void SceneManager::CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass) {
     meshShaders.emplace_back(VulkanMeshShader(physicalDevice, device, vulkanSwapChain, shadowPass, renderPass, meshes.size(), textures[0],
                                               SHADER_DIR + "vert_mesh.spv", SHADER_DIR + "frag_mesh.spv"));
     shadowPassShaders.emplace_back(VulkanShadowPassShader(physicalDevice, device, shadowPass.renderPass, { static_cast<uint32_t>(shadowPass.width), static_cast<uint32_t>(shadowPass.height) }, meshes.size(),
                                                           SHADER_DIR + "vert_shadow.spv", SHADER_DIR + "frag_shadow.spv"));
+    deferredPassGeometryShaders.emplace_back(VulkanDeferredPassGeometryShader(physicalDevice, device, vulkanSwapChain, shadowPass, deferredPass.renderPass, meshes.size(), textures[0],
+                                                                              SHADER_DIR + "vert_deferred_geom.spv", SHADER_DIR + "frag_deferred_geom.spv"));
+    deferredPassLightingShaders.emplace_back(VulkanDeferredPassLightingShader(physicalDevice, device, vulkanSwapChain, shadowPass, deferredPass, renderPass, 1, textures[0],
+                                                                              SHADER_DIR + "vert_deferred_lighting.spv", SHADER_DIR + "frag_deferred_lighting.spv"));
 }
 
-void SceneManager::RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass) {
-    CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass);
+void SceneManager::RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass) {
+    CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass, deferredPass);
     camera.SetAspect(vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height);
 }
 
@@ -45,20 +58,29 @@ void SceneManager::CleanupMeshesAndTextures(VkDevice device) {
     for (Mesh m : meshes) {
         m.Cleanup(device);
     }
+    screenSpaceTriangle.Cleanup(device);
     for (Texture t : textures) {
         t.Cleanup(device);
     }
 }
 
 void SceneManager::CleanupShaders(VkDevice device) {
-    for (VulkanMeshShader meshShader : meshShaders) {
+    for (auto& meshShader : meshShaders) {
         meshShader.Cleanup(device);
     }
-    for (VulkanShadowPassShader shadowPassShader : shadowPassShaders) {
+    for (auto& shadowPassShader : shadowPassShaders) {
         shadowPassShader.Cleanup(device);
+    }
+    for (auto& deferredPassGeomShader : deferredPassGeometryShaders) {
+        deferredPassGeomShader.Cleanup(device);
+    }
+    for (auto& deferredPasslightShader : deferredPassLightingShaders) {
+        deferredPasslightShader.Cleanup(device);
     }
     meshShaders.clear();
     shadowPassShaders.clear();
+    deferredPassGeometryShaders.clear();
+    deferredPassLightingShaders.clear();
 }
 
 void SceneManager::UpdateModelMatrices() {
@@ -72,7 +94,7 @@ void SceneManager::UpdateModelMatrices() {
     meshes[0].SetModelMatrix(mat1);
     
     glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, -0.75f, 0.0f));
-    mat2 = glm::rotate(mat2, /*time * -0.7853f*/0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+    mat2 = glm::rotate(mat2, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
     mat2 = glm::scale(mat2, glm::vec3(0.25f, 0.25f, 0.25f));
     meshes[1].SetModelMatrix(mat2);
 
@@ -88,11 +110,17 @@ void SceneManager::UpdateModelMatrices() {
 }
 
 void SceneManager::UpdateShaderUniformBuffers(VkDevice device, uint32_t imageIndex) {
-    for (VulkanMeshShader meshShader : meshShaders) {
+    for (auto& meshShader : meshShaders) {
         meshShader.UpdateUniformBuffers(device, imageIndex, camera, shadowCamera, meshes);
     }
-    for (VulkanShadowPassShader shadowPassShader : shadowPassShaders) {
+    for (auto& shadowPassShader : shadowPassShaders) {
         shadowPassShader.UpdateUniformBuffers(device, shadowCamera, meshes);
+    }
+    for (auto& deferredPassGeomShader : deferredPassGeometryShaders) {
+        deferredPassGeomShader.UpdateUniformBuffers(device, camera, shadowCamera, meshes);
+    }
+    for (auto& deferredPasslightShader : deferredPassLightingShaders) {
+        deferredPasslightShader.UpdateUniformBuffers(device, imageIndex, camera, shadowCamera);
     }
 }
 
@@ -113,4 +141,24 @@ void SceneManager::BindShadowPassResources(VkCommandBuffer commandBuffer) {
         shadowPassShaders[0].BindDescriptorSets(commandBuffer, dynamicOffset);
         meshes[j].Draw(commandBuffer);
     }
+}
+
+void SceneManager::BindDeferredPassGeometryResources(VkCommandBuffer commandBuffer) {
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, deferredPassGeometryShaders[0].GetPipeline());
+    for (uint32_t j = 0; j < meshes.size(); ++j) {
+        uint32_t dynamicOffset = j * static_cast<uint32_t>(deferredPassGeometryShaders[0].GetDynamicAlignment());
+        deferredPassGeometryShaders[0].BindDescriptorSets(commandBuffer, dynamicOffset);
+        meshes[j].Draw(commandBuffer);
+    }
+}
+
+void SceneManager::BindDeferredPassLightingResources(VkCommandBuffer commandBuffer, size_t index) {
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, deferredPassLightingShaders[0].GetPipeline());
+    // TODO: change this to only draw the screen space triangle
+    // Also: update the deferred pass lighting shader dynamic ubo setup to only take one mesh
+    //for (uint32_t j = 0; j < meshes.size(); ++j) {
+    uint32_t dynamicOffset = 0; //j * static_cast<uint32_t>(deferredPassLightingShaders[0].GetDynamicAlignment());
+    deferredPassLightingShaders[0].BindDescriptorSets(commandBuffer, index, dynamicOffset);
+    screenSpaceTriangle.Draw(commandBuffer);
+    //}
 }

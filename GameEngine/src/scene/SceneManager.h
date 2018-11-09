@@ -16,6 +16,7 @@ private:
 
     // Meshes
     std::vector<Mesh> meshes;
+    static Mesh screenSpaceTriangle;
 
     // Textures
     std::vector<Texture> textures;
@@ -23,18 +24,22 @@ private:
     // Shaders
     std::vector<VulkanMeshShader> meshShaders;
     std::vector<VulkanShadowPassShader> shadowPassShaders;
+    std::vector<VulkanDeferredPassGeometryShader> deferredPassGeometryShaders;
+    std::vector<VulkanDeferredPassLightingShader> deferredPassLightingShaders;
 
 public:
     SceneManager() {}
     ~SceneManager() {}
 
-    void LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass);
-    void CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass);
-    void RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass);
+    void LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass);
+    void CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass);
+    void RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass);
     void CleanupMeshesAndTextures(VkDevice device);
     void CleanupShaders(VkDevice device);
     void UpdateModelMatrices();
     void UpdateShaderUniformBuffers(VkDevice device, uint32_t imageIndex);
     void BindResources(VkCommandBuffer commandBuffer, size_t index);
     void BindShadowPassResources(VkCommandBuffer commandBuffer);
+    void BindDeferredPassGeometryResources(VkCommandBuffer commandBuffer);
+    void BindDeferredPassLightingResources(VkCommandBuffer commandBuffer, size_t index);
 };

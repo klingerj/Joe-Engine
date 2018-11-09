@@ -12,8 +12,8 @@
 #include "glm/glm.hpp"
 
 // Constants for rendering
-constexpr int DEFAULT_SCREEN_WIDTH = 800;
-constexpr int DEFAULT_SCREEN_HEIGHT = 600;
+constexpr int DEFAULT_SCREEN_WIDTH = 1280;
+constexpr int DEFAULT_SCREEN_HEIGHT = 720;
 constexpr int DEFAULT_MAX_FRAMES_IN_FLIGHT = 2;
 
 constexpr int DEFAULT_SHADOW_MAP_WIDTH = 2000;

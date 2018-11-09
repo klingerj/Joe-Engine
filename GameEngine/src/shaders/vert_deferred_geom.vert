@@ -5,6 +5,10 @@ layout(binding = 0) uniform UBO_ViewProj {
     mat4 viewProj;
 } ubo_viewProj;
 
+layout(binding = 1) uniform UBO_ViewProj_Shadow {
+    mat4 viewProj;
+} ubo_viewProj_Shadow;
+
 layout (binding = 2) uniform UBODynamic_ModelMat {
 	mat4 model;
 } uboDynamicModelMatInstance;
@@ -22,8 +26,9 @@ out gl_PerVertex {
 };
 
 void main() {
-    gl_Position = ubo_viewProj.viewProj * uboDynamicModelMatInstance.model * vec4(inPosition, 1.0);
-    fragPos = (uboDynamicModelMatInstance.model * vec4(inPosition, 1.0)).xyz;
+    vec3 pos = (uboDynamicModelMatInstance.model * vec4(inPosition, 1.0)).xyz;
+    fragPos = pos;
+    gl_Position = ubo_viewProj.viewProj * vec4(pos, 1.0);
     fragUV = inUV;
     fragColor = inColor;
 }
