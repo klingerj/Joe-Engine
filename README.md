@@ -2,7 +2,7 @@
 
 #### Weekly Update
 11/6/18  
-A delayed update but the engine is now capable of shadow mapping. The branch dedicated to this feature has already been merged into master. This branch is dedicated to implementing a deferred renderer and is almost complete. Demo images will be available soon.
+A delayed update but the engine is now capable of shadow mapping. The branch dedicated to this feature has already been merged into master. Deferred renderer is complete and has been merged into master.
 
 10/16/18  
 Couple of things added so far:
