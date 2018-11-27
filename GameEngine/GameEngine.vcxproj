@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\EngineApplication.cpp" />
+    <ClCompile Include="src\io\IOHandler.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\rendering\Mesh.cpp" />
     <ClCompile Include="src\rendering\Texture.cpp" />
@@ -35,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\EngineApplication.h" />
+    <ClInclude Include="src\io\IOHandler.h" />
     <ClInclude Include="src\rendering\Mesh.h" />
     <ClInclude Include="src\rendering\Texture.h" />
     <ClInclude Include="src\rendering\VulkanQueue.h" />

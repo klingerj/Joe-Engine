@@ -41,6 +41,12 @@
     <Filter Include="src\Source Files\Scene">
       <UniqueIdentifier>{bc96f262-6ec4-45ff-91c6-565485c6d1a3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Header Files\IO">
+      <UniqueIdentifier>{5d630ec6-5ca3-4919-94bc-57bb0957f22d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Source Files\IO">
+      <UniqueIdentifier>{d656ab7a-a0d0-417b-8bc8-9c9593be65e5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -82,6 +88,9 @@
     <ClCompile Include="src\scene\SceneManager.cpp">
       <Filter>src\Source Files\Scene</Filter>
     </ClCompile>
+    <ClCompile Include="src\io\IOHandler.cpp">
+      <Filter>src\Source Files\IO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\rendering\VulkanWindow.h">
@@ -122,6 +131,9 @@
     </ClInclude>
     <ClInclude Include="src\scene\Camera.h">
       <Filter>src\Header Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\IOHandler.h">
+      <Filter>src\Header Files\IO</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

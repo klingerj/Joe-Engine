@@ -7,12 +7,14 @@
 #include "../rendering/Mesh.h"
 #include "../rendering/VulkanShader.h"
 #include "../rendering/VulkanRenderer.h"
+#include "../io/IOHandler.h"
 
 class SceneManager {
 private:
     // Camera(s)
     Camera camera;
     Camera shadowCamera;
+    float cameraMoveSensitivity;
 
     // Meshes
     std::vector<Mesh> meshes;
@@ -28,16 +30,27 @@ private:
     std::vector<VulkanDeferredPassLightingShader> deferredPassLightingShaders;
 
 public:
-    SceneManager() {}
+    SceneManager() : cameraMoveSensitivity(1.0f) {}
     ~SceneManager() {}
 
+    // Creation
+    void Initialize();
     void LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass);
     void CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass);
     void RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass);
+
+    // IO
+    void RegisterCallbacks(IOHandler* ioHandler);
+    
+    // Cleanup
     void CleanupMeshesAndTextures(VkDevice device);
     void CleanupShaders(VkDevice device);
+
+    // Updating of resources, called every frame
     void UpdateModelMatrices();
     void UpdateShaderUniformBuffers(VkDevice device, uint32_t imageIndex);
+
+    // Resource binding, called during command buffer generation
     void BindResources(VkCommandBuffer commandBuffer, size_t index);
     void BindShadowPassResources(VkCommandBuffer commandBuffer);
     void BindDeferredPassGeometryResources(VkCommandBuffer commandBuffer);

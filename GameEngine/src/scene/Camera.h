@@ -25,6 +25,20 @@ public:
         up = glm::normalize(glm::cross(right, look));
     }
 
+    // Camera Movement
+    void TranslateAlongLook(float amount) {
+        ref += look * amount;
+        eye += look * amount;
+    }
+    void TranslateAlongRight(float amount) {
+        ref += right * amount;
+        eye += right * amount;
+    }
+    void TranslateAlongUp(float amount) {
+        ref += up * amount;
+        eye += up * amount;
+    }
+
     void SetAspect(float a) {
         aspect = a;
     }

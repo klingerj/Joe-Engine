@@ -2,6 +2,9 @@
 
 #include <string>
 
+#define GLFW_INCLUDE_VULKAN
+#include "GLFW/glfw3.h"
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
@@ -47,3 +50,9 @@ VkImageView CreateImageView(VkDevice device, VkImage image, VkFormat format, VkI
 void TransitionImageLayout(VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 VkFormat FindSupportedFormat(VkPhysicalDevice physicalDevice, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 VkFormat FindDepthFormat(VkPhysicalDevice physicalDevice);
+
+// IO - defines for keys
+#define JE_KEY_W GLFW_KEY_W
+#define JE_KEY_A GLFW_KEY_A
+#define JE_KEY_S GLFW_KEY_S
+#define JE_KEY_D GLFW_KEY_D

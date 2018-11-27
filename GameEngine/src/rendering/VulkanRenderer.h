@@ -147,6 +147,9 @@ public:
     const VulkanWindow& GetWindow() const {
         return vulkanWindow;
     }
+    GLFWwindow* GetGLFWWindow() const {
+        return vulkanWindow.GetWindow();
+    }
     VkDevice GetDevice() const {
         return device;
     }

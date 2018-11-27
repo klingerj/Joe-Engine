@@ -4,6 +4,8 @@
 
 Mesh SceneManager::screenSpaceTriangle = Mesh();
 
+void SceneManager::Initialize() {} // TODO: set to default scene. Also need to manage multiple scenes.
+
 void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass) {
     // Meshes
     Mesh m2 = Mesh();
@@ -52,6 +54,17 @@ void SceneManager::CreateShaders(VkPhysicalDevice physicalDevice, VkDevice devic
 void SceneManager::RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass) {
     CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass, deferredPass);
     camera.SetAspect(vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height);
+}
+
+void SceneManager::RegisterCallbacks(IOHandler* ioHandler) {
+    std::function<void()> cameraPanForward = [&] { camera.TranslateAlongLook(cameraMoveSensitivity); };
+    std::function<void()> cameraPanBackward = [&] { camera.TranslateAlongLook(-cameraMoveSensitivity); };
+    std::function<void()> cameraPanLeft = [&] { camera.TranslateAlongRight(-cameraMoveSensitivity); };
+    std::function<void()> cameraPanRight = [&] { camera.TranslateAlongRight(cameraMoveSensitivity); };
+    ioHandler->AddCallback(JE_KEY_W, cameraPanForward);
+    ioHandler->AddCallback(JE_KEY_A, cameraPanLeft);
+    ioHandler->AddCallback(JE_KEY_S, cameraPanBackward);
+    ioHandler->AddCallback(JE_KEY_D, cameraPanRight);
 }
 
 void SceneManager::CleanupMeshesAndTextures(VkDevice device) {
