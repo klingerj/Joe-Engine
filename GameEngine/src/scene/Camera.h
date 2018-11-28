@@ -41,17 +41,17 @@ public:
         eye += up * amount;
     }
     void RotateAboutLook(float amount) {
-        up = glm::rotate(glm::mat4(1.0f), amount, look) * glm::vec4(up, 1.0f);
-        right = glm::rotate(glm::mat4(1.0f), amount, look) * glm::vec4(right, 1.0f);
+        up = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, look) * glm::vec4(up, 1.0f)));
+        right = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, look) * glm::vec4(right, 1.0f)));
     }
     void RotateAboutRight(float amount) {
-        look = glm::rotate(glm::mat4(1.0f), amount, right) * glm::vec4(look, 1.0f);
-        up = glm::rotate(glm::mat4(1.0f), amount, right) * glm::vec4(up, 1.0f);
+        look = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, right) * glm::vec4(look, 1.0f)));
+        up = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, right) * glm::vec4(up, 1.0f)));
         ref = eye + look;
     }
     void RotateAboutUp(float amount) {
-        look = glm::rotate(glm::mat4(1.0f), amount, up) * glm::vec4(look, 1.0f);
-        right = glm::rotate(glm::mat4(1.0f), amount, up) * glm::vec4(right, 1.0f);
+        look = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, up) * glm::vec4(look, 1.0f)));
+        right = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, up) * glm::vec4(right, 1.0f)));
         ref = eye + look;
     }
 

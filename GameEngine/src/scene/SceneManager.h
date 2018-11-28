@@ -30,7 +30,7 @@ private:
     std::vector<VulkanDeferredPassLightingShader> deferredPassLightingShaders;
 
 public:
-    SceneManager() : camTranslateSensitivity(1.0f), camRotateSensitivity(0.1f) {}
+    SceneManager() : camTranslateSensitivity(0.25f), camRotateSensitivity(0.05f) {}
     ~SceneManager() {}
 
     // Creation

@@ -57,18 +57,22 @@ void SceneManager::RecreateResources(VkPhysicalDevice physicalDevice, VkDevice d
 }
 
 void SceneManager::RegisterCallbacks(IOHandler* ioHandler) {
-    CallbackFunction cameraPanForward = [&] { camera.TranslateAlongLook(camTranslateSensitivity); };
+    CallbackFunction cameraPanForward  = [&] { camera.TranslateAlongLook(camTranslateSensitivity); };
     CallbackFunction cameraPanBackward = [&] { camera.TranslateAlongLook(-camTranslateSensitivity); };
-    CallbackFunction cameraPanLeft = [&] { camera.TranslateAlongRight(-camTranslateSensitivity); };
-    CallbackFunction cameraPanRight = [&] { camera.TranslateAlongRight(camTranslateSensitivity); };
-    CallbackFunction cameraPitchDown = [&] { camera.RotateAboutRight(-camRotateSensitivity); };
-    CallbackFunction cameraPitchUp = [&] { camera.RotateAboutRight(camRotateSensitivity); };
-    CallbackFunction cameraYawLeft = [&] { camera.RotateAboutUp(-camRotateSensitivity); };
-    CallbackFunction cameraYawRight = [&] { camera.RotateAboutUp(camRotateSensitivity); };
+    CallbackFunction cameraPanLeft     = [&] { camera.TranslateAlongRight(-camTranslateSensitivity); };
+    CallbackFunction cameraPanRight    = [&] { camera.TranslateAlongRight(camTranslateSensitivity); };
+    CallbackFunction cameraPanUp       = [&] { camera.TranslateAlongUp(camTranslateSensitivity); };
+    CallbackFunction cameraPanDown     = [&] { camera.TranslateAlongUp(-camTranslateSensitivity); };
+    CallbackFunction cameraPitchDown   = [&] { camera.RotateAboutRight(-camRotateSensitivity); };
+    CallbackFunction cameraPitchUp     = [&] { camera.RotateAboutRight(camRotateSensitivity); };
+    CallbackFunction cameraYawLeft     = [&] { camera.RotateAboutUp(-camRotateSensitivity); };
+    CallbackFunction cameraYawRight    = [&] { camera.RotateAboutUp(camRotateSensitivity); };
     ioHandler->AddCallback(JE_KEY_W, cameraPanForward);
     ioHandler->AddCallback(JE_KEY_A, cameraPanLeft);
     ioHandler->AddCallback(JE_KEY_S, cameraPanBackward);
     ioHandler->AddCallback(JE_KEY_D, cameraPanRight);
+    ioHandler->AddCallback(JE_KEY_Q, cameraPanDown);
+    ioHandler->AddCallback(JE_KEY_E, cameraPanUp);
     ioHandler->AddCallback(JE_KEY_UP, cameraPitchDown);
     ioHandler->AddCallback(JE_KEY_LEFT, cameraYawRight);
     ioHandler->AddCallback(JE_KEY_DOWN, cameraPitchUp);
