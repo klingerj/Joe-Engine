@@ -1,6 +1,9 @@
 # GameEngine
 
 #### Weekly Update
+11/28/18
+Engine now capable of input handling through glfw and can add custom callback functions for key/mouse interaction. This will be easy to abstract to an API to allow the user to bind custom functionality to key/mouse events.
+
 11/6/18  
 A delayed update but the engine is now capable of shadow mapping. The branch dedicated to this feature has already been merged into master. Deferred renderer is complete and has been merged into master.
 
