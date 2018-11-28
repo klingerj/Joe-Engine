@@ -3,10 +3,11 @@
 
 #include "VulkanRenderer.h"
 #include "../scene/SceneManager.h"
+#include "../EngineApplication.h"
 
 static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-    auto app = reinterpret_cast<VulkanRenderer*>(glfwGetWindowUserPointer(window));
-    app->FramebufferResized();
+    auto renderer = reinterpret_cast<EngineApplication*>(glfwGetWindowUserPointer(window))->GetRenderSubsystem();
+    renderer->FramebufferResized();
 }
 
 void VulkanRenderer::Initialize(SceneManager* sceneManager) {
@@ -24,7 +25,6 @@ void VulkanRenderer::Initialize(SceneManager* sceneManager) {
     // Window surface
     vulkanWindow.SetupVulkanSurface(instance);
     vulkanWindow.SetFrameBufferCallback(framebufferResizeCallback);
-    vulkanWindow.SetWindowUserPointer(this);
 
     // Devices
     PickPhysicalDevice();

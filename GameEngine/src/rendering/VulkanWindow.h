@@ -3,10 +3,8 @@
 // Wrapper class for GLFW Window and VkSurfaceKHR
 // Note: GLFW clean-up happens in destructor
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
 #include <string>
+#include "../utils/Common.h"
 
 class VulkanRenderer;
 
@@ -35,17 +33,11 @@ public:
     bool ShouldClose() const {
         return glfwWindowShouldClose(window);
     }
-    void PollEvents() const {
-        glfwPollEvents();
-    }
     const char** GetRequiredInstanceExtensions(uint32_t* count) const {
         return glfwGetRequiredInstanceExtensions(count);
     }
     void SetFrameBufferCallback(GLFWframebuffersizefun framebufferResizeCallback) const {
         glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
-    }
-    void SetWindowUserPointer(VulkanRenderer* renderer) {
-        glfwSetWindowUserPointer(window, renderer);
     }
     void AwaitMaximize(int* width, int* height) const {
         glfwGetFramebufferSize(window, width, height);

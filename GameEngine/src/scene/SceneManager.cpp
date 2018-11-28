@@ -4,6 +4,8 @@
 
 Mesh SceneManager::screenSpaceTriangle = Mesh();
 
+void SceneManager::Initialize() {} // TODO: set to default scene. Also need to manage multiple scenes.
+
 void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass) {
     // Meshes
     Mesh m2 = Mesh();
@@ -52,6 +54,29 @@ void SceneManager::CreateShaders(VkPhysicalDevice physicalDevice, VkDevice devic
 void SceneManager::RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass) {
     CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass, deferredPass);
     camera.SetAspect(vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height);
+}
+
+void SceneManager::RegisterCallbacks(IOHandler* ioHandler) {
+    CallbackFunction cameraPanForward  = [&] { camera.TranslateAlongLook(camTranslateSensitivity); };
+    CallbackFunction cameraPanBackward = [&] { camera.TranslateAlongLook(-camTranslateSensitivity); };
+    CallbackFunction cameraPanLeft     = [&] { camera.TranslateAlongRight(-camTranslateSensitivity); };
+    CallbackFunction cameraPanRight    = [&] { camera.TranslateAlongRight(camTranslateSensitivity); };
+    CallbackFunction cameraPanUp       = [&] { camera.TranslateAlongUp(camTranslateSensitivity); };
+    CallbackFunction cameraPanDown     = [&] { camera.TranslateAlongUp(-camTranslateSensitivity); };
+    CallbackFunction cameraPitchDown   = [&] { camera.RotateAboutRight(-camRotateSensitivity); };
+    CallbackFunction cameraPitchUp     = [&] { camera.RotateAboutRight(camRotateSensitivity); };
+    CallbackFunction cameraYawLeft     = [&] { camera.RotateAboutUp(-camRotateSensitivity); };
+    CallbackFunction cameraYawRight    = [&] { camera.RotateAboutUp(camRotateSensitivity); };
+    ioHandler->AddCallback(JE_KEY_W, cameraPanForward);
+    ioHandler->AddCallback(JE_KEY_A, cameraPanLeft);
+    ioHandler->AddCallback(JE_KEY_S, cameraPanBackward);
+    ioHandler->AddCallback(JE_KEY_D, cameraPanRight);
+    ioHandler->AddCallback(JE_KEY_Q, cameraPanDown);
+    ioHandler->AddCallback(JE_KEY_E, cameraPanUp);
+    ioHandler->AddCallback(JE_KEY_UP, cameraPitchDown);
+    ioHandler->AddCallback(JE_KEY_LEFT, cameraYawRight);
+    ioHandler->AddCallback(JE_KEY_DOWN, cameraPitchUp);
+    ioHandler->AddCallback(JE_KEY_RIGHT, cameraYawLeft);
 }
 
 void SceneManager::CleanupMeshesAndTextures(VkDevice device) {

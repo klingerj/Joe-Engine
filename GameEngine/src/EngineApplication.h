@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "io/IOHandler.h"
 #include "scene/SceneManager.h"
 #include "rendering/VulkanRenderer.h"
 
@@ -10,6 +11,7 @@ private:
     // Subsystems
     SceneManager sceneManager;
     VulkanRenderer vulkanRenderer;
+    IOHandler ioHandler;
 
     double frameStartTime, frameEndTime; // timing for performance analysis
     bool enableFrameCounter;
@@ -30,4 +32,12 @@ public:
 
     // Shutdown engine
     void StopEngine();
+
+    // Getters
+    VulkanRenderer* GetRenderSubsystem() {
+        return &vulkanRenderer;
+    }
+    IOHandler* GetIOSubsystem() {
+        return &ioHandler;
+    }
 };

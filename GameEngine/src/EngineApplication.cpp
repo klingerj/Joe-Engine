@@ -4,10 +4,11 @@
 
 void EngineApplication::Run() {
     const VulkanWindow& window = vulkanRenderer.GetWindow();
+    ioHandler.Initialize(window.GetWindow());
 
     while (!window.ShouldClose()) {
         frameStartTime = glfwGetTime();
-        window.PollEvents();
+        ioHandler.PollInput();
         vulkanRenderer.DrawFrame();
         frameEndTime = glfwGetTime();
         if (enableFrameCounter) {
@@ -20,7 +21,12 @@ void EngineApplication::Run() {
 }
 
 void EngineApplication::InitializeEngine() {
+    sceneManager.Initialize();
     vulkanRenderer.Initialize(&sceneManager);
+    GLFWwindow* window = vulkanRenderer.GetGLFWWindow();
+    ioHandler.Initialize(window);
+    glfwSetWindowUserPointer(window, this);
+    sceneManager.RegisterCallbacks(&ioHandler);
 }
 
 void EngineApplication::StopEngine() {
