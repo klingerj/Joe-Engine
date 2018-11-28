@@ -14,7 +14,7 @@ private:
     // Camera(s)
     Camera camera;
     Camera shadowCamera;
-    float cameraMoveSensitivity;
+    float camTranslateSensitivity, camRotateSensitivity;
 
     // Meshes
     std::vector<Mesh> meshes;
@@ -30,7 +30,7 @@ private:
     std::vector<VulkanDeferredPassLightingShader> deferredPassLightingShaders;
 
 public:
-    SceneManager() : cameraMoveSensitivity(1.0f) {}
+    SceneManager() : camTranslateSensitivity(1.0f), camRotateSensitivity(0.1f) {}
     ~SceneManager() {}
 
     // Creation

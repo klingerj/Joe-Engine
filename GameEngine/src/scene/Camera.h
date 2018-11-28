@@ -16,7 +16,9 @@ private:
 
 public:
     Camera() : Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, SCENE_VIEW_NEAR_PLANE, SCENE_VIEW_FAR_PLANE) {}
-    Camera(glm::vec3 e, glm::vec3 r, float a, float n, float f) : eye(e), ref(r), aspect(a), nearPlane(n), farPlane(f) { ComputeAttributes();  }
+    Camera(glm::vec3 e, glm::vec3 r, float a, float n, float f) : eye(e), ref(r), aspect(a), nearPlane(n), farPlane(f) {
+        ComputeAttributes();
+    }
     ~Camera() {}
 
     void ComputeAttributes() {
@@ -25,7 +27,7 @@ public:
         up = glm::normalize(glm::cross(right, look));
     }
 
-    // Camera Movement
+    // Camera Movement and rotation
     void TranslateAlongLook(float amount) {
         ref += look * amount;
         eye += look * amount;
@@ -37,6 +39,20 @@ public:
     void TranslateAlongUp(float amount) {
         ref += up * amount;
         eye += up * amount;
+    }
+    void RotateAboutLook(float amount) {
+        up = glm::rotate(glm::mat4(1.0f), amount, look) * glm::vec4(up, 1.0f);
+        right = glm::rotate(glm::mat4(1.0f), amount, look) * glm::vec4(right, 1.0f);
+    }
+    void RotateAboutRight(float amount) {
+        look = glm::rotate(glm::mat4(1.0f), amount, right) * glm::vec4(look, 1.0f);
+        up = glm::rotate(glm::mat4(1.0f), amount, right) * glm::vec4(up, 1.0f);
+        ref = eye + look;
+    }
+    void RotateAboutUp(float amount) {
+        look = glm::rotate(glm::mat4(1.0f), amount, up) * glm::vec4(look, 1.0f);
+        right = glm::rotate(glm::mat4(1.0f), amount, up) * glm::vec4(right, 1.0f);
+        ref = eye + look;
     }
 
     void SetAspect(float a) {

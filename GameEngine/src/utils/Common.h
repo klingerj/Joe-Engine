@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <functional>
 
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
@@ -51,8 +52,14 @@ void TransitionImageLayout(VkDevice device, VkCommandPool commandPool, const Vul
 VkFormat FindSupportedFormat(VkPhysicalDevice physicalDevice, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 VkFormat FindDepthFormat(VkPhysicalDevice physicalDevice);
 
+using CallbackFunction = std::function<void()>;
+
 // IO - defines for keys
 #define JE_KEY_W GLFW_KEY_W
 #define JE_KEY_A GLFW_KEY_A
 #define JE_KEY_S GLFW_KEY_S
 #define JE_KEY_D GLFW_KEY_D
+#define JE_KEY_UP GLFW_KEY_UP
+#define JE_KEY_LEFT GLFW_KEY_LEFT
+#define JE_KEY_DOWN GLFW_KEY_DOWN
+#define JE_KEY_RIGHT GLFW_KEY_RIGHT
