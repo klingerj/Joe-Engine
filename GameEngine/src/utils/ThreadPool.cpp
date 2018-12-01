@@ -1,5 +1,8 @@
 #include "ThreadPool.h"
 
+// Define extern threadpool object
+ThreadPool threadPool = ThreadPool();
+
 // Atomically enqueue a new job
 void ThreadPool::EnqueueJob(thread_job_t job) {
     {
@@ -37,13 +40,13 @@ void ThreadPool::ThreadFunction() {
 }
 
 void ThreadPool::JoinThreads() {
-    StopThreads();
+    StopThreadJobs();
     for (unsigned int i = 0; i < threads.size(); ++i) {
         threads[i].join();
     }
 }
 
-void ThreadPool::StopThreads() {
+void ThreadPool::StopThreadJobs() {
     quit = true;
     {
         std::unique_lock<std::mutex> lock(mutex_queue);

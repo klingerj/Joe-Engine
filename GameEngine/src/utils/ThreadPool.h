@@ -40,7 +40,7 @@ private:
     thread_job_t DequeueJob(); // Atomically pop a job from the queue
     void ThreadDoJob(thread_job_t threadJob); // Call the thread function on the thread's data
     void JoinThreads(); // All threads must rejoin the main thread before terminating the program
-    void StopThreads(); // All jobs will be removed from the queue, then all threads will return from ThreadFunction
+    void StopThreadJobs(); // All jobs will be removed from the queue, then all threads will return from ThreadFunction
 
 public:
     ThreadPool() : quit(false) {
@@ -49,11 +49,10 @@ public:
         }
     }
     ~ThreadPool() {
-        StopThreads();
         JoinThreads();
     }
 
     void EnqueueJob(thread_job_t job); // Atomically queue up a new job
 };
 
-static ThreadPool threadPool = ThreadPool();
+extern ThreadPool threadPool;
