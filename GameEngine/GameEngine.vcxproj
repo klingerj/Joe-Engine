@@ -29,6 +29,7 @@
     <ClCompile Include="src\rendering\VulkanShader.cpp" />
     <ClCompile Include="src\rendering\VulkanSwapChain.cpp" />
     <ClCompile Include="src\rendering\VulkanWindow.cpp" />
+    <ClCompile Include="src\scene\MeshDataManager.cpp" />
     <ClCompile Include="src\scene\SceneManager.cpp" />
     <ClCompile Include="src\utils\Common.cpp" />
     <ClCompile Include="src\utils\ThreadPool.cpp" />
@@ -45,6 +46,7 @@
     <ClInclude Include="src\rendering\VulkanSwapChain.h" />
     <ClInclude Include="src\rendering\VulkanWindow.h" />
     <ClInclude Include="src\scene\Camera.h" />
+    <ClInclude Include="src\scene\MeshDataManager.h" />
     <ClInclude Include="src\scene\SceneManager.h" />
     <ClInclude Include="src\utils\Common.h" />
     <ClInclude Include="src\utils\ThreadPool.h" />

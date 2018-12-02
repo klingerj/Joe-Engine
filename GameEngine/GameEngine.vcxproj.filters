@@ -91,6 +91,9 @@
     <ClCompile Include="src\io\IOHandler.cpp">
       <Filter>src\Source Files\IO</Filter>
     </ClCompile>
+    <ClCompile Include="src\scene\MeshDataManager.cpp">
+      <Filter>src\Source Files\Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\rendering\VulkanWindow.h">
@@ -134,6 +137,9 @@
     </ClInclude>
     <ClInclude Include="src\io\IOHandler.h">
       <Filter>src\Header Files\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scene\MeshDataManager.h">
+      <Filter>src\Header Files\Scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
