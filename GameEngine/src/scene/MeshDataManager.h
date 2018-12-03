@@ -71,8 +71,8 @@ typedef struct mesh_data_graphics_t {
     VkBuffer vertexBufferArray[NUM_MESHES];
     VkDeviceMemory vertexBufferMemoryArray[NUM_MESHES];
     VkBuffer indexBufferArray[NUM_MESHES];
-    VkDeviceMemory indexMemoryArray[NUM_MESHES];
-    glm::mat4 modelMatrix[NUM_MESHES];
+    VkDeviceMemory indexBufferMemoryArray[NUM_MESHES];
+    glm::mat4 modelMatrices[NUM_MESHES];
     std::vector<MeshVertex> vertexLists[NUM_MESHES];
     std::vector<uint32_t> indexLists[NUM_MESHES];
 } MeshData_Graphics;
@@ -85,15 +85,59 @@ typedef struct mesh_data_physics_t {
     uint32_t freezeStates[NUM_MESHES];
 } MeshData_Physics;
 
+typedef struct mesh_data_sstri_t {
+    VkBuffer vertexBuffer;
+    VkDeviceMemory vertexBufferMemory;
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexBufferMemory;
+    std::vector<MeshVertex> vertexList;
+    std::vector<uint32_t> indexList;
+} MeshData_SSTriangle;
+
 // Class for managing meshes that have graphics and physics needs in a data-oriented fashion.
 
 class MeshDataManager {
 private:
     MeshData_Graphics meshData_Graphics;
     MeshData_Physics meshData_Physics;
+    uint32_t numMeshes; // how many meshes have been added so far
+    // ScreenSpace Triangle - needed for deferred rendering lighting pass and post processing. Store separately from other mesh data.
+    static MeshData_SSTriangle screenSpaceTriangle;
+
+    // Mesh Creation
+    void CreateVertexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::vector<MeshVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory);
+    void CreateIndexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::vector<uint32_t>& indices, VkBuffer* indexBuffer, VkDeviceMemory* indexBufferMemory);
+    void LoadModelFromFile(const std::string& filepath);
+
 public:
-    MeshDataManager() {}
+    MeshDataManager() : numMeshes(0) {}
     ~MeshDataManager() {}
+    
+    void Cleanup(VkDevice device);
 
+    void SetModelMatrix(glm::mat4& m, uint32_t index) {
+        meshData_Graphics.modelMatrices[index] = m;
+    }
 
+    void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::string& filepath);
+    void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::vector<MeshVertex>& vertices, const std::vector<uint32_t>& indices);
+    void CreateScreenSpaceTriangleMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue);
+    void DrawMesh(VkCommandBuffer commandBuffer, unsigned int index);
+    void DrawScreenSpaceTriangle(VkCommandBuffer commandBuffer);
+
+    // Getters
+    const glm::mat4& GetModelMatrix(unsigned int index) const {
+        return meshData_Graphics.modelMatrices[index];
+    }
+    uint32_t GetNumMeshes() const {
+        return numMeshes;
+    }
+    std::vector<glm::mat4> GetModelMatrices() const {
+        std::vector<glm::mat4> matrices;
+        matrices.reserve(NUM_MESHES);
+        for (unsigned int i = 0; i < numMeshes; ++i) {
+            matrices.emplace_back(meshData_Graphics.modelMatrices[i]);
+        }
+        return matrices;
+    }
 };

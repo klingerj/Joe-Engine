@@ -6,7 +6,6 @@
 #include "vulkan/vulkan.h"
 #include "VulkanSwapChain.h"
 #include "VulkanRenderer.h"
-#include "Mesh.h"
 #include "Texture.h"
 #include "../scene/Camera.h"
 
@@ -75,7 +74,7 @@ public:
 
     void Cleanup(VkDevice device);
 
-    void UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const Camera& camera, const Camera& shadowCamera, const std::vector<Mesh>& meshes);
+    void UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const Camera& camera, const Camera& shadowCamera, const std::vector<glm::mat4>& modelMatrices);
     void BindDescriptorSets(VkCommandBuffer commandBuffer, size_t descriptorSetIndex, uint32_t dynamicOffset);
 
     // Getters
@@ -137,7 +136,7 @@ public:
 
     void Cleanup(VkDevice device);
 
-    void UpdateUniformBuffers(VkDevice device, const Camera& camera, const std::vector<Mesh>& meshes);
+    void UpdateUniformBuffers(VkDevice device, const Camera& camera, const std::vector<glm::mat4>& modelMatrices);
     void BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t dynamicOffset);
 
     // Getters
@@ -203,7 +202,7 @@ public:
 
     void Cleanup(VkDevice device);
 
-    void UpdateUniformBuffers(VkDevice device, const Camera& camera, const Camera& shadowCamera, const std::vector<Mesh>& meshes);
+    void UpdateUniformBuffers(VkDevice device, const Camera& camera, const Camera& shadowCamera, const std::vector<glm::mat4>& modelMatrices);
     void BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t dynamicOffset);
 
     // Getters

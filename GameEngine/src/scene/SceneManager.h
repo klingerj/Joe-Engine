@@ -4,10 +4,11 @@
 
 #include "Camera.h"
 #include "../rendering/Texture.h"
-#include "../rendering/Mesh.h"
+//#include "../rendering/Mesh.h"
 #include "../rendering/VulkanShader.h"
 #include "../rendering/VulkanRenderer.h"
 #include "../io/IOHandler.h"
+#include "MeshDataManager.h"
 
 class SceneManager {
 private:
@@ -17,8 +18,9 @@ private:
     float camTranslateSensitivity, camRotateSensitivity;
 
     // Meshes
-    std::vector<Mesh> meshes;
-    static Mesh screenSpaceTriangle;
+    MeshDataManager meshDataManager;
+    //std::vector<Mesh> meshes;
+    //static Mesh screenSpaceTriangle;
 
     // Textures
     std::vector<Texture> textures;

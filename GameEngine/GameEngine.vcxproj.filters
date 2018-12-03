@@ -70,9 +70,6 @@
     <ClCompile Include="src\rendering\VulkanShader.cpp">
       <Filter>src\Source Files\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="src\rendering\Mesh.cpp">
-      <Filter>src\Source Files\Rendering</Filter>
-    </ClCompile>
     <ClCompile Include="src\rendering\Texture.cpp">
       <Filter>src\Source Files\Rendering</Filter>
     </ClCompile>
@@ -112,9 +109,6 @@
       <Filter>src\Header Files\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\rendering\VulkanShader.h">
-      <Filter>src\Header Files\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="src\rendering\Mesh.h">
       <Filter>src\Header Files\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\rendering\Texture.h">
