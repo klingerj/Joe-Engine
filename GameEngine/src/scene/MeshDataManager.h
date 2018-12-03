@@ -129,8 +129,10 @@ public:
     uint32_t GetNumMeshes() const {
         return numMeshes;
     }
-    std::vector<glm::mat4> GetModelMatrices() const {
-        std::vector<glm::mat4> matrices;
+    // TODO: change scene manager and vulkan shaders to take an array of mat4's instead of copying them into the vector
+    const std::vector<glm::mat4>& GetModelMatrices() const {
+        static std::vector<glm::mat4> matrices;
+        matrices.clear();
         matrices.reserve(NUM_MESHES);
         for (unsigned int i = 0; i < numMeshes; ++i) {
             matrices.emplace_back(meshData_Graphics.modelMatrices[i]);

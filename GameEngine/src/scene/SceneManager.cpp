@@ -118,7 +118,7 @@ void SceneManager::UpdateModelMatrices() {
 }
 
 void SceneManager::UpdateShaderUniformBuffers(VkDevice device, uint32_t imageIndex) {
-    const std::vector<glm::mat4> modelMatrices = meshDataManager.GetModelMatrices();
+    const std::vector<glm::mat4>& modelMatrices = meshDataManager.GetModelMatrices();
     for (auto& meshShader : meshShaders) {
         meshShader.UpdateUniformBuffers(device, imageIndex, camera, shadowCamera, modelMatrices);
     }
