@@ -6,30 +6,12 @@ void SceneManager::Initialize() {} // TODO: set to default scene. Also need to m
 
 void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass) {
     // Meshes
-    /*Mesh m2 = Mesh();
-    Mesh m1 = Mesh();
-    Mesh m3 = Mesh();
-    Mesh m4 = Mesh();
-    m1.Create(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "plane.obj");
-    m2.Create(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "wahoo.obj"); // TODO: instancing
-    m3.Create(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "sphere.obj");
-    m4.Create(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "alienModel_Small.obj");
-    meshes.push_back(m1);
-    meshes.push_back(m2);
-    meshes.push_back(m3);
-    meshes.push_back(m4);*/
-
     meshDataManager.CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "plane.obj");
     meshDataManager.CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "wahoo.obj");
     meshDataManager.CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "sphere.obj");
     meshDataManager.CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "alienModel_Small.obj");
 
     // Screen space triangle setup
-    /*const std::vector<MeshVertex> screenSpaceTriangleVertices = { { glm::vec3(-1.0, -1.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0, 0.0) },
-                                                        { glm::vec3(3.0, -1.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec2(2.0, 0.0) },
-                                                        { glm::vec3(-1.0, 3.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0, 2.0) } };
-    const std::vector<uint32_t> screenSpaceTriangleIndices = { 2, 1, 0 };
-    screenSpaceTriangle.Create(physicalDevice, device, commandPool, graphicsQueue, screenSpaceTriangleVertices, screenSpaceTriangleIndices);*/
     meshDataManager.CreateScreenSpaceTriangleMesh(physicalDevice, device, commandPool, graphicsQueue);
 
     // Textures
@@ -117,25 +99,21 @@ void SceneManager::UpdateModelMatrices() {
     glm::mat4 mat1 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
     mat1 = glm::rotate(mat1, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
     mat1 = glm::scale(mat1, glm::vec3(8.0f, 8.0f, 8.0f));
-    //meshes[0].SetModelMatrix(mat1);
     meshDataManager.SetModelMatrix(mat1, 0);
     
     glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, -0.75f, 0.0f));
     mat2 = glm::rotate(mat2, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
     mat2 = glm::scale(mat2, glm::vec3(0.25f, 0.25f, 0.25f));
-    //meshes[1].SetModelMatrix(mat2);
     meshDataManager.SetModelMatrix(mat2, 1);
 
     glm::mat4 mat3 = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, -0.75f, 0.05f));
     mat3 = glm::rotate(mat3, time * -1.5708f, glm::vec3(0.0f, 1.0f, 0.0f));
     mat3 = glm::scale(mat3, glm::vec3(0.15f, 0.15f, 0.15f));
-    //meshes[2].SetModelMatrix(mat3);
     meshDataManager.SetModelMatrix(mat3, 2);
 
     glm::mat4 mat4 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, std::sinf(time) * 0.05f - 0.75f, 0.75f));
     mat4 = glm::rotate(mat4, time * -1.5708f, glm::vec3(0.0f, 1.0f, 0.0f));
     mat4 = glm::scale(mat4, glm::vec3(0.15f, 0.15f, 0.15f));
-    //meshes[3].SetModelMatrix(mat4);
     meshDataManager.SetModelMatrix(mat4, 3);
 }
 
@@ -185,12 +163,7 @@ void SceneManager::BindDeferredPassGeometryResources(VkCommandBuffer commandBuff
 
 void SceneManager::BindDeferredPassLightingResources(VkCommandBuffer commandBuffer, size_t index) {
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, deferredPassLightingShaders[0].GetPipeline());
-    // TODO: change this to only draw the screen space triangle
-    // Also: update the deferred pass lighting shader dynamic ubo setup to only take one mesh
-    //for (uint32_t j = 0; j < meshes.size(); ++j) {
-    //uint32_t dynamicOffset = 0; //j * static_cast<uint32_t>(deferredPassLightingShaders[0].GetDynamicAlignment());
+    // TODO: update the deferred pass lighting shader dynamic ubo setup to only take one mesh. Later: Is this still a todo?
     deferredPassLightingShaders[0].BindDescriptorSets(commandBuffer, index, 0);
-    //screenSpaceTriangle.Draw(commandBuffer);
     meshDataManager.DrawScreenSpaceTriangle(commandBuffer);
-    //}
 }

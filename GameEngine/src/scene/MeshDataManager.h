@@ -58,9 +58,6 @@ namespace std {
     };
 }
 
-
-
-
 #define NUM_MESHES 100
 // TODO: expand to freeze position x, y, z, etc, same for rotation
 #define JE_PHYSICS_FREEZE_POSITION 1
@@ -100,7 +97,7 @@ class MeshDataManager {
 private:
     MeshData_Graphics meshData_Graphics;
     MeshData_Physics meshData_Physics;
-    uint32_t numMeshes; // how many meshes have been added so far
+    uint32_t numMeshes; // # of meshes added so far
     // ScreenSpace Triangle - needed for deferred rendering lighting pass and post processing. Store separately from other mesh data.
     static MeshData_SSTriangle screenSpaceTriangle;
 
