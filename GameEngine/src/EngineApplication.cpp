@@ -21,8 +21,11 @@ void EngineApplication::Run() {
 }
 
 void EngineApplication::InitializeEngine() {
-    sceneManager.Initialize();
+    std::shared_ptr<MeshDataManager> meshDataManager = std::make_shared<MeshDataManager>();
+    physicsManager.Initialize(meshDataManager);
+    sceneManager.Initialize(meshDataManager);
     vulkanRenderer.Initialize(&sceneManager);
+
     GLFWwindow* window = vulkanRenderer.GetGLFWWindow();
     ioHandler.Initialize(window);
     glfwSetWindowUserPointer(window, this);

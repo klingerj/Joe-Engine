@@ -5,6 +5,7 @@
 #include "io/IOHandler.h"
 #include "scene/SceneManager.h"
 #include "rendering/VulkanRenderer.h"
+#include "physics/PhysicsManager.h"
 
 class EngineApplication {
 private:
@@ -12,6 +13,7 @@ private:
     SceneManager sceneManager;
     VulkanRenderer vulkanRenderer;
     IOHandler ioHandler;
+    PhysicsManager physicsManager;
 
     double frameStartTime, frameEndTime; // timing for performance analysis
     bool enableFrameCounter;

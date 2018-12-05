@@ -4,7 +4,6 @@
 
 #include "Camera.h"
 #include "../rendering/Texture.h"
-//#include "../rendering/Mesh.h"
 #include "../rendering/VulkanShader.h"
 #include "../rendering/VulkanRenderer.h"
 #include "../io/IOHandler.h"
@@ -18,7 +17,7 @@ private:
     float camTranslateSensitivity, camRotateSensitivity;
 
     // Meshes
-    MeshDataManager meshDataManager;
+    std::shared_ptr<MeshDataManager> meshDataManager;
     //std::vector<Mesh> meshes;
     //static Mesh screenSpaceTriangle;
 
@@ -36,7 +35,7 @@ public:
     ~SceneManager() {}
 
     // Creation
-    void Initialize();
+    void Initialize(std::shared_ptr<MeshDataManager> p);
     void LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass);
     void CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass);
     void RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass);

@@ -129,6 +129,9 @@ public:
     uint32_t GetNumMeshes() const {
         return numMeshes;
     }
+    const MeshData_Physics& GetMeshData_Physics() const {
+        return meshData_Physics;
+    }
     // TODO: change scene manager and vulkan shaders to take an array of mat4's instead of copying them into the vector
     const std::vector<glm::mat4>& GetModelMatrices() const {
         static std::vector<glm::mat4> matrices;

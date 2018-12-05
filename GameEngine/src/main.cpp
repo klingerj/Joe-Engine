@@ -13,5 +13,6 @@ int RunApp() {
 }
 
 int main() {
+    std::cout << sizeof(int*);
     return RunApp();
 }
