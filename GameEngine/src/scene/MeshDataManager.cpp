@@ -6,7 +6,7 @@
 MeshData_SSTriangle MeshDataManager::screenSpaceTriangle {};
 
 void MeshDataManager::Cleanup(VkDevice device) {
-    for (unsigned int i = 0; i < NUM_MESHES; ++i) {
+    for (unsigned int i = 0; i < numMeshes; ++i) {
         vkDestroyBuffer(device, meshData_Graphics.vertexBufferArray[i], nullptr);
         vkFreeMemory(device, meshData_Graphics.vertexBufferMemoryArray[i], nullptr);
         vkDestroyBuffer(device, meshData_Graphics.indexBufferArray[i], nullptr);
@@ -18,18 +18,20 @@ void MeshDataManager::Cleanup(VkDevice device) {
     vkFreeMemory(device, screenSpaceTriangle.indexBufferMemory, nullptr);
 }
 
-void MeshDataManager::CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::string& filepath) {
+void MeshDataManager::CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::string& filepath, int freezeState) {
     LoadModelFromFile(filepath);
     CreateVertexBuffer(physicalDevice, device, commandPool, graphicsQueue, meshData_Graphics.vertexLists[numMeshes], &meshData_Graphics.vertexBufferArray[numMeshes], &meshData_Graphics.vertexBufferMemoryArray[numMeshes]);
     CreateIndexBuffer(physicalDevice, device, commandPool, graphicsQueue, meshData_Graphics.indexLists[numMeshes], &meshData_Graphics.indexBufferArray[numMeshes], &meshData_Graphics.indexBufferMemoryArray[numMeshes]);
+    meshData_Physics.freezeStates[numMeshes] = freezeState;
     ++numMeshes;
 }
 
-void MeshDataManager::CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::vector<MeshVertex>& vertices, const std::vector<uint32_t>& indices) {
+void MeshDataManager::CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::vector<MeshVertex>& vertices, const std::vector<uint32_t>& indices, int freezeState) {
     meshData_Graphics.vertexLists[numMeshes] = std::vector<MeshVertex>(vertices);
     meshData_Graphics.indexLists[numMeshes] = std::vector<uint32_t>(indices);
     CreateVertexBuffer(physicalDevice, device, commandPool, graphicsQueue, vertices, &meshData_Graphics.vertexBufferArray[numMeshes], &meshData_Graphics.vertexBufferMemoryArray[numMeshes]);
     CreateIndexBuffer(physicalDevice, device, commandPool, graphicsQueue, indices, &meshData_Graphics.indexBufferArray[numMeshes], &meshData_Graphics.indexBufferMemoryArray[numMeshes]);
+    meshData_Physics.freezeStates[numMeshes] = freezeState;
     ++numMeshes;
 }
 

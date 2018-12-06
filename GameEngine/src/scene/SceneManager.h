@@ -18,8 +18,6 @@ private:
 
     // Meshes
     std::shared_ptr<MeshDataManager> meshDataManager;
-    //std::vector<Mesh> meshes;
-    //static Mesh screenSpaceTriangle;
 
     // Textures
     std::vector<Texture> textures;
@@ -27,7 +25,7 @@ private:
     // Shaders
     std::vector<VulkanMeshShader> meshShaders;
     std::vector<VulkanShadowPassShader> shadowPassShaders;
-    std::vector<VulkanDeferredPassGeometryShader> deferredPassGeometryShaders;
+    std::vector<VulkanDeferredPassGeometryShader> deferredPassGeometryShaders; // TODO: this probably doesn't need to be a vector
     std::vector<VulkanDeferredPassLightingShader> deferredPassLightingShaders;
 
 public:

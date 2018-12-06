@@ -22,6 +22,7 @@
     <ClCompile Include="src\EngineApplication.cpp" />
     <ClCompile Include="src\io\IOHandler.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\physics\PhysicsManager.cpp" />
     <ClCompile Include="src\rendering\Texture.cpp" />
     <ClCompile Include="src\rendering\VulkanQueue.cpp" />
     <ClCompile Include="src\rendering\VulkanRenderer.cpp" />
@@ -37,6 +38,7 @@
   <ItemGroup>
     <ClInclude Include="src\EngineApplication.h" />
     <ClInclude Include="src\io\IOHandler.h" />
+    <ClInclude Include="src\physics\PhysicsManager.h" />
     <ClInclude Include="src\rendering\Texture.h" />
     <ClInclude Include="src\rendering\VulkanQueue.h" />
     <ClInclude Include="src\rendering\VulkanRenderer.h" />

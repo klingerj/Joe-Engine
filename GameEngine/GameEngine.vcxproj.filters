@@ -47,6 +47,12 @@
     <Filter Include="src\Source Files\IO">
       <UniqueIdentifier>{d656ab7a-a0d0-417b-8bc8-9c9593be65e5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Header Files\Physics">
+      <UniqueIdentifier>{7bda80d9-e01f-4b07-85aa-04a429d42956}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Source Files\Physics">
+      <UniqueIdentifier>{fbd8147d-f594-4e11-8b97-f030b20c937f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -91,6 +97,9 @@
     <ClCompile Include="src\scene\MeshDataManager.cpp">
       <Filter>src\Source Files\Scene</Filter>
     </ClCompile>
+    <ClCompile Include="src\physics\PhysicsManager.cpp">
+      <Filter>src\Source Files\Physics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\rendering\VulkanWindow.h">
@@ -134,6 +143,9 @@
     </ClInclude>
     <ClInclude Include="src\scene\MeshDataManager.h">
       <Filter>src\Header Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\physics\PhysicsManager.h">
+      <Filter>src\Header Files\Physics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

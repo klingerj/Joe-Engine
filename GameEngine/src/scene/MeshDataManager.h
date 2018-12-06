@@ -58,28 +58,30 @@ namespace std {
     };
 }
 
-#define NUM_MESHES 100
+#define MAX_MESHES 100
 // TODO: expand to freeze position x, y, z, etc, same for rotation
+// Also TODO: change this to an enum and update the MeshDataManager's CreateNewMesh function parameters from int to the enum
+#define JE_PHYSICS_FREEZE_NONE 0
 #define JE_PHYSICS_FREEZE_POSITION 1
 #define JE_PHYSICS_FREEZE_ROTATION 2
 
 // TODO: create a linked list of these
 typedef struct mesh_data_graphics_t {
-    VkBuffer vertexBufferArray[NUM_MESHES];
-    VkDeviceMemory vertexBufferMemoryArray[NUM_MESHES];
-    VkBuffer indexBufferArray[NUM_MESHES];
-    VkDeviceMemory indexBufferMemoryArray[NUM_MESHES];
-    glm::mat4 modelMatrices[NUM_MESHES];
-    std::vector<MeshVertex> vertexLists[NUM_MESHES];
-    std::vector<uint32_t> indexLists[NUM_MESHES];
+    VkBuffer vertexBufferArray[MAX_MESHES];
+    VkDeviceMemory vertexBufferMemoryArray[MAX_MESHES];
+    VkBuffer indexBufferArray[MAX_MESHES];
+    VkDeviceMemory indexBufferMemoryArray[MAX_MESHES];
+    glm::mat4 modelMatrices[MAX_MESHES];
+    std::vector<MeshVertex> vertexLists[MAX_MESHES];
+    std::vector<uint32_t> indexLists[MAX_MESHES];
 } MeshData_Graphics;
 
 typedef struct mesh_data_physics_t {
-    glm::vec3 positions[NUM_MESHES];
-    glm::vec3 velocities[NUM_MESHES];
-    glm::vec3 accelerations[NUM_MESHES];
+    glm::vec3 positions[MAX_MESHES];
+    glm::vec3 velocities[MAX_MESHES];
+    glm::vec3 accelerations[MAX_MESHES];
     // TODO: rigidbody fields
-    uint32_t freezeStates[NUM_MESHES];
+    uint32_t freezeStates[MAX_MESHES];
 } MeshData_Physics;
 
 typedef struct mesh_data_sstri_t {
@@ -107,17 +109,40 @@ private:
     void LoadModelFromFile(const std::string& filepath);
 
 public:
-    MeshDataManager() : numMeshes(0) {}
+    MeshDataManager() : numMeshes(0) {
+        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+            meshData_Graphics.modelMatrices[i] = glm::mat4(1.0f); // Initialize model matrix to identity matrix
+        }
+        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+            meshData_Physics.positions[i] = glm::vec3(0.0f);
+        }
+        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+            meshData_Physics.velocities[i] = glm::vec3(0.0f);
+        }
+        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+            meshData_Physics.accelerations[i] = glm::vec3(0.0f);
+        }
+        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+            meshData_Physics.freezeStates[i] = JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION;
+        }
+    }
     ~MeshDataManager() {}
     
     void Cleanup(VkDevice device);
 
-    void SetModelMatrix(glm::mat4& m, uint32_t index) {
+    void SetModelMatrix(const glm::mat4& m, uint32_t index) {
         meshData_Graphics.modelMatrices[index] = m;
     }
+    void SetMeshPosition(const glm::vec3& pos, uint32_t index) {
+        meshData_Physics.positions[index] = pos;
+        glm::mat4& modelMat = meshData_Graphics.modelMatrices[index];
+        modelMat[0][3] = pos.x;
+        modelMat[1][3] = pos.y;
+        modelMat[2][3] = pos.z;
+    }
 
-    void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::string& filepath);
-    void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::vector<MeshVertex>& vertices, const std::vector<uint32_t>& indices);
+    void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::string& filepath, int freezeState);
+    void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::vector<MeshVertex>& vertices, const std::vector<uint32_t>& indices, int freezeState);
     void CreateScreenSpaceTriangleMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue);
     void DrawMesh(VkCommandBuffer commandBuffer, unsigned int index);
     void DrawScreenSpaceTriangle(VkCommandBuffer commandBuffer);
@@ -129,14 +154,14 @@ public:
     uint32_t GetNumMeshes() const {
         return numMeshes;
     }
-    const MeshData_Physics& GetMeshData_Physics() const {
+    MeshData_Physics& GetMeshData_Physics() {
         return meshData_Physics;
     }
     // TODO: change scene manager and vulkan shaders to take an array of mat4's instead of copying them into the vector
     const std::vector<glm::mat4>& GetModelMatrices() const {
         static std::vector<glm::mat4> matrices;
         matrices.clear();
-        matrices.reserve(NUM_MESHES);
+        matrices.reserve(MAX_MESHES);
         for (unsigned int i = 0; i < numMeshes; ++i) {
             matrices.emplace_back(meshData_Graphics.modelMatrices[i]);
         }

@@ -38,15 +38,15 @@ void VulkanMeshShader::Cleanup(VkDevice device) {
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);
     vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
     vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-    for (size_t i = 0; i < uniformBuffers_ViewProj.size(); i++) {
+    for (size_t i = 0; i < uniformBuffers_ViewProj.size(); ++i) {
         vkDestroyBuffer(device, uniformBuffers_ViewProj[i], nullptr);
         vkFreeMemory(device, uniformBuffersMemory_ViewProj[i], nullptr);
     }
-    for (size_t i = 0; i < uniformBuffers_ViewProj.size(); i++) {
+    for (size_t i = 0; i < uniformBuffers_ViewProj.size(); ++i) {
         vkDestroyBuffer(device, uniformBuffers_ViewProj_Shadow[i], nullptr);
         vkFreeMemory(device, uniformBuffersMemory_ViewProj_Shadow[i], nullptr);
     }
-    for (size_t i = 0; i < uniformBuffers_Dynamic_Model.size(); i++) {
+    for (size_t i = 0; i < uniformBuffers_Dynamic_Model.size(); ++i) {
         vkDestroyBuffer(device, uniformBuffers_Dynamic_Model[i], nullptr);
         vkFreeMemory(device, uniformBuffersMemory_Dynamic_Model[i], nullptr);
     }
@@ -314,7 +314,7 @@ void VulkanMeshShader::CreateDescriptorSets(VkDevice device, const Texture& text
         throw std::runtime_error("failed to allocate descriptor sets!");
     }
 
-    for (size_t i = 0; i < numSwapChainImages; i++) {
+    for (size_t i = 0; i < numSwapChainImages; ++i) {
         VkDescriptorBufferInfo bufferInfo_vp = {};
         bufferInfo_vp.buffer = uniformBuffers_ViewProj[i];
         bufferInfo_vp.offset = 0;
@@ -408,7 +408,7 @@ void VulkanMeshShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkD
 
     ubo_Dynamic_ModelMat.model = (glm::mat4*)_aligned_malloc(bufferSize_Dynamic_Model, uboDynamicAlignment);
 
-    for (size_t i = 0; i < numSwapChainImages; i++) {
+    for (size_t i = 0; i < numSwapChainImages; ++i) {
         CreateBuffer(physicalDevice, device, bufferSize_viewProj, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers_ViewProj[i], uniformBuffersMemory_ViewProj[i]);
         CreateBuffer(physicalDevice, device, bufferSize_viewProj, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers_ViewProj_Shadow[i], uniformBuffersMemory_ViewProj_Shadow[i]);
         CreateBuffer(physicalDevice, device, bufferSize_Dynamic_Model, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, uniformBuffers_Dynamic_Model[i], uniformBuffersMemory_Dynamic_Model[i]);
@@ -1223,15 +1223,15 @@ void VulkanDeferredPassLightingShader::Cleanup(VkDevice device) {
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);
     vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
     vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-    for (size_t i = 0; i < uniformBuffers_ViewProj.size(); i++) {
+    for (size_t i = 0; i < uniformBuffers_ViewProj.size(); ++i) {
         vkDestroyBuffer(device, uniformBuffers_ViewProj[i], nullptr);
         vkFreeMemory(device, uniformBuffersMemory_ViewProj[i], nullptr);
     }
-    for (size_t i = 0; i < uniformBuffers_ViewProj.size(); i++) {
+    for (size_t i = 0; i < uniformBuffers_ViewProj.size(); ++i) {
         vkDestroyBuffer(device, uniformBuffers_ViewProj_Shadow[i], nullptr);
         vkFreeMemory(device, uniformBuffersMemory_ViewProj_Shadow[i], nullptr);
     }
-    for (size_t i = 0; i < uniformBuffers_Dynamic_Model.size(); i++) {
+    for (size_t i = 0; i < uniformBuffers_Dynamic_Model.size(); ++i) {
         vkDestroyBuffer(device, uniformBuffers_Dynamic_Model[i], nullptr);
         vkFreeMemory(device, uniformBuffersMemory_Dynamic_Model[i], nullptr);
     }
@@ -1526,7 +1526,7 @@ void VulkanDeferredPassLightingShader::CreateDescriptorSets(VkDevice device, con
         throw std::runtime_error("failed to allocate descriptor sets!");
     }
 
-    for (size_t i = 0; i < numSwapChainImages; i++) {
+    for (size_t i = 0; i < numSwapChainImages; ++i) {
         VkDescriptorBufferInfo bufferInfo_vp = {};
         bufferInfo_vp.buffer = uniformBuffers_ViewProj[i];
         bufferInfo_vp.offset = 0;
