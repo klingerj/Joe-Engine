@@ -44,7 +44,7 @@ private:
 
 public:
     ThreadPool() : quit(false) {
-        for (unsigned int t = 0; t < std::thread::hardware_concurrency(); ++t) { // one less than main thread?
+        for (uint32_t t = 0; t < std::thread::hardware_concurrency(); ++t) { // one less than main thread?
             threads.emplace_back(std::thread([this] { ThreadFunction(); }));
         }
     }

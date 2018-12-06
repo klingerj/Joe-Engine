@@ -1,6 +1,6 @@
 #include "PhysicsManager.h"
 
-void PhysicsManager::Initialize(std::shared_ptr<MeshDataManager> m) {
+void PhysicsManager::Initialize(const std::shared_ptr<MeshDataManager>& m) {
     meshDataManager = m;
 }
 

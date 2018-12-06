@@ -3,19 +3,19 @@
 #include "SceneManager.h"
 
 // TODO: set to default scene. Also need to manage multiple scenes.
-void SceneManager::Initialize(std::shared_ptr<MeshDataManager> m) {
+void SceneManager::Initialize(const std::shared_ptr<MeshDataManager>& m) {
     meshDataManager = m;
 }
 
 void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass) {
     // Meshes
-    meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "plane.obj", JE_PHYSICS_FREEZE_POSITION);
-    meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "wahoo.obj", JE_PHYSICS_FREEZE_POSITION);
-    meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "sphere.obj", JE_PHYSICS_FREEZE_NONE);
+    //meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "plane.obj", JE_PHYSICS_FREEZE_POSITION);
+    meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "wahoo.obj", JE_PHYSICS_FREEZE_NONE);
+    //meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "sphere.obj", JE_PHYSICS_FREEZE_NONE);
     //glm::mat4 sphereModelMat = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 10.0f, 0.0f));
     //meshDataManager->SetModelMatrix(sphereModelMat, 2);
-    meshDataManager->SetMeshPosition(glm::vec3(0.0f, 4.0f, 0.0f), 2);
-    meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "alienModel_Small.obj", JE_PHYSICS_FREEZE_POSITION);
+    meshDataManager->SetMeshPosition(glm::vec3(0.0f, 3.0f, 0.0f), 0);
+    //meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "alienModel_Small.obj", JE_PHYSICS_FREEZE_POSITION);
 
     // Screen space triangle setup
     meshDataManager->CreateScreenSpaceTriangleMesh(physicalDevice, device, commandPool, graphicsQueue);
@@ -98,7 +98,7 @@ void SceneManager::CleanupShaders(VkDevice device) {
 }
 
 void SceneManager::UpdateModelMatrices() {
-    static auto startTime = std::chrono::high_resolution_clock::now();
+    /*static auto startTime = std::chrono::high_resolution_clock::now();
     auto currentTime = std::chrono::high_resolution_clock::now();
     float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
@@ -112,27 +112,26 @@ void SceneManager::UpdateModelMatrices() {
     mat2 = glm::scale(mat2, glm::vec3(0.25f, 0.25f, 0.25f));
     meshDataManager->SetModelMatrix(mat2, 1);
 
-    /*glm::mat4 mat3 = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, -0.75f, 0.05f));
-    mat3 = glm::rotate(mat3, time * -1.5708f, glm::vec3(0.0f, 1.0f, 0.0f));
-    mat3 = glm::scale(mat3, glm::vec3(0.15f, 0.15f, 0.15f));
-    meshDataManager->SetModelMatrix(mat3, 2);*/
+    //glm::mat4 mat3 = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, -0.75f, 0.05f));
+    //mat3 = glm::rotate(mat3, time * -1.5708f, glm::vec3(0.0f, 1.0f, 0.0f));
+    //mat3 = glm::scale(mat3, glm::vec3(0.15f, 0.15f, 0.15f));
+    //meshDataManager->SetModelMatrix(mat3, 2);
 
     glm::mat4 mat4 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, std::sinf(time) * 0.05f - 0.75f, 0.75f));
     mat4 = glm::rotate(mat4, time * -1.5708f, glm::vec3(0.0f, 1.0f, 0.0f));
     mat4 = glm::scale(mat4, glm::vec3(0.15f, 0.15f, 0.15f));
-    meshDataManager->SetModelMatrix(mat4, 3);
+    meshDataManager->SetModelMatrix(mat4, 3);*/
 }
 
 void SceneManager::UpdateShaderUniformBuffers(VkDevice device, uint32_t imageIndex) {
-    const std::vector<glm::mat4>& modelMatrices = meshDataManager->GetModelMatrices();
     for (auto& meshShader : meshShaders) {
-        meshShader.UpdateUniformBuffers(device, imageIndex, camera, shadowCamera, modelMatrices);
+        meshShader.UpdateUniformBuffers(device, imageIndex, camera, shadowCamera, meshDataManager->GetModelMatrices(), meshDataManager->GetNumMeshes());
     }
     for (auto& shadowPassShader : shadowPassShaders) {
-        shadowPassShader.UpdateUniformBuffers(device, shadowCamera, modelMatrices);
+        shadowPassShader.UpdateUniformBuffers(device, shadowCamera, meshDataManager->GetModelMatrices(), meshDataManager->GetNumMeshes());
     }
     for (auto& deferredPassGeomShader : deferredPassGeometryShaders) {
-        deferredPassGeomShader.UpdateUniformBuffers(device, camera, shadowCamera, modelMatrices);
+        deferredPassGeomShader.UpdateUniformBuffers(device, camera, shadowCamera, meshDataManager->GetModelMatrices(), meshDataManager->GetNumMeshes());
     }
     for (auto& deferredPasslightShader : deferredPassLightingShaders) {
         deferredPasslightShader.UpdateUniformBuffers(device, imageIndex, camera, shadowCamera);

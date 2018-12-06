@@ -41,7 +41,7 @@ void ThreadPool::ThreadFunction() {
 
 void ThreadPool::JoinThreads() {
     StopThreadJobs();
-    for (unsigned int i = 0; i < threads.size(); ++i) {
+    for (uint32_t i = 0; i < threads.size(); ++i) {
         threads[i].join();
     }
 }

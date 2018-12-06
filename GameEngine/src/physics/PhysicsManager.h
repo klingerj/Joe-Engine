@@ -18,7 +18,7 @@ public:
     PhysicsManager() : m_startTime(std::chrono::high_resolution_clock::now()), m_currentTime(0.0), m_updateRateInSeconds(33.333), m_updateRateFactor(1.0f / (float)m_updateRateInSeconds) {}
     ~PhysicsManager() {}
 
-    void Initialize(std::shared_ptr<MeshDataManager> m);
+    void Initialize(const std::shared_ptr<MeshDataManager>& m);
 
     // Compute physics on the mesh data
     void Update();

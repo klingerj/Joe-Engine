@@ -2,11 +2,12 @@
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
+#include <iostream>
 
 MeshData_SSTriangle MeshDataManager::screenSpaceTriangle {};
 
 void MeshDataManager::Cleanup(VkDevice device) {
-    for (unsigned int i = 0; i < numMeshes; ++i) {
+    for (uint32_t i = 0; i < numMeshes; ++i) {
         vkDestroyBuffer(device, meshData_Graphics.vertexBufferArray[i], nullptr);
         vkFreeMemory(device, meshData_Graphics.vertexBufferMemoryArray[i], nullptr);
         vkDestroyBuffer(device, meshData_Graphics.indexBufferArray[i], nullptr);
@@ -48,7 +49,7 @@ void MeshDataManager::CreateScreenSpaceTriangleMesh(VkPhysicalDevice physicalDev
 }
 
 void MeshDataManager::CreateVertexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::vector<MeshVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory) {
-    VkDeviceSize bufferSize = sizeof(vertices) * vertices.size();
+    VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
     CreateBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
@@ -95,6 +96,7 @@ void MeshDataManager::LoadModelFromFile(const std::string& filepath) {
     }
 
     std::unordered_map<MeshVertex, uint32_t> uniqueVertices = {};
+    std::vector<MeshVertex>& vertexList = meshData_Graphics.vertexLists[numMeshes];
 
     for (const auto& shape : shapes) {
         for (const auto& index : shape.mesh.indices) {
@@ -115,16 +117,17 @@ void MeshDataManager::LoadModelFromFile(const std::string& filepath) {
 
             // Vertex deduplication
             if (uniqueVertices.count(vertex) == 0) {
-                std::vector<MeshVertex>& vertexList = meshData_Graphics.vertexLists[numMeshes];
                 uniqueVertices[vertex] = static_cast<uint32_t>(vertexList.size());
                 vertexList.push_back(vertex);
             }
             meshData_Graphics.indexLists[numMeshes].push_back(uniqueVertices[vertex]);
         }
     }
+    std::cout << "Number of vertices loaded: " << vertexList.size() << std::endl;
+    std::cout << "Number of indices loaded: " << meshData_Graphics.indexLists[numMeshes].size() << std::endl;
 }
 
-void MeshDataManager::DrawMesh(VkCommandBuffer commandBuffer, unsigned int index) {
+void MeshDataManager::DrawMesh(VkCommandBuffer commandBuffer, uint32_t index) {
     VkBuffer vertexBuffers[] = { meshData_Graphics.vertexBufferArray[index] };
     VkDeviceSize offsets[] = { 0 };
 

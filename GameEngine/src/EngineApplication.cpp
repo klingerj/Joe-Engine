@@ -10,7 +10,7 @@ void EngineApplication::Run() {
         frameStartTime = glfwGetTime();
         ioHandler.PollInput();
         vulkanRenderer.DrawFrame();
-        //physicsManager.Update();
+        physicsManager.Update();
         frameEndTime = glfwGetTime();
         if (enableFrameCounter) {
             std::cout << "Frame Time: " << (frameEndTime - frameStartTime) * 1000.0f << " ms" << std::endl;

@@ -114,6 +114,12 @@ public:
             meshData_Graphics.modelMatrices[i] = glm::mat4(1.0f); // Initialize model matrix to identity matrix
         }
         for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+            meshData_Graphics.vertexLists[i] = std::vector<MeshVertex>();
+        }
+        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+            meshData_Graphics.indexLists[i] = std::vector<uint32_t>();
+        }
+        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
             meshData_Physics.positions[i] = glm::vec3(0.0f);
         }
         for (uint32_t i = 0; i < MAX_MESHES; ++i) {
@@ -125,6 +131,8 @@ public:
         for (uint32_t i = 0; i < MAX_MESHES; ++i) {
             meshData_Physics.freezeStates[i] = JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION;
         }
+        screenSpaceTriangle.vertexList = std::vector<MeshVertex>();
+        screenSpaceTriangle.indexList = std::vector<uint32_t>();
     }
     ~MeshDataManager() {}
     
@@ -143,13 +151,15 @@ public:
     }
 
     void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::string& filepath, int freezeState);
+
+    // TODO: This is not needed, replace with a function that creates a duplicate of an existing mesh. Later, this will need an offset buffer for instanced rendering.
     void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::vector<MeshVertex>& vertices, const std::vector<uint32_t>& indices, int freezeState);
     void CreateScreenSpaceTriangleMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue);
-    void DrawMesh(VkCommandBuffer commandBuffer, unsigned int index);
+    void DrawMesh(VkCommandBuffer commandBuffer, uint32_t index);
     void DrawScreenSpaceTriangle(VkCommandBuffer commandBuffer);
 
     // Getters
-    const glm::mat4& GetModelMatrix(unsigned int index) const {
+    const glm::mat4& GetModelMatrix(uint32_t index) const {
         return meshData_Graphics.modelMatrices[index];
     }
     uint32_t GetNumMeshes() const {
@@ -158,14 +168,7 @@ public:
     MeshData_Physics& GetMeshData_Physics() {
         return meshData_Physics;
     }
-    // TODO: change scene manager and vulkan shaders to take an array of mat4's instead of copying them into the vector
-    const std::vector<glm::mat4>& GetModelMatrices() const {
-        static std::vector<glm::mat4> matrices;
-        matrices.clear();
-        matrices.reserve(MAX_MESHES);
-        for (unsigned int i = 0; i < numMeshes; ++i) {
-            matrices.emplace_back(meshData_Graphics.modelMatrices[i]);
-        }
-        return matrices;
+    const glm::mat4* GetModelMatrices() const {
+        return meshData_Graphics.modelMatrices;
     }
 };

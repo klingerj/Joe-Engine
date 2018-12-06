@@ -415,7 +415,7 @@ void VulkanMeshShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkD
     }
 }
 
-void VulkanMeshShader::UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const Camera& camera, const Camera& shadowCamera, const std::vector<glm::mat4>& modelMatrices) {
+void VulkanMeshShader::UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const Camera& camera, const Camera& shadowCamera, const glm::mat4* modelMatrices, uint32_t numMeshes) {
     UBO_ViewProj ubo_vp = {};
     glm::mat4 view = camera.GetView();
     glm::mat4 proj = camera.GetProj();
@@ -428,7 +428,7 @@ void VulkanMeshShader::UpdateUniformBuffers(VkDevice device, uint32_t currentIma
     proj[1][1] *= -1.0f;
     ubo_vp_shadow.viewProj = proj * view;
 
-    for (unsigned int i = 0; i < modelMatrices.size(); ++i) {
+    for (uint32_t i = 0; i < numMeshes; ++i) {
         // Aligned offset
         glm::mat4* modelMat = (glm::mat4*)(((uint64_t)ubo_Dynamic_ModelMat.model + (i * uboDynamicAlignment)));
         *modelMat = modelMatrices[i];
@@ -443,7 +443,7 @@ void VulkanMeshShader::UpdateUniformBuffers(VkDevice device, uint32_t currentIma
     memcpy(data, &ubo_vp_shadow, sizeof(ubo_vp_shadow));
     vkUnmapMemory(device, uniformBuffersMemory_ViewProj_Shadow[currentImage]);
 
-    size_t dynamicMemorySize = modelMatrices.size() * uboDynamicAlignment;
+    size_t dynamicMemorySize = numMeshes * uboDynamicAlignment;
     vkMapMemory(device, uniformBuffersMemory_Dynamic_Model[currentImage], 0, dynamicMemorySize, 0, &data);
     memcpy(data, ubo_Dynamic_ModelMat.model, dynamicMemorySize);
 
@@ -763,14 +763,14 @@ void VulkanShadowPassShader::CreateUniformBuffers(VkPhysicalDevice physicalDevic
     CreateBuffer(physicalDevice, device, bufferSize_Dynamic_Model, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, uniformBuffers_Dynamic_Model, uniformBuffersMemory_Dynamic_Model);
 }
 
-void VulkanShadowPassShader::UpdateUniformBuffers(VkDevice device, const Camera& shadowCamera, const std::vector<glm::mat4>& modelMatrices) {
+void VulkanShadowPassShader::UpdateUniformBuffers(VkDevice device, const Camera& shadowCamera, const glm::mat4* modelMatrices, uint32_t numMeshes) {
     UBO_ViewProj ubo_vp = {};
     glm::mat4 view = shadowCamera.GetView();
     glm::mat4 proj = shadowCamera.GetProj();
     proj[1][1] *= -1.0f;
     ubo_vp.viewProj = proj * view;
 
-    for (unsigned int i = 0; i < modelMatrices.size(); ++i) {
+    for (uint32_t i = 0; i < numMeshes; ++i) {
         // Aligned offset
         glm::mat4* modelMat = (glm::mat4*)(((uint64_t)ubo_Dynamic_ModelMat.model + (i * uboDynamicAlignment)));
         *modelMat = modelMatrices[i];
@@ -781,7 +781,7 @@ void VulkanShadowPassShader::UpdateUniformBuffers(VkDevice device, const Camera&
     memcpy(data, &ubo_vp, sizeof(ubo_vp));
     vkUnmapMemory(device, uniformBuffersMemory_ViewProj);
 
-    size_t dynamicMemorySize = modelMatrices.size() * uboDynamicAlignment;
+    size_t dynamicMemorySize = numMeshes * uboDynamicAlignment;
     vkMapMemory(device, uniformBuffersMemory_Dynamic_Model, 0, dynamicMemorySize, 0, &data);
     memcpy(data, ubo_Dynamic_ModelMat.model, dynamicMemorySize);
 
@@ -1171,7 +1171,7 @@ void VulkanDeferredPassGeometryShader::CreateUniformBuffers(VkPhysicalDevice phy
     CreateBuffer(physicalDevice, device, bufferSize_Dynamic_Model, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, uniformBuffers_Dynamic_Model, uniformBuffersMemory_Dynamic_Model);
 }
 
-void VulkanDeferredPassGeometryShader::UpdateUniformBuffers(VkDevice device, const Camera& camera, const Camera& shadowCamera, const std::vector<glm::mat4>& modelMatrices) {
+void VulkanDeferredPassGeometryShader::UpdateUniformBuffers(VkDevice device, const Camera& camera, const Camera& shadowCamera, const glm::mat4* modelMatrices, uint32_t numMeshes) {
     UBO_ViewProj ubo_vp = {};
     glm::mat4 view = camera.GetView();
     glm::mat4 proj = camera.GetProj();
@@ -1184,7 +1184,7 @@ void VulkanDeferredPassGeometryShader::UpdateUniformBuffers(VkDevice device, con
     proj[1][1] *= -1.0f;
     ubo_vp_shadow.viewProj = proj * view;
 
-    for (unsigned int i = 0; i < modelMatrices.size(); ++i) {
+    for (uint32_t i = 0; i < numMeshes; ++i) {
         // Aligned offset
         glm::mat4* modelMat = (glm::mat4*)(((uint64_t)ubo_Dynamic_ModelMat.model + (i * uboDynamicAlignment)));
         *modelMat = modelMatrices[i];
@@ -1199,7 +1199,7 @@ void VulkanDeferredPassGeometryShader::UpdateUniformBuffers(VkDevice device, con
     memcpy(data, &ubo_vp_shadow, sizeof(ubo_vp_shadow));
     vkUnmapMemory(device, uniformBuffersMemory_ViewProj_Shadow);
 
-    size_t dynamicMemorySize = modelMatrices.size() * uboDynamicAlignment;
+    size_t dynamicMemorySize = numMeshes * uboDynamicAlignment;
     vkMapMemory(device, uniformBuffersMemory_Dynamic_Model, 0, dynamicMemorySize, 0, &data);
     memcpy(data, ubo_Dynamic_ModelMat.model, dynamicMemorySize);
 

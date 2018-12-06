@@ -74,7 +74,7 @@ public:
 
     void Cleanup(VkDevice device);
 
-    void UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const Camera& camera, const Camera& shadowCamera, const std::vector<glm::mat4>& modelMatrices);
+    void UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const Camera& camera, const Camera& shadowCamera, const glm::mat4* modelMatrices, uint32_t numMeshes);
     void BindDescriptorSets(VkCommandBuffer commandBuffer, size_t descriptorSetIndex, uint32_t dynamicOffset);
 
     // Getters
@@ -136,7 +136,7 @@ public:
 
     void Cleanup(VkDevice device);
 
-    void UpdateUniformBuffers(VkDevice device, const Camera& camera, const std::vector<glm::mat4>& modelMatrices);
+    void UpdateUniformBuffers(VkDevice device, const Camera& camera, const glm::mat4* modelMatrices, uint32_t numMeshes);
     void BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t dynamicOffset);
 
     // Getters
@@ -202,7 +202,7 @@ public:
 
     void Cleanup(VkDevice device);
 
-    void UpdateUniformBuffers(VkDevice device, const Camera& camera, const Camera& shadowCamera, const std::vector<glm::mat4>& modelMatrices);
+    void UpdateUniformBuffers(VkDevice device, const Camera& camera, const Camera& shadowCamera, const glm::mat4* modelMatrices, uint32_t numMeshes);
     void BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t dynamicOffset);
 
     // Getters
