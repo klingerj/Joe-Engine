@@ -2,7 +2,6 @@
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
-#include <iostream>
 
 MeshData_SSTriangle MeshDataManager::screenSpaceTriangle {};
 
@@ -123,8 +122,6 @@ void MeshDataManager::LoadModelFromFile(const std::string& filepath) {
             meshData_Graphics.indexLists[numMeshes].push_back(uniqueVertices[vertex]);
         }
     }
-    std::cout << "Number of vertices loaded: " << vertexList.size() << std::endl;
-    std::cout << "Number of indices loaded: " << meshData_Graphics.indexLists[numMeshes].size() << std::endl;
 }
 
 void MeshDataManager::DrawMesh(VkCommandBuffer commandBuffer, uint32_t index) {
