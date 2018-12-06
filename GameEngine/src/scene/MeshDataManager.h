@@ -130,6 +130,7 @@ public:
     
     void Cleanup(VkDevice device);
 
+    // TODO: add checks for bad indices
     void SetModelMatrix(const glm::mat4& m, uint32_t index) {
         meshData_Graphics.modelMatrices[index] = m;
     }
