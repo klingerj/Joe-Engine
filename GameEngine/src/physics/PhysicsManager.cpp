@@ -10,17 +10,19 @@ void PhysicsManager::Update() {
     if (currentTimeDelta > m_updateRateInSeconds) {
         auto& meshPhysicsData = meshDataManager->GetMeshData_Physics();
         for (uint32_t i = 0; i < meshDataManager->GetNumMeshes(); ++i) { // TODO: Process multiple meshes at a time with AVX
-            // Euler integration
-            // TODO: RK2
-            if (!(meshPhysicsData.freezeStates[i] & JE_PHYSICS_FREEZE_POSITION)) {
-                meshPhysicsData.positions[i] += meshPhysicsData.velocities[i] * m_updateRateFactor;
-                meshPhysicsData.velocities[i] += meshPhysicsData.accelerations[i] * m_updateRateFactor;
+            // Collisions
+            if (meshPhysicsData.positions[i].y < 0.0f) {
+                if (meshPhysicsData.velocities[i].y < 0.0f) {
+                    meshPhysicsData.velocities[i] *= -0.8f;
+                    meshPhysicsData.positions[i].y = 0.0f;
+                }
             }
 
-            // Collisions
-            if (meshPhysicsData.positions[i].y < 0.0f) { // Collide with an invisible plane at y = -1
-                meshPhysicsData.velocities[i] *= -0.75f;
-                //collisionForce = glm::vec3(0.0f, 9.80665f, 0.0f);
+            // Integration
+            if (!(meshPhysicsData.freezeStates[i] & JE_PHYSICS_FREEZE_POSITION)) {
+                glm::vec3 nextFrameVel = meshPhysicsData.accelerations[i] * m_updateRateFactor;
+                meshPhysicsData.positions[i] += 0.5f * (meshPhysicsData.velocities[i] + nextFrameVel) * m_updateRateFactor;
+                meshPhysicsData.velocities[i] += nextFrameVel;
             }
 
             // Compute forces
@@ -28,7 +30,7 @@ void PhysicsManager::Update() {
             const float mass = 0.5f;
 
             // Force computation to update acceleration
-            glm::vec3 acceleration = force_gravity / mass;
+            glm::vec3 acceleration = force_gravity;// *mass;
             meshPhysicsData.accelerations[i] = acceleration;
 
             // TODO: compute angular velocity, rotation matrix, etc

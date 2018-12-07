@@ -15,7 +15,7 @@ private:
     const float m_updateRateFactor; // For physics integration
 
 public:
-    PhysicsManager() : m_startTime(std::chrono::high_resolution_clock::now()), m_currentTime(0.0), m_updateRateInSeconds(33.333), m_updateRateFactor(1.0f / (float)m_updateRateInSeconds) {}
+    PhysicsManager() : m_startTime(std::chrono::high_resolution_clock::now()), m_currentTime(0.0), m_updateRateInSeconds(33.333), m_updateRateFactor(1.0f / 33.333f) {}
     ~PhysicsManager() {}
 
     void Initialize(const std::shared_ptr<MeshDataManager>& m);
