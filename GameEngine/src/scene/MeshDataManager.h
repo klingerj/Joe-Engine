@@ -145,9 +145,7 @@ public:
     void SetMeshPosition(const glm::vec3& pos, uint32_t index) {
         meshData_Physics.positions[index] = pos;
         glm::mat4& modelMat = meshData_Graphics.modelMatrices[index];
-        modelMat[0][3] = pos.x;
-        modelMat[1][3] = pos.y;
-        modelMat[2][3] = pos.z;
+        modelMat[3] = glm::vec4(pos, 1.0f);
     }
 
     void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::string& filepath, int freezeState);

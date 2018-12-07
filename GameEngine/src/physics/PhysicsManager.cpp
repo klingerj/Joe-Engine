@@ -25,7 +25,7 @@ void PhysicsManager::Update() {
 
             // Compute forces
             const glm::vec3 force_gravity = glm::vec3(0.0f, -9.80665f, 0.0f);
-            const float mass = 1.0f;
+            const float mass = 0.5f;
 
             // Force computation to update acceleration
             glm::vec3 acceleration = force_gravity / mass;

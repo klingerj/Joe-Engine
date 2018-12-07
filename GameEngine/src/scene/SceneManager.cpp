@@ -12,9 +12,7 @@ void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, V
     meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "plane.obj", JE_PHYSICS_FREEZE_POSITION);
     meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "wahoo.obj", JE_PHYSICS_FREEZE_POSITION);
     meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "sphere.obj", JE_PHYSICS_FREEZE_NONE);
-    //glm::mat4 sphereModelMat = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 10.0f, 0.0f));
-    //meshDataManager->SetModelMatrix(sphereModelMat, 2);
-    meshDataManager->SetMeshPosition(glm::vec3(0.0f, 3.0f, 0.0f), 0);
+    meshDataManager->SetMeshPosition(glm::vec3(0.0f, 10.0f, 0.0f), 2);
     meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "alienModel_Small.obj", JE_PHYSICS_FREEZE_POSITION);
 
     // Screen space triangle setup
@@ -25,8 +23,8 @@ void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, V
     textures.push_back(t);
 
     // Camera
-    camera = Camera(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height, SCENE_VIEW_NEAR_PLANE, SCENE_VIEW_FAR_PLANE);
-    shadowCamera = Camera(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPass.width / (float)shadowPass.height, SHADOW_VIEW_NEAR_PLANE, SHADOW_VIEW_FAR_PLANE);
+    camera = Camera(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height, SCENE_VIEW_NEAR_PLANE, SCENE_VIEW_FAR_PLANE);
+    shadowCamera = Camera(glm::vec3(7.0f, 7.0f, 7.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPass.width / (float)shadowPass.height, SHADOW_VIEW_NEAR_PLANE, SHADOW_VIEW_FAR_PLANE);
 
     // Shaders
     CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass, deferredPass);
