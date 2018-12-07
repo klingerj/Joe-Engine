@@ -19,7 +19,7 @@ void PhysicsManager::Update() {
 
             // Collisions
             if (meshPhysicsData.positions[i].y < 0.0f) { // Collide with an invisible plane at y = -1
-                meshPhysicsData.velocities[i] *= -0.85f;
+                meshPhysicsData.velocities[i] *= -0.75f;
                 //collisionForce = glm::vec3(0.0f, 9.80665f, 0.0f);
             }
 
