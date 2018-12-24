@@ -97,6 +97,10 @@ void MeshDataManager::LoadModelFromFile(const std::string& filepath) {
     std::unordered_map<MeshVertex, uint32_t> uniqueVertices = {};
     std::vector<MeshVertex>& vertexList = meshData_Graphics.vertexLists[numMeshes];
 
+    // To compute the mesh's OBB (needed for physics), keep track of the min/max extents
+    glm::vec3 minPos = glm::vec3(9999999999.0f);
+    glm::vec3 maxPos = glm::vec3(-9999999999.0f);
+
     for (const auto& shape : shapes) {
         for (const auto& index : shape.mesh.indices) {
             MeshVertex vertex = {};
@@ -118,9 +122,16 @@ void MeshDataManager::LoadModelFromFile(const std::string& filepath) {
             if (uniqueVertices.count(vertex) == 0) {
                 uniqueVertices[vertex] = static_cast<uint32_t>(vertexList.size());
                 vertexList.push_back(vertex);
+                minPos = glm::vec3(std::min(minPos.x, vertex.pos.x), std::min(minPos.y, vertex.pos.y), std::min(minPos.z, vertex.pos.z));
+                maxPos = glm::vec3(std::max(maxPos.x, vertex.pos.x), std::max(maxPos.y, vertex.pos.y), std::max(maxPos.z, vertex.pos.z));
             }
             meshData_Graphics.indexLists[numMeshes].push_back(uniqueVertices[vertex]);
         }
+    }
+    if (vertexList.size() == 0) {
+        meshData_Physics.obbs[numMeshes].e = glm::vec3(0.5f * (maxPos - minPos));
+    } else {
+        meshData_Physics.obbs[numMeshes].e = glm::vec3(0.5f * (maxPos - minPos));
     }
 }
 

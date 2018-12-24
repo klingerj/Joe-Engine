@@ -23,3 +23,10 @@ public:
     // Compute physics on the mesh data
     void Update();
 };
+
+// Collision information
+// TODO: expand this to store info for edge-edge collisions. Right now we are just checking vertex-face.
+typedef struct collision_info_t {
+    glm::vec4 minimumTranslation; // x, y, & z contains the direction, w contains the minimum penetration distance of the two object collision
+    glm::vec4 point; // The point on the bounding box that the collision should be applied to 
+} CollisionInfo;
