@@ -12,7 +12,7 @@ void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, V
     meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "plane.obj", JE_PHYSICS_FREEZE_POSITION);
     meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "wahoo.obj", JE_PHYSICS_FREEZE_POSITION);
     meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "sphere.obj", JE_PHYSICS_FREEZE_NONE);
-    meshDataManager->SetMeshPosition(glm::vec3(0.0f, 3.0f, 0.0f), 2);
+    meshDataManager->SetMeshPosition(glm::vec3(0.0f, 5.0f, 0.0f), 2);
     meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "alienModel_Small.obj", JE_PHYSICS_FREEZE_POSITION);
 
     // Screen space triangle setup

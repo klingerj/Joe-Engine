@@ -79,6 +79,7 @@ typedef struct mesh_data_graphics_t {
 typedef struct oriented_bounding_box_t {
     glm::vec3 u[3]; // Local OBB axes
     glm::vec3 e; // extents of local OBB axes (halfwidths)
+    glm::vec3 center; // position of the OBB
 } OBB;
 
 typedef struct mesh_data_physics_t {
@@ -87,6 +88,7 @@ typedef struct mesh_data_physics_t {
     glm::vec3 accelerations[MAX_MESHES];
     glm::vec3 angularMomentums[MAX_MESHES];
     glm::mat3 rotations[MAX_MESHES]; // TODO: change to quaternion
+    float masses[MAX_MESHES];
     OBB obbs[MAX_MESHES];
     uint32_t freezeStates[MAX_MESHES];
 } MeshData_Physics;
@@ -142,7 +144,12 @@ public:
             meshData_Physics.rotations[i] = glm::mat3(1.0f);
         }
         for (uint32_t i = 0; i < MAX_MESHES; ++i) {
-            meshData_Physics.obbs[i] = { { glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f) } , glm::vec3(1.0f, 1.0f, 1.0f) };
+            meshData_Physics.masses[i] = 1.0f;
+        }
+        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+            meshData_Physics.obbs[i] = { { glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f) },
+                                           glm::vec3(1.0f, 1.0f, 1.0f),
+                                           glm::vec3(0.0f, 0.0f, 0.0f) };
         }
         for (uint32_t i = 0; i < MAX_MESHES; ++i) {
             meshData_Physics.freezeStates[i] = JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION;
