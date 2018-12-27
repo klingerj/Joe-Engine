@@ -24,7 +24,7 @@ private:
     const double m_updateRateInSeconds; // in s
     const float m_updateRateFactor; // For physics integration
 
-    CollisionInfo SAT(const OBB& obbA, const OBB& obbB);
+    CollisionInfo SAT(const OBB& obbA, const OBB& obbB, uint32_t indexA, uint32_t indexB);
 
 public:
     PhysicsManager() : m_startTime(std::chrono::high_resolution_clock::now()), m_currentTime(0.0), m_updateRateInSeconds(33.333), m_updateRateFactor(1.0f / 33.333f) {}
