@@ -58,11 +58,16 @@ void PhysicsManager::Update() {
                 if (i != j) {
                     CollisionInfo collisionInfo = SAT(meshPhysicsData.obbs[i], meshPhysicsData.obbs[j], i, j);
                     if (!(glm::length(glm::vec3(collisionInfo.minimumTranslation)) == 0.0f && collisionInfo.minimumTranslation.w == -1.0f)) {
+                        // Rotational impulse equation
                         const float impulseNum = (-2.0f * glm::dot(meshPhysicsData.velocities[i], glm::vec3(collisionInfo.minimumTranslation)));
                         const glm::vec3 impulseDenom = ((1.0f / meshPhysicsData.masses[i]) * glm::cross(inertiaTensor_Inverse * glm::cross(collisionInfo.point, glm::vec3(collisionInfo.minimumTranslation)), collisionInfo.point));
                         const glm::vec3 impulse = impulseNum / impulseDenom;
-                        force += impulse;
                         torque += glm::cross(collisionInfo.point, impulse);
+                        
+                        // Linear impulse
+                        const glm::vec3 momentum = meshPhysicsData.masses[i] * meshPhysicsData.velocities[i];
+                        meshPhysicsData.velocities[i] += glm::max(0.0f, -2.0f * glm::dot(momentum, glm::vec3(collisionInfo.minimumTranslation))) * glm::vec3(collisionInfo.minimumTranslation) / meshPhysicsData.masses[i];
+                        
                         break;
                     }
                 }
@@ -99,21 +104,21 @@ void PhysicsManager::Update() {
 // Checks for intersection between two oriented bounding boxes
 CollisionInfo PhysicsManager::SAT(const OBB& obbA, const OBB& obbB, uint32_t indexA, uint32_t indexB) {
     CollisionInfo collisionInfo = {};
-    collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
+    collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -999999.0f);
 
     const glm::vec3 obbCenterDiff = obbB.center - obbA.center;
     // List of points that are used in a bounding box for collision detection
     // Each point is a potential point of penetration and therefore collision
     // The points are the corners and edge midpoints of a (1, 1, 1)-scale cube
-    constexpr uint32_t numOBBPoints = 8;
+    constexpr uint32_t numOBBPoints = 20;
     const std::array<glm::vec3, numOBBPoints> obbPoints = { glm::vec3(-1.0f, -1.0f, -1.0f),
                                                             glm::vec3(-1.0f, -1.0f,  1.0f),
                                                             glm::vec3(-1.0f,  1.0f, -1.0f),
                                                             glm::vec3(-1.0f,  1.0f,  1.0f),
-                                                            glm::vec3(1.0f, -1.0f, -1.0f),
-                                                            glm::vec3(1.0f, -1.0f,  1.0f),
-                                                            glm::vec3(1.0f,  1.0f, -1.0f),
-                                                            glm::vec3(1.0f,  1.0f,  1.0f) };/* ,
+                                                            glm::vec3( 1.0f, -1.0f, -1.0f),
+                                                            glm::vec3 (1.0f, -1.0f,  1.0f),
+                                                            glm::vec3( 1.0f,  1.0f, -1.0f),
+                                                            glm::vec3( 1.0f,  1.0f,  1.0f),
                                                             glm::vec3( 1.0f, -1.0f,  0.0f),
                                                             glm::vec3(-1.0f, -1.0f,  0.0f),
                                                             glm::vec3( 1.0f,  1.0f,  0.0f),
@@ -125,7 +130,7 @@ CollisionInfo PhysicsManager::SAT(const OBB& obbA, const OBB& obbB, uint32_t ind
                                                             glm::vec3( 1.0f,  0.0f,  1.0f),
                                                             glm::vec3( 1.0f,  0.0f, -1.0f),
                                                             glm::vec3(-1.0f,  0.0f,  1.0f),
-                                                            glm::vec3(-1.0f,  0.0f, -1.0f) };*/
+                                                            glm::vec3(-1.0f,  0.0f, -1.0f) };
     std::array<glm::vec3, numOBBPoints> obbPointsTransformed_A;
     glm::mat4 translationA = glm::translate(glm::mat4(1.0f), obbA.center);
     glm::mat4 transformA = translationA * glm::mat4(glm::vec4(obbA.u[0], 0.0f), glm::vec4(obbA.u[1], 1.0f), glm::vec4(obbA.u[2], 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
@@ -163,34 +168,76 @@ CollisionInfo PhysicsManager::SAT(const OBB& obbA, const OBB& obbB, uint32_t ind
         }
     }
 
-    for (uint32_t i = 0; i < 15; ++i) {
-        const glm::vec3& planeNormal = planeNormals[i];
-        const float diffProj = glm::dot(obbCenterDiff, planeNormal);
-
-        // First, find the most distant point along the normal for each OBB and project it onto the axis
-        float maxProjA, maxProjB = -99999999.0f;
-        for (uint32_t j = 0; j < numOBBPoints; ++j) {
-            const float pointProjA = glm::dot(planeNormal, obbPointsTransformed_A[j] - obbA.center);
-            const float pointProjB = glm::dot(planeNormal, obbPointsTransformed_B[j] - obbB.center);
-            maxProjA = std::max(maxProjA, std::fabsf(pointProjA));
-            maxProjB = std::max(maxProjB, std::fabsf(pointProjB));
-            if ((pointProjA < 0.0f) && (pointProjA > collisionInfo.minimumTranslation.w)) { // check if pointProjA penetrates into OBB B at all
-                collisionInfo.minimumTranslation = glm::vec4(planeNormal, pointProjA);
-                collisionInfo.point = obbPointsTransformed_A[j] - obbA.center;
-            }
-        }
-
-        // TODO
-        // trying to do too much need to:
-        // 1. get most radial point and use the max projection to determine if the obbs are even intersecting
-        // if yes, iterate over all the points AGAIN and store the direction of minimum penetration and the amount.
-        // This is where we will also decide whether or not to store multiple contact points or not, do that later.
+    // Test OBB A's axes
+    for (uint32_t i = 0; i < 3; ++i) {
+        const glm::vec3& axis = planeNormals[i];
+        const float diffProj = glm::dot(obbCenterDiff, axis);
+        const float ra = obbA.e[i];
+        const float rb = std::fabsf(glm::dot(obbB.u[i] * obbB.e[i], axis));
         
-        // Check for whether or not the axis is separating
-        if (std::fabsf(diffProj) > (maxProjA + maxProjB)) {
+        // Check if this axis is a separating axis
+        if (std::fabsf(diffProj) > (ra + rb)) {
             collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
             collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
             return collisionInfo;
+        }
+    }
+
+    // Test OBB B's axes
+    for (uint32_t i = 0; i < 3; ++i) {
+        const glm::vec3& axis = planeNormals[i + 3];
+        const float diffProj = glm::dot(obbCenterDiff, axis);
+        const float ra = std::fabsf(glm::dot(obbA.u[i] * obbA.e[i], axis));
+        const float rb = obbB.e[i];
+
+        // Check if this axis is a separating axis
+        if (std::fabsf(diffProj) > (ra + rb)) {
+            collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
+            collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
+            return collisionInfo;
+        }
+    }
+
+    for (uint32_t i = 0; i < 9; ++i) {
+        const glm::vec3& axis = planeNormals[i + 6];
+        const float diffProj = glm::dot(obbCenterDiff, axis);
+        const uint32_t idx = i % 3;
+        const float ra = std::fabsf(glm::dot(obbA.u[idx] * obbA.e[idx], axis));
+        const float rb = std::fabsf(glm::dot(obbB.u[idx] * obbB.e[idx], axis));
+
+        // Check if this axis is a separating axis
+        if (std::fabsf(diffProj) > (ra + rb)) {
+            collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
+            collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
+            return collisionInfo;
+        }
+    }
+
+    // If we made it this far, the two OBB's must be colliding
+    // So, we will compute the minimum translation amount and direction
+    // This involves iterating over all 6 planes of OBB B and checking for OBB A's penetration into OBB B
+    const std::array<glm::vec3, 6> planePoints = { obbB.center + obbB.u[0] * obbB.e.x,
+                                                   obbB.center - obbB.u[0] * obbB.e.x,
+                                                   obbB.center + obbB.u[1] * obbB.e.y,
+                                                   obbB.center - obbB.u[1] * obbB.e.y,
+                                                   obbB.center + obbB.u[2] * obbB.e.z,
+                                                   obbB.center - obbB.u[2] * obbB.e.z };
+
+    for (uint32_t i = 0; i < 6; ++i) {
+        const uint32_t odd = i & 0x1;
+        const glm::vec3& currentPlanePoint = planePoints[i];
+        const glm::vec3 planeNormal = glm::normalize(currentPlanePoint - obbB.center);
+
+        // Check each point in OBB A for penetration into B
+        for (uint32_t j = 0; j < numOBBPoints; ++j) {
+            const glm::vec3 point = obbPointsTransformed_A[j] - currentPlanePoint;
+            const float proj = glm::dot(point, planeNormal);
+
+            // If point is on the back side of the plane and is "more positive" than the previous stored min
+            if ((proj < 0.0f) && (proj > collisionInfo.minimumTranslation.w)) {
+                collisionInfo.minimumTranslation = glm::vec4(planeNormal, proj);
+                collisionInfo.point = obbPointsTransformed_A[j] - obbA.center;
+            }
         }
     }
 
