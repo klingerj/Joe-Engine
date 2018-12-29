@@ -13,16 +13,12 @@ void PhysicsManager::Update() {
         auto& meshPhysicsData = meshDataManager->GetMeshData_Physics();
         for (uint32_t i = 0; i < meshDataManager->GetNumMeshes(); ++i) { // TODO: Process multiple meshes at a time with AVX
             meshPhysicsData.obbs[i].center = meshPhysicsData.positions[i];
-
             // Integration
             if (!(meshPhysicsData.freezeStates[i] & JE_PHYSICS_FREEZE_POSITION)) {
-                /*glm::vec3 nextFrameVel = meshPhysicsData.accelerations[i] * m_updateRateFactor;
-                meshPhysicsData.positions[i] += 0.5f * (meshPhysicsData.velocities[i] + nextFrameVel) * m_updateRateFactor;
-                meshPhysicsData.velocities[i] += nextFrameVel; // this is rk2? */
                 meshPhysicsData.velocities[i] += meshPhysicsData.accelerations[i] * m_updateRateFactor;
                 meshPhysicsData.positions[i] += meshPhysicsData.velocities[i] * m_updateRateFactor;
             }
-
+            
             // Compute forces
             glm::vec3 force = glm::vec3(0.0f, -9.80665f, 0.0f);
             const float mass = 1.0f;
@@ -40,10 +36,7 @@ void PhysicsManager::Update() {
             const glm::mat3 inertiaTensor_Inverse = meshPhysicsData.rotations[i] * inertiaTensor_bodyInverse * glm::transpose(meshPhysicsData.rotations[i]);
 
             // Initialize torque
-            glm::vec3 torque = glm::vec3(0.0f, 0.0f, 0.0f);/*glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f)) * 0.1f;
-            if (m_currentTime > 30000.0f) {
-                torque *= -1.0f;
-            }*/
+            glm::vec3 torque = glm::vec3(0.0f, 0.0f, 0.0f);
 
             // Compute collisions between each OBB in the scene
             for (uint32_t j = 0; j < meshDataManager->GetNumMeshes(); ++j) {
@@ -51,15 +44,15 @@ void PhysicsManager::Update() {
                     CollisionInfo collisionInfo = SAT(meshPhysicsData.obbs[i], meshPhysicsData.obbs[j], i, j);
                     if (!(glm::length(glm::vec3(collisionInfo.minimumTranslation)) == 0.0f && collisionInfo.minimumTranslation.w == -1.0f)) {
                         // Rotational impulse
-                        const float impulseNum = (-1.2f * glm::dot(meshPhysicsData.velocities[i], glm::vec3(collisionInfo.minimumTranslation)));
+                        const float impulseNum = (-1.5f * glm::dot(meshPhysicsData.velocities[i], glm::vec3(collisionInfo.minimumTranslation)));
                         const glm::vec3 impulseDenom = ((1.0f / meshPhysicsData.masses[i]) * glm::cross(inertiaTensor_Inverse * glm::cross(collisionInfo.point, glm::vec3(collisionInfo.minimumTranslation)), collisionInfo.point));
                         const glm::vec3 impulse = impulseNum / impulseDenom;
                         torque += glm::cross(collisionInfo.point, impulse);
                         
                         // Linear impulse
                         const glm::vec3 momentum = meshPhysicsData.masses[i] * meshPhysicsData.velocities[i];
-                        meshPhysicsData.velocities[i] += glm::max(0.0f, -1.5f * glm::dot(momentum, glm::vec3(collisionInfo.minimumTranslation))) * glm::vec3(collisionInfo.minimumTranslation) / meshPhysicsData.masses[i];
-                        
+                        meshPhysicsData.velocities[i] += glm::max(0.0f, -1.45f * glm::dot(momentum, glm::vec3(collisionInfo.minimumTranslation))) * glm::vec3(collisionInfo.minimumTranslation) / meshPhysicsData.masses[i];
+                        meshPhysicsData.positions[i] += glm::vec3(collisionInfo.minimumTranslation) * -collisionInfo.minimumTranslation.w * 0.5f; // hacky
                         break;
                     }
                 }
@@ -333,6 +326,23 @@ CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_
                 collisionInfo.point = obbPointsTransformed_A[j] - obbA.center;
             }
         }
+
+        // Now that we have the point of minimum penetration, find all points that are really close to that point, and average their
+        // positions for the contact point
+        glm::vec3 contactPoint = glm::vec3(0.0f, 0.0f, 0.0f);
+        uint32_t numContactPoints = 0;
+        for (uint32_t j = 0; j < numOBBPoints; ++j) {
+            const glm::vec3 point = obbPointsTransformed_A[j] - currentPlanePoint;
+            const float proj = glm::dot(point, planeNormal);
+
+            // If point is on the back side of the plane and is "more positive" than the previous stored min
+            if (std::fabsf(proj - collisionInfo.minimumTranslation.w) < 0.000000953674316f) {
+                contactPoint += point;
+                ++numContactPoints;
+            }
+        }
+        contactPoint /= (float)numContactPoints;
+        collisionInfo.point = contactPoint;
     }
 
     // Return the collision result otherwise.

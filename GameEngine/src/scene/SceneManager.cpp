@@ -15,8 +15,8 @@ void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, V
     //meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_NONE);
     //meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_NONE);
     meshDataManager->SetMeshPosition(glm::vec3(0.0f, 0.0f, 0.0f), 0);
-    meshDataManager->SetMeshPosition(glm::vec3(0.0f, 3.0f, 0.0f), 1);
-    meshDataManager->SetMeshScale(glm::vec3(3.0f, 1.0f, 3.0f), 0);
+    meshDataManager->SetMeshPosition(glm::vec3(0.5f, 3.0f, 0.0f), 1);
+    meshDataManager->SetMeshScale(glm::vec3(1.0f, 1.0f, 1.0f), 0);
     //meshDataManager->SetMeshPosition(glm::vec3(0.0f, 4.0f, 0.0f), 2);
     //meshDataManager->SetMeshPosition(glm::vec3(0.0f, 6.0f, 0.0f), 3);
     //meshDataManager->SetMeshPosition(glm::vec3(0.0f, 8.0f, 0.0f), 4);
@@ -109,7 +109,7 @@ void SceneManager::UpdateModelMatrices() {
     float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
     glm::mat4 mat1 = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 1.0f, 3.0f));
-    meshDataManager->SetModelMatrix(mat1, 0);
+    //meshDataManager->SetModelMatrix(mat1, 0);
     
     /*glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, -0.75f, 0.0f));
     mat2 = glm::rotate(mat2, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
