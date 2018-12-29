@@ -9,17 +9,9 @@ void PhysicsManager::Initialize(const std::shared_ptr<MeshDataManager>& m) {
 void PhysicsManager::Update() {
     const JE_TIMER globalTime = std::chrono::high_resolution_clock::now();
     double currentTimeDelta = std::chrono::duration<double, std::chrono::milliseconds::period>(globalTime - m_startTime).count();
-    if (currentTimeDelta > m_updateRateInSeconds) {
+    if (currentTimeDelta > m_updateRateInMilliseconds) {
         auto& meshPhysicsData = meshDataManager->GetMeshData_Physics();
         for (uint32_t i = 0; i < meshDataManager->GetNumMeshes(); ++i) { // TODO: Process multiple meshes at a time with AVX
-            // "Collision" with ground
-            /*if (meshPhysicsData.positions[i].y < 0.0f) {
-                if (meshPhysicsData.velocities[i].y < 0.0f) {
-                    meshPhysicsData.velocities[i] *= -0.8f;
-                    meshPhysicsData.positions[i].y = 0.0f;
-                }
-            }*/
-            
             meshPhysicsData.obbs[i].center = meshPhysicsData.positions[i];
 
             // Integration
@@ -55,18 +47,18 @@ void PhysicsManager::Update() {
 
             // Compute collisions between each OBB in the scene
             for (uint32_t j = 0; j < meshDataManager->GetNumMeshes(); ++j) {
-                if (i != j) {
+                if ((!(meshPhysicsData.freezeStates[i] & (JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION))) && i != j) {
                     CollisionInfo collisionInfo = SAT(meshPhysicsData.obbs[i], meshPhysicsData.obbs[j], i, j);
                     if (!(glm::length(glm::vec3(collisionInfo.minimumTranslation)) == 0.0f && collisionInfo.minimumTranslation.w == -1.0f)) {
-                        // Rotational impulse equation
-                        const float impulseNum = (-2.0f * glm::dot(meshPhysicsData.velocities[i], glm::vec3(collisionInfo.minimumTranslation)));
+                        // Rotational impulse
+                        const float impulseNum = (-1.2f * glm::dot(meshPhysicsData.velocities[i], glm::vec3(collisionInfo.minimumTranslation)));
                         const glm::vec3 impulseDenom = ((1.0f / meshPhysicsData.masses[i]) * glm::cross(inertiaTensor_Inverse * glm::cross(collisionInfo.point, glm::vec3(collisionInfo.minimumTranslation)), collisionInfo.point));
                         const glm::vec3 impulse = impulseNum / impulseDenom;
                         torque += glm::cross(collisionInfo.point, impulse);
                         
                         // Linear impulse
                         const glm::vec3 momentum = meshPhysicsData.masses[i] * meshPhysicsData.velocities[i];
-                        meshPhysicsData.velocities[i] += glm::max(0.0f, -2.0f * glm::dot(momentum, glm::vec3(collisionInfo.minimumTranslation))) * glm::vec3(collisionInfo.minimumTranslation) / meshPhysicsData.masses[i];
+                        meshPhysicsData.velocities[i] += glm::max(0.0f, -1.5f * glm::dot(momentum, glm::vec3(collisionInfo.minimumTranslation))) * glm::vec3(collisionInfo.minimumTranslation) / meshPhysicsData.masses[i];
                         
                         break;
                     }
@@ -79,7 +71,7 @@ void PhysicsManager::Update() {
 
             // TODO: compute angular velocity, rotation matrix, etc
             if (!(meshPhysicsData.freezeStates[i] & JE_PHYSICS_FREEZE_ROTATION)) {
-                meshPhysicsData.angularMomentums[i] += torque * m_updateRateFactor;
+                meshPhysicsData.angularMomentums[i] += torque * m_updateRateFactor; // TODO: multiply by mass or something?
                 const glm::vec3 angularVelocity = inertiaTensor_Inverse * meshPhysicsData.angularMomentums[i];
                 const float angle = std::sqrt(glm::dot(angularVelocity, angularVelocity)) * m_updateRateFactor;
 
@@ -97,16 +89,21 @@ void PhysicsManager::Update() {
                 meshDataManager->SetModelMatrix(translation * rotation, i);
             }
         }
-        m_currentTime += m_updateRateInSeconds;
+        m_currentTime += m_updateRateInMilliseconds;
     }
 }
 
 // Checks for intersection between two oriented bounding boxes
-CollisionInfo PhysicsManager::SAT(const OBB& obbA, const OBB& obbB, uint32_t indexA, uint32_t indexB) {
+// TODO: change back to const references
+CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_t indexB) {
     CollisionInfo collisionInfo = {};
     collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -999999.0f);
 
     const glm::vec3 obbCenterDiff = obbB.center - obbA.center;
+
+    obbA.e *= meshDataManager->GetMeshData_Physics().scales[indexA];
+    obbB.e *= meshDataManager->GetMeshData_Physics().scales[indexB];
+
     // List of points that are used in a bounding box for collision detection
     // Each point is a potential point of penetration and therefore collision
     // The points are the corners and edge midpoints of a (1, 1, 1)-scale cube
@@ -137,80 +134,177 @@ CollisionInfo PhysicsManager::SAT(const OBB& obbA, const OBB& obbB, uint32_t ind
     for (uint32_t i = 0; i < numOBBPoints; ++i) {
         obbPointsTransformed_A[i] = glm::vec3(meshDataManager->GetModelMatrix(indexA) * glm::vec4(obbPoints[i] * obbA.e, 1.0f));
     }
-    std::array<glm::vec3, numOBBPoints> obbPointsTransformed_B;
+    /*std::array<glm::vec3, numOBBPoints> obbPointsTransformed_B;
     glm::mat4 translationB = glm::translate(glm::mat4(1.0f), obbB.center);
     glm::mat4 transformB = translationB * glm::mat4(glm::vec4(obbB.u[0], 0.0f), glm::vec4(obbB.u[1], 1.0f), glm::vec4(obbB.u[2], 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
     for (uint32_t i = 0; i < numOBBPoints; ++i) {
         obbPointsTransformed_B[i] = glm::vec3(meshDataManager->GetModelMatrix(indexB) * glm::vec4(obbPoints[i] * obbB.e, 1.0f));
-    }
+    }*/
 
     // Now, each array is populated with each obb's world space collision points
     // Now, we test the 15 required axes for the 3D OBB SAT
-    std::array<glm::vec3, 15> planeNormals;
+    /*std::array<glm::vec3, 15> planeNormals;
     for (uint32_t i = 0; i < 3; ++i) { planeNormals[i] = obbA.u[i]; };
     for (uint32_t i = 0; i < 3; ++i) { planeNormals[i + 3] = obbB.u[i]; };
 
     // Attempt to cross product the axes. If the cross product cannot be computed i.e. the vectors are identical, just reuse some OBB local vector
-    /*planeNormals[6]  = glm::epsilonEqual(obbA.u[0], obbB.u[0], glm::vec3(0.000000953674316f)) ? obbA.u[0] : glm::normalize(glm::cross(obbA.u[0], obbB.u[0]));
-    planeNormals[7]  = glm::normalize(glm::cross(obbA.u[0], obbB.u[1]));
-    planeNormals[8]  = glm::normalize(glm::cross(obbA.u[0], obbB.u[2]));
-    planeNormals[9]  = glm::normalize(glm::cross(obbA.u[1], obbB.u[0]));
-    planeNormals[10] = glm::normalize(glm::cross(obbA.u[1], obbB.u[1]));
-    planeNormals[11] = glm::normalize(glm::cross(obbA.u[1], obbB.u[2]));
-    planeNormals[12] = glm::normalize(glm::cross(obbA.u[2], obbB.u[0]));
-    planeNormals[13] = glm::normalize(glm::cross(obbA.u[2], obbB.u[1]));
-    planeNormals[14] = glm::normalize(glm::cross(obbA.u[2], obbB.u[2]));*/
     for (uint32_t i = 0; i < 3; ++i) {
         for (uint32_t j = 0; j < 3; ++j) {
-            const glm::vec3 vecsEqual = glm::epsilonEqual(obbA.u[0], obbB.u[0], glm::vec3(0.000000953674316f));
+            const glm::vec3 vecsEqual = glm::epsilonEqual(obbA.u[i], obbB.u[j], glm::vec3(0.000000953674316f));
             const uint32_t equal = (uint32_t)vecsEqual[0] + (uint32_t)vecsEqual[1] + (uint32_t)vecsEqual[2];
             planeNormals[i * 3 + j + 6] = (equal == 3) ? obbA.u[j] : glm::normalize(glm::cross(obbA.u[i], obbB.u[j]));
+        }
+    }*/
+
+    // Ericson OBB SAT test
+    float ra, rb;
+    glm::mat3 rot, absRot;
+
+    for (uint32_t i = 0; i < 3; ++i) {
+        for (uint32_t j = 0; j < 3; ++j) {
+            rot[i][j] = glm::dot(obbA.u[i], obbB.u[j]);
+        }
+    }
+    glm::vec3 diffProj = glm::vec3(glm::dot(obbCenterDiff, obbA.u[0]), glm::dot(obbCenterDiff, obbA.u[1]), glm::dot(obbCenterDiff, obbA.u[2]));
+
+    for (uint32_t i = 0; i < 3; ++i) {
+        for (uint32_t j = 0; j < 3; ++j) {
+            absRot[i][j] = std::fabsf(rot[i][j]) + 0.000000953674316f;
         }
     }
 
     // Test OBB A's axes
     for (uint32_t i = 0; i < 3; ++i) {
-        const glm::vec3& axis = planeNormals[i];
-        const float diffProj = glm::dot(obbCenterDiff, axis);
-        const float ra = obbA.e[i];
-        const float rb = std::fabsf(glm::dot(obbB.u[i] * obbB.e[i], axis));
-        
-        // Check if this axis is a separating axis
-        if (std::fabsf(diffProj) > (ra + rb)) {
+        ra = obbA.e[i];
+        rb = obbB.e[0] * absRot[i][0] + obbB.e[1] * absRot[i][1] + obbB.e[2] * absRot[i][2];
+        if (std::fabsf(obbCenterDiff[i]) > ra + rb) {
             collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
             collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
+            obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
+            obbB.e /= meshDataManager->GetMeshData_Physics().scales[indexB];
             return collisionInfo;
         }
     }
 
     // Test OBB B's axes
     for (uint32_t i = 0; i < 3; ++i) {
-        const glm::vec3& axis = planeNormals[i + 3];
-        const float diffProj = glm::dot(obbCenterDiff, axis);
-        const float ra = std::fabsf(glm::dot(obbA.u[i] * obbA.e[i], axis));
-        const float rb = obbB.e[i];
-
-        // Check if this axis is a separating axis
-        if (std::fabsf(diffProj) > (ra + rb)) {
+        ra = obbA.e[0] * absRot[0][i] + obbA.e[1] * absRot[1][i] + obbA.e[2] * absRot[2][i];
+        rb = obbB.e[i];
+        if (std::fabsf(obbCenterDiff[i]) > ra + rb) {
             collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
             collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
+            obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
+            obbB.e /= meshDataManager->GetMeshData_Physics().scales[indexB];
             return collisionInfo;
         }
     }
 
-    for (uint32_t i = 0; i < 9; ++i) {
-        const glm::vec3& axis = planeNormals[i + 6];
-        const float diffProj = glm::dot(obbCenterDiff, axis);
-        const uint32_t idx = i % 3;
-        const float ra = std::fabsf(glm::dot(obbA.u[idx] * obbA.e[idx], axis));
-        const float rb = std::fabsf(glm::dot(obbB.u[idx] * obbB.e[idx], axis));
+    // Test A0 x B0
+    ra = obbA.e[1] * absRot[2][0] + obbA.e[2] * absRot[1][0];
+    rb = obbB.e[1] * absRot[0][2] + obbB.e[2] * absRot[0][1];
+    if (std::fabsf(obbCenterDiff.z) * rot[1][0] -
+        obbCenterDiff.y * rot[2][0] > ra + rb) {
+        collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
+        collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
+        obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
+        obbB.e /= meshDataManager->GetMeshData_Physics().scales[indexB];
+        return collisionInfo;
+    }
 
-        // Check if this axis is a separating axis
-        if (std::fabsf(diffProj) > (ra + rb)) {
-            collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
-            collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
-            return collisionInfo;
-        }
+    // Test A0 x B1
+    ra = obbA.e[1] * absRot[2][1] + obbA.e[2] * absRot[1][1];
+    rb = obbB.e[0] * absRot[0][2] + obbB.e[2] * absRot[0][0];
+    if (std::fabsf(obbCenterDiff.z) * rot[1][1] -
+        obbCenterDiff.y * rot[2][1] > ra + rb) {
+        collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
+        collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
+        obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
+        obbB.e /= meshDataManager->GetMeshData_Physics().scales[indexB];
+        return collisionInfo;
+    }
+
+    // Test A0 x B2
+    ra = obbA.e[1] * absRot[2][2] + obbA.e[2] * absRot[1][2];
+    rb = obbB.e[0] * absRot[0][1] + obbB.e[1] * absRot[0][0];
+    if (std::fabsf(obbCenterDiff.z) * rot[1][2] -
+        obbCenterDiff.y * rot[2][2] > ra + rb) {
+        collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
+        collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
+        obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
+        obbB.e /= meshDataManager->GetMeshData_Physics().scales[indexB];
+        return collisionInfo;
+    }
+
+    // Test A1 x B0
+    ra = obbA.e[0] * absRot[2][0] + obbA.e[2] * absRot[0][0];
+    rb = obbB.e[1] * absRot[1][2] + obbB.e[2] * absRot[1][1];
+    if (std::fabsf(obbCenterDiff.x) * rot[2][0] -
+        obbCenterDiff.z * rot[0][0] > ra + rb) {
+        collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
+        collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
+        obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
+        obbB.e /= meshDataManager->GetMeshData_Physics().scales[indexB];
+        return collisionInfo;
+    }
+
+    // Test A1 x B1
+    ra = obbA.e[0] * absRot[2][1] + obbA.e[2] * absRot[0][1];
+    rb = obbB.e[0] * absRot[1][2] + obbB.e[2] * absRot[1][0];
+    if (std::fabsf(obbCenterDiff.x) * rot[2][1] -
+        obbCenterDiff.z * rot[0][1] > ra + rb) {
+        collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
+        collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
+        obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
+        obbB.e /= meshDataManager->GetMeshData_Physics().scales[indexB];
+        return collisionInfo;
+    }
+
+    // Test A1 x B2
+    ra = obbA.e[0] * absRot[2][2] + obbA.e[2] * absRot[0][2];
+    rb = obbB.e[0] * absRot[1][1] + obbB.e[1] * absRot[1][0];
+    if (std::fabsf(obbCenterDiff.x) * rot[2][2] -
+        obbCenterDiff.z * rot[0][2] > ra + rb) {
+        collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
+        collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
+        obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
+        obbB.e /= meshDataManager->GetMeshData_Physics().scales[indexB];
+        return collisionInfo;
+    }
+
+    // Test A2 x B0
+    ra = obbA.e[0] * absRot[1][0] + obbA.e[1] * absRot[0][0];
+    rb = obbB.e[1] * absRot[2][2] + obbB.e[2] * absRot[2][1];
+    if (std::fabsf(obbCenterDiff.y) * rot[0][0] -
+        obbCenterDiff.x * rot[1][0] > ra + rb) {
+        collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
+        collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
+        obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
+        obbB.e /= meshDataManager->GetMeshData_Physics().scales[indexB];
+        return collisionInfo;
+    }
+
+    // Test A2 x B1
+    ra = obbA.e[0] * absRot[1][1] + obbA.e[1] * absRot[0][1];
+    rb = obbB.e[0] * absRot[2][1] + obbB.e[2] * absRot[2][0];
+    if (std::fabsf(obbCenterDiff.y) * rot[0][1] -
+        obbCenterDiff.x * rot[1][1] > ra + rb) {
+        collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
+        collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
+        obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
+        obbB.e /= meshDataManager->GetMeshData_Physics().scales[indexB];
+        return collisionInfo;
+    }
+
+    // Test A2 x B2
+    ra = obbA.e[0] * absRot[1][2] + obbA.e[1] * absRot[0][2];
+    rb = obbB.e[0] * absRot[2][1] + obbB.e[1] * absRot[2][0];
+    if (std::fabsf(obbCenterDiff.y) * rot[0][2] -
+        obbCenterDiff.x * rot[1][2] > ra + rb) {
+        collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
+        collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
+        obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
+        obbB.e /= meshDataManager->GetMeshData_Physics().scales[indexB];
+        return collisionInfo;
     }
 
     // If we made it this far, the two OBB's must be colliding
@@ -225,7 +319,7 @@ CollisionInfo PhysicsManager::SAT(const OBB& obbA, const OBB& obbB, uint32_t ind
 
     for (uint32_t i = 0; i < 6; ++i) {
         const uint32_t odd = i & 0x1;
-        const glm::vec3& currentPlanePoint = planePoints[i];
+        const glm::vec3& currentPlanePoint = planePoints[i] * meshDataManager->GetMeshData_Physics().scales[indexB];
         const glm::vec3 planeNormal = glm::normalize(currentPlanePoint - obbB.center);
 
         // Check each point in OBB A for penetration into B
@@ -244,5 +338,7 @@ CollisionInfo PhysicsManager::SAT(const OBB& obbA, const OBB& obbB, uint32_t ind
     // Return the collision result otherwise.
     // The collision result contains the minimum penetration information necessary to apply the impulse response
     // TODO: Maybe come back to this if we find that ground collisions are visually shaky.
+    obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
+    obbB.e /= meshDataManager->GetMeshData_Physics().scales[indexB];
     return collisionInfo;
 }

@@ -88,6 +88,7 @@ typedef struct mesh_data_physics_t {
     glm::vec3 accelerations[MAX_MESHES];
     glm::vec3 angularMomentums[MAX_MESHES];
     glm::mat3 rotations[MAX_MESHES]; // TODO: change to quaternion
+    glm::vec3 scales[MAX_MESHES];
     float masses[MAX_MESHES];
     OBB obbs[MAX_MESHES];
     uint32_t freezeStates[MAX_MESHES];
@@ -144,6 +145,9 @@ public:
             meshData_Physics.rotations[i] = glm::mat3(1.0f);
         }
         for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+            meshData_Physics.scales[i] = glm::vec3(1.0f);
+        }
+        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
             meshData_Physics.masses[i] = 1.0f;
         }
         for (uint32_t i = 0; i < MAX_MESHES; ++i) {
@@ -169,6 +173,9 @@ public:
         meshData_Physics.positions[index] = pos;
         glm::mat4& modelMat = meshData_Graphics.modelMatrices[index];
         modelMat[3] = glm::vec4(pos, 1.0f);
+    }
+    void SetMeshScale(const glm::vec3& scale, uint32_t index) { //TODO: connect to model matrix
+        meshData_Physics.scales[index] = scale;
     }
 
     void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::string& filepath, int freezeState);

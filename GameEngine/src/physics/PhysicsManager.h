@@ -21,13 +21,13 @@ private:
     using JE_TIMER = std::chrono::time_point<std::chrono::steady_clock>;
     const JE_TIMER m_startTime; // Start time of the physics system
     double m_currentTime; // Current time of the physics system
-    const double m_updateRateInSeconds; // in s
+    const double m_updateRateInMilliseconds; // in ms
     const float m_updateRateFactor; // For physics integration
 
-    CollisionInfo SAT(const OBB& obbA, const OBB& obbB, uint32_t indexA, uint32_t indexB);
+    CollisionInfo SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_t indexB);
 
 public:
-    PhysicsManager() : m_startTime(std::chrono::high_resolution_clock::now()), m_currentTime(0.0), m_updateRateInSeconds(33.333), m_updateRateFactor(1.0f / 33.333f) {}
+    PhysicsManager() : m_startTime(std::chrono::high_resolution_clock::now()), m_currentTime(0.0), m_updateRateInMilliseconds(16.667), m_updateRateFactor(1.0f / 60.0f) {}
     ~PhysicsManager() {}
 
     void Initialize(const std::shared_ptr<MeshDataManager>& m);
