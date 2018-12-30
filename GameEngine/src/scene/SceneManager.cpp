@@ -11,12 +11,14 @@ void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, V
     // Meshes
     meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
     meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_NONE);
-    //meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_NONE);
-    //meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_NONE);
+    meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+    meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
     //meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_NONE);
     meshDataManager->SetMeshPosition(glm::vec3(0.0f, 0.0f, 0.0f), 0);
-    meshDataManager->SetMeshPosition(glm::vec3(0.5f, 3.0f, 0.0f), 1);
+    meshDataManager->SetMeshPosition(glm::vec3(0.75f, 2.0f, 0.0f), 1);
     meshDataManager->SetMeshScale(glm::vec3(1.0f, 1.0f, 1.0f), 0);
+    meshDataManager->SetMeshPosition(glm::vec3(1.1f, -1.0f, 0.0f), 2);
+    meshDataManager->SetMeshPosition(glm::vec3(2.2f, -2.0f, 0.0f), 3);
     //meshDataManager->SetMeshPosition(glm::vec3(0.0f, 4.0f, 0.0f), 2);
     //meshDataManager->SetMeshPosition(glm::vec3(0.0f, 6.0f, 0.0f), 3);
     //meshDataManager->SetMeshPosition(glm::vec3(0.0f, 8.0f, 0.0f), 4);

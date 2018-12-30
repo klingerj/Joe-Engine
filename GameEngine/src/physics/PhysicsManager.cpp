@@ -21,7 +21,7 @@ void PhysicsManager::Update() {
             
             // Compute forces
             glm::vec3 force = glm::vec3(0.0f, -9.80665f, 0.0f);
-            const float mass = 1.0f;
+            const float mass = 1.0f; // TODO change to use mass data
 
             // Inertia Tensor
             glm::mat3 inertiaTensor_body = glm::mat3(1.0f);
@@ -38,29 +38,39 @@ void PhysicsManager::Update() {
             // Initialize torque
             glm::vec3 torque = glm::vec3(0.0f, 0.0f, 0.0f);
 
+            glm::vec3 impulse = glm::vec3(0.0f);
             // Compute collisions between each OBB in the scene
             for (uint32_t j = 0; j < meshDataManager->GetNumMeshes(); ++j) {
                 if ((!(meshPhysicsData.freezeStates[i] & (JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION))) && i != j) {
                     CollisionInfo collisionInfo = SAT(meshPhysicsData.obbs[i], meshPhysicsData.obbs[j], i, j);
                     if (!(glm::length(glm::vec3(collisionInfo.minimumTranslation)) == 0.0f && collisionInfo.minimumTranslation.w == -1.0f)) {
                         // Rotational impulse
-                        const float impulseNum = (-1.5f * glm::dot(meshPhysicsData.velocities[i], glm::vec3(collisionInfo.minimumTranslation)));
-                        const glm::vec3 impulseDenom = ((1.0f / meshPhysicsData.masses[i]) * glm::cross(inertiaTensor_Inverse * glm::cross(collisionInfo.point, glm::vec3(collisionInfo.minimumTranslation)), collisionInfo.point));
-                        const glm::vec3 impulse = impulseNum / impulseDenom;
-                        torque += glm::cross(collisionInfo.point, impulse);
+                        const float impulseNum = std::max(0.0f, (-1.85f * glm::dot(meshPhysicsData.velocities[i], glm::vec3(collisionInfo.minimumTranslation))));
+                        glm::vec3 cp1 = glm::cross(collisionInfo.point, glm::vec3(collisionInfo.minimumTranslation));
+                        glm::vec3 cp2 = inertiaTensor_Inverse * cp1;
+                        glm::vec3 cp3 = glm::cross(cp2, collisionInfo.point);
+                        glm::vec3 impulseDenom = ((1.0f / meshPhysicsData.masses[i]) * cp3);
+                        //impulseDenom = glm::min(glm::vec3(0.0f), glm::abs(impulseDenom - 0.002f));
+                        for (uint32_t k = 0; k < 3; ++k) { // Account for zeroes in the denom
+                            if (impulseDenom[k] == 0.0f) {
+                                impulse[k] = 0.0f;
+                            } else {
+                                impulse[k] = impulseNum / impulseDenom[k];
+                            }
+                        }
+                        torque += glm::cross(collisionInfo.point, impulse); // TODO: figure out why this has to be negative'd
+                        if (std::isnan(torque.x) || std::isnan(torque.y) || std::isnan(torque.z)) {
+                            torque += glm::vec3(1.0f);
+                        }
                         
                         // Linear impulse
                         const glm::vec3 momentum = meshPhysicsData.masses[i] * meshPhysicsData.velocities[i];
-                        meshPhysicsData.velocities[i] += glm::max(0.0f, -1.45f * glm::dot(momentum, glm::vec3(collisionInfo.minimumTranslation))) * glm::vec3(collisionInfo.minimumTranslation) / meshPhysicsData.masses[i];
-                        meshPhysicsData.positions[i] += glm::vec3(collisionInfo.minimumTranslation) * -collisionInfo.minimumTranslation.w * 0.5f; // hacky
+                        meshPhysicsData.velocities[i] += glm::max(0.0f, -1.5f * glm::dot(momentum, glm::vec3(collisionInfo.minimumTranslation))) * glm::vec3(collisionInfo.minimumTranslation) / meshPhysicsData.masses[i];
+                        meshPhysicsData.positions[i] += glm::vec3(collisionInfo.minimumTranslation) * -collisionInfo.minimumTranslation.w * 1.0f; // hacky
                         break;
                     }
                 }
             }
-
-            // Force computation to update acceleration
-            glm::vec3 acceleration = force;
-            meshPhysicsData.accelerations[i] = acceleration;
 
             // TODO: compute angular velocity, rotation matrix, etc
             if (!(meshPhysicsData.freezeStates[i] & JE_PHYSICS_FREEZE_ROTATION)) {
@@ -71,15 +81,25 @@ void PhysicsManager::Update() {
                 // Update model matrices
                 glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(meshPhysicsData.positions[i]));
                 glm::mat4 rotation = glm::mat4(1.0f);
+                glm::mat3 smallRot = glm::mat3(1.0f);
                 if (std::fabsf(angle) > 0.000000953674316f) { // 1/2^(20)
-                    rotation = glm::rotate(glm::mat4(meshPhysicsData.rotations[i]), angle, angularVelocity);
+                    rotation = glm::rotate(glm::mat4(meshPhysicsData.rotations[i]), angle, glm::normalize(angularVelocity));
+                    smallRot = glm::mat3(glm::rotate(glm::mat4(1.0f), angle * 100.0f, glm::normalize(angularVelocity)));
                 }
+                // Use torque to add slight force in the direction of the force
+                const glm::vec3 forceRotDir = glm::mat3(smallRot) * impulse;
+                meshPhysicsData.velocities[i] += 0.2f * forceRotDir;
+
                 meshPhysicsData.rotations[i] = glm::mat3(rotation);
                 meshPhysicsData.obbs[i].u[0] = meshPhysicsData.rotations[i][0]; // TODO: this might be wrong w/ the columns idk
                 meshPhysicsData.obbs[i].u[1] = meshPhysicsData.rotations[i][1];
                 meshPhysicsData.obbs[i].u[2] = meshPhysicsData.rotations[i][2];
                 
                 meshDataManager->SetModelMatrix(translation * rotation, i);
+
+                // Update acceleration w/ force
+                glm::vec3 acceleration = force;
+                meshPhysicsData.accelerations[i] = acceleration;
             }
         }
         m_currentTime += m_updateRateInMilliseconds;
@@ -100,54 +120,64 @@ CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_
     // List of points that are used in a bounding box for collision detection
     // Each point is a potential point of penetration and therefore collision
     // The points are the corners and edge midpoints of a (1, 1, 1)-scale cube
-    constexpr uint32_t numOBBPoints = 20;
-    const std::array<glm::vec3, numOBBPoints> obbPoints = { glm::vec3(-1.0f, -1.0f, -1.0f),
+    constexpr uint32_t numOBBPoints = 50;
+    const std::array<glm::vec3, numOBBPoints> obbPoints = { glm::vec3(-1.0f, -1.0f, -1.0f), // First, the 8 corners
                                                             glm::vec3(-1.0f, -1.0f,  1.0f),
                                                             glm::vec3(-1.0f,  1.0f, -1.0f),
                                                             glm::vec3(-1.0f,  1.0f,  1.0f),
-                                                            glm::vec3( 1.0f, -1.0f, -1.0f),
-                                                            glm::vec3 (1.0f, -1.0f,  1.0f),
-                                                            glm::vec3( 1.0f,  1.0f, -1.0f),
-                                                            glm::vec3( 1.0f,  1.0f,  1.0f),
-                                                            glm::vec3( 1.0f, -1.0f,  0.0f),
+                                                            glm::vec3(1.0f, -1.0f, -1.0f),
+                                                            glm::vec3(1.0f, -1.0f,  1.0f),
+                                                            glm::vec3(1.0f,  1.0f, -1.0f),
+                                                            glm::vec3(1.0f,  1.0f,  1.0f),
+                                                            glm::vec3(1.0f, -1.0f,  0.0f), // Second, midpoints of each edge
                                                             glm::vec3(-1.0f, -1.0f,  0.0f),
-                                                            glm::vec3( 1.0f,  1.0f,  0.0f),
+                                                            glm::vec3(1.0f,  1.0f,  0.0f),
                                                             glm::vec3(-1.0f,  1.0f,  0.0f),
-                                                            glm::vec3( 0.0f, -1.0f,  1.0f),
-                                                            glm::vec3( 0.0f, -1.0f, -1.0f),
-                                                            glm::vec3( 0.0f,  1.0f,  1.0f),
-                                                            glm::vec3( 0.0f,  1.0f, -1.0f),
-                                                            glm::vec3( 1.0f,  0.0f,  1.0f),
-                                                            glm::vec3( 1.0f,  0.0f, -1.0f),
+                                                            glm::vec3(0.0f, -1.0f,  1.0f),
+                                                            glm::vec3(0.0f, -1.0f, -1.0f),
+                                                            glm::vec3(0.0f,  1.0f,  1.0f),
+                                                            glm::vec3(0.0f,  1.0f, -1.0f),
+                                                            glm::vec3(1.0f,  0.0f,  1.0f),
+                                                            glm::vec3(1.0f,  0.0f, -1.0f),
                                                             glm::vec3(-1.0f,  0.0f,  1.0f),
-                                                            glm::vec3(-1.0f,  0.0f, -1.0f) };
+                                                            glm::vec3(-1.0f,  0.0f, -1.0f), // Third, center of each plane
+                                                            glm::vec3(0.0f,  1.0f,  0.0f),
+                                                            glm::vec3(0.0f, -1.0f,  0.0f),
+                                                            glm::vec3(1.0f,  0.0f,  0.0f),
+                                                            glm::vec3(-1.0f,  0.0f,  0.0f),
+                                                            glm::vec3(0.0f,  0.0f,  1.0f),
+                                                            glm::vec3(0.0f,  0.0f, -1.0f),
+                                                            glm::vec3(1.0f, 0.5f, 0.0f), // Fourth, the points on each plane between the center of the plane and the edge midpoints
+                                                            glm::vec3(1.0f, -0.5f, 0.0f),
+                                                            glm::vec3(1.0f, 0.0f, 0.5f),
+                                                            glm::vec3(1.0f, 0.0f, -0.5f),
+                                                            glm::vec3(-1.0f, 0.5f, 0.0f),
+                                                            glm::vec3(-1.0f, -0.5f, 0.0f),
+                                                            glm::vec3(-1.0f, 0.0f, 0.5f),
+                                                            glm::vec3(-1.0f, 0.0f, -0.5f),
+                                                            glm::vec3(0.0f, 0.5f, 1.0f),
+                                                            glm::vec3(0.0f, -0.5f, 1.0f),
+                                                            glm::vec3(0.5f, 0.0f, 1.0f),
+                                                            glm::vec3(-0.5f, 0.0f, 1.0f),
+                                                            glm::vec3(0.0f, 0.5f, -1.0f),
+                                                            glm::vec3(0.0f, -0.5f, -1.0f),
+                                                            glm::vec3(0.5f, 0.0f, -1.0f),
+                                                            glm::vec3(-0.5f, 0.0f, -1.0f),
+                                                            glm::vec3(0.5f, 1.0f, 0.0f),
+                                                            glm::vec3(-0.5f, 1.0f, 0.0f),
+                                                            glm::vec3(0.0f, 1.0f, -0.5f),
+                                                            glm::vec3(0.0f, 1.0f, -0.5f),
+                                                            glm::vec3(0.5f, -1.0f, 0.0f),
+                                                            glm::vec3(-0.5f, -1.0f, 0.0f),
+                                                            glm::vec3(0.0f, -1.0f, -0.5f),
+                                                            glm::vec3(0.0f, -1.0f, -0.5f) };
+
     std::array<glm::vec3, numOBBPoints> obbPointsTransformed_A;
     glm::mat4 translationA = glm::translate(glm::mat4(1.0f), obbA.center);
     glm::mat4 transformA = translationA * glm::mat4(glm::vec4(obbA.u[0], 0.0f), glm::vec4(obbA.u[1], 1.0f), glm::vec4(obbA.u[2], 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
     for (uint32_t i = 0; i < numOBBPoints; ++i) {
         obbPointsTransformed_A[i] = glm::vec3(meshDataManager->GetModelMatrix(indexA) * glm::vec4(obbPoints[i] * obbA.e, 1.0f));
     }
-    /*std::array<glm::vec3, numOBBPoints> obbPointsTransformed_B;
-    glm::mat4 translationB = glm::translate(glm::mat4(1.0f), obbB.center);
-    glm::mat4 transformB = translationB * glm::mat4(glm::vec4(obbB.u[0], 0.0f), glm::vec4(obbB.u[1], 1.0f), glm::vec4(obbB.u[2], 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    for (uint32_t i = 0; i < numOBBPoints; ++i) {
-        obbPointsTransformed_B[i] = glm::vec3(meshDataManager->GetModelMatrix(indexB) * glm::vec4(obbPoints[i] * obbB.e, 1.0f));
-    }*/
-
-    // Now, each array is populated with each obb's world space collision points
-    // Now, we test the 15 required axes for the 3D OBB SAT
-    /*std::array<glm::vec3, 15> planeNormals;
-    for (uint32_t i = 0; i < 3; ++i) { planeNormals[i] = obbA.u[i]; };
-    for (uint32_t i = 0; i < 3; ++i) { planeNormals[i + 3] = obbB.u[i]; };
-
-    // Attempt to cross product the axes. If the cross product cannot be computed i.e. the vectors are identical, just reuse some OBB local vector
-    for (uint32_t i = 0; i < 3; ++i) {
-        for (uint32_t j = 0; j < 3; ++j) {
-            const glm::vec3 vecsEqual = glm::epsilonEqual(obbA.u[i], obbB.u[j], glm::vec3(0.000000953674316f));
-            const uint32_t equal = (uint32_t)vecsEqual[0] + (uint32_t)vecsEqual[1] + (uint32_t)vecsEqual[2];
-            planeNormals[i * 3 + j + 6] = (equal == 3) ? obbA.u[j] : glm::normalize(glm::cross(obbA.u[i], obbB.u[j]));
-        }
-    }*/
 
     // Ericson OBB SAT test
     float ra, rb;
@@ -158,7 +188,7 @@ CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_
             rot[i][j] = glm::dot(obbA.u[i], obbB.u[j]);
         }
     }
-    glm::vec3 diffProj = glm::vec3(glm::dot(obbCenterDiff, obbA.u[0]), glm::dot(obbCenterDiff, obbA.u[1]), glm::dot(obbCenterDiff, obbA.u[2]));
+    const glm::vec3 diffProj = glm::vec3(glm::dot(obbCenterDiff, obbA.u[0]), glm::dot(obbCenterDiff, obbA.u[1]), glm::dot(obbCenterDiff, obbA.u[2]));
 
     for (uint32_t i = 0; i < 3; ++i) {
         for (uint32_t j = 0; j < 3; ++j) {
@@ -170,7 +200,7 @@ CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_
     for (uint32_t i = 0; i < 3; ++i) {
         ra = obbA.e[i];
         rb = obbB.e[0] * absRot[i][0] + obbB.e[1] * absRot[i][1] + obbB.e[2] * absRot[i][2];
-        if (std::fabsf(obbCenterDiff[i]) > ra + rb) {
+        if (std::fabsf(diffProj[i]) > ra + rb) {
             collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
             collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
             obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
@@ -183,7 +213,9 @@ CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_
     for (uint32_t i = 0; i < 3; ++i) {
         ra = obbA.e[0] * absRot[0][i] + obbA.e[1] * absRot[1][i] + obbA.e[2] * absRot[2][i];
         rb = obbB.e[i];
-        if (std::fabsf(obbCenterDiff[i]) > ra + rb) {
+        if (std::fabsf(diffProj.x * rot[0][i] +
+            diffProj.y * rot[1][i] +
+            diffProj.z * rot[2][i]) > ra + rb) {
             collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
             collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
             obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
@@ -195,8 +227,8 @@ CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_
     // Test A0 x B0
     ra = obbA.e[1] * absRot[2][0] + obbA.e[2] * absRot[1][0];
     rb = obbB.e[1] * absRot[0][2] + obbB.e[2] * absRot[0][1];
-    if (std::fabsf(obbCenterDiff.z) * rot[1][0] -
-        obbCenterDiff.y * rot[2][0] > ra + rb) {
+    if (std::fabsf(diffProj.z * rot[1][0] -
+        diffProj.y * rot[2][0]) > ra + rb) {
         collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
         collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
         obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
@@ -207,8 +239,8 @@ CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_
     // Test A0 x B1
     ra = obbA.e[1] * absRot[2][1] + obbA.e[2] * absRot[1][1];
     rb = obbB.e[0] * absRot[0][2] + obbB.e[2] * absRot[0][0];
-    if (std::fabsf(obbCenterDiff.z) * rot[1][1] -
-        obbCenterDiff.y * rot[2][1] > ra + rb) {
+    if (std::fabsf(diffProj.z * rot[1][1] -
+        diffProj.y * rot[2][1]) > ra + rb) {
         collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
         collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
         obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
@@ -219,8 +251,8 @@ CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_
     // Test A0 x B2
     ra = obbA.e[1] * absRot[2][2] + obbA.e[2] * absRot[1][2];
     rb = obbB.e[0] * absRot[0][1] + obbB.e[1] * absRot[0][0];
-    if (std::fabsf(obbCenterDiff.z) * rot[1][2] -
-        obbCenterDiff.y * rot[2][2] > ra + rb) {
+    if (std::fabsf(diffProj.z * rot[1][2] -
+        diffProj.y * rot[2][2]) > ra + rb) {
         collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
         collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
         obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
@@ -231,8 +263,8 @@ CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_
     // Test A1 x B0
     ra = obbA.e[0] * absRot[2][0] + obbA.e[2] * absRot[0][0];
     rb = obbB.e[1] * absRot[1][2] + obbB.e[2] * absRot[1][1];
-    if (std::fabsf(obbCenterDiff.x) * rot[2][0] -
-        obbCenterDiff.z * rot[0][0] > ra + rb) {
+    if (std::fabsf(diffProj.x * rot[2][0] -
+        diffProj.z * rot[0][0]) > ra + rb) {
         collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
         collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
         obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
@@ -243,8 +275,8 @@ CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_
     // Test A1 x B1
     ra = obbA.e[0] * absRot[2][1] + obbA.e[2] * absRot[0][1];
     rb = obbB.e[0] * absRot[1][2] + obbB.e[2] * absRot[1][0];
-    if (std::fabsf(obbCenterDiff.x) * rot[2][1] -
-        obbCenterDiff.z * rot[0][1] > ra + rb) {
+    if (std::fabsf(diffProj.x * rot[2][1] -
+        diffProj.z * rot[0][1]) > ra + rb) {
         collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
         collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
         obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
@@ -255,8 +287,8 @@ CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_
     // Test A1 x B2
     ra = obbA.e[0] * absRot[2][2] + obbA.e[2] * absRot[0][2];
     rb = obbB.e[0] * absRot[1][1] + obbB.e[1] * absRot[1][0];
-    if (std::fabsf(obbCenterDiff.x) * rot[2][2] -
-        obbCenterDiff.z * rot[0][2] > ra + rb) {
+    if (std::fabsf(diffProj.x * rot[2][2] -
+        diffProj.z * rot[0][2]) > ra + rb) {
         collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
         collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
         obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
@@ -267,8 +299,8 @@ CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_
     // Test A2 x B0
     ra = obbA.e[0] * absRot[1][0] + obbA.e[1] * absRot[0][0];
     rb = obbB.e[1] * absRot[2][2] + obbB.e[2] * absRot[2][1];
-    if (std::fabsf(obbCenterDiff.y) * rot[0][0] -
-        obbCenterDiff.x * rot[1][0] > ra + rb) {
+    if (std::fabsf(diffProj.y * rot[0][0] -
+        diffProj.x * rot[1][0]) > ra + rb) {
         collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
         collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
         obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
@@ -278,9 +310,9 @@ CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_
 
     // Test A2 x B1
     ra = obbA.e[0] * absRot[1][1] + obbA.e[1] * absRot[0][1];
-    rb = obbB.e[0] * absRot[2][1] + obbB.e[2] * absRot[2][0];
-    if (std::fabsf(obbCenterDiff.y) * rot[0][1] -
-        obbCenterDiff.x * rot[1][1] > ra + rb) {
+    rb = obbB.e[0] * absRot[2][2] + obbB.e[2] * absRot[2][0];
+    if (std::fabsf(diffProj.y * rot[0][1] -
+        diffProj.x * rot[1][1]) > ra + rb) {
         collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
         collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
         obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
@@ -291,8 +323,8 @@ CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_
     // Test A2 x B2
     ra = obbA.e[0] * absRot[1][2] + obbA.e[1] * absRot[0][2];
     rb = obbB.e[0] * absRot[2][1] + obbB.e[1] * absRot[2][0];
-    if (std::fabsf(obbCenterDiff.y) * rot[0][2] -
-        obbCenterDiff.x * rot[1][2] > ra + rb) {
+    if (std::fabsf(diffProj.y * rot[0][2] -
+        diffProj.x * rot[1][2]) > ra + rb) {
         collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
         collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
         obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
@@ -310,6 +342,13 @@ CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_
                                                    obbB.center + obbB.u[2] * obbB.e.z,
                                                    obbB.center - obbB.u[2] * obbB.e.z };
 
+    glm::vec3 directions = glm::vec3(0.0f);
+    glm::vec3 points = glm::vec3(0.0f);
+    uint32_t numDirs = 0;
+    uint32_t numPts = 0;
+
+    std::array<uint32_t, numOBBPoints> ptsInOrOut;
+    for (uint32_t o = 0; o < numOBBPoints; ++o) { ptsInOrOut[o] = true; }
     for (uint32_t i = 0; i < 6; ++i) {
         const uint32_t odd = i & 0x1;
         const glm::vec3& currentPlanePoint = planePoints[i] * meshDataManager->GetMeshData_Physics().scales[indexB];
@@ -321,29 +360,57 @@ CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_
             const float proj = glm::dot(point, planeNormal);
 
             // If point is on the back side of the plane and is "more positive" than the previous stored min
-            if ((proj < 0.0f) && (proj > collisionInfo.minimumTranslation.w)) {
+            if ((proj < 0.0f) && (proj > collisionInfo.minimumTranslation.w) && (std::fabsf(glm::dot(planeNormal, meshDataManager->GetMeshData_Physics().velocities[indexA])) > 0.0f)) {
                 collisionInfo.minimumTranslation = glm::vec4(planeNormal, proj);
-                collisionInfo.point = obbPointsTransformed_A[j] - obbA.center;
+                collisionInfo.point = currentPlanePoint;
+            }
+            if (proj > 0.0f) {
+                ptsInOrOut[j] = false;
             }
         }
-
-        // Now that we have the point of minimum penetration, find all points that are really close to that point, and average their
-        // positions for the contact point
-        glm::vec3 contactPoint = glm::vec3(0.0f, 0.0f, 0.0f);
-        uint32_t numContactPoints = 0;
-        for (uint32_t j = 0; j < numOBBPoints; ++j) {
-            const glm::vec3 point = obbPointsTransformed_A[j] - currentPlanePoint;
-            const float proj = glm::dot(point, planeNormal);
-
-            // If point is on the back side of the plane and is "more positive" than the previous stored min
-            if (std::fabsf(proj - collisionInfo.minimumTranslation.w) < 0.000000953674316f) {
-                contactPoint += point;
-                ++numContactPoints;
-            }
-        }
-        contactPoint /= (float)numContactPoints;
-        collisionInfo.point = contactPoint;
     }
+    //obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
+    //obbB.e /= meshDataManager->GetMeshData_Physics().scales[indexB];
+    //return collisionInfo;
+
+    // Now that we have the point of minimum penetration, find all points that are really close to that point, and average their
+    // positions for the contact point
+    glm::vec3 contactPoint = glm::vec3(0.0f, 0.0f, 0.0f);
+    uint32_t numContactPoints = 0;
+    //const glm::mat3 rotB_inv = glm::inverse(glm::mat3(obbB.u[0], obbB.u[1], obbB.u[2]));
+    for (uint32_t j = 0; j < numOBBPoints; ++j) {
+        // Check if the point of OBB A is even inside of OBB B
+        //glm::vec3 p = obbPointsTransformed_A[j] - obbB.center;
+        //p = rotB_inv * p;
+        /*glm::vec3 p = glm::vec3(glm::inverse(meshDataManager->GetModelMatrices()[indexB]) * glm::vec4(obbPointsTransformed_A[j], 1.0f));
+        p /= obbB.e; // double accounting for scale rn, wrong, but the scale is 1 rn so who cares
+        // Box sdf
+        const glm::vec3 d = glm::abs(p) - glm::vec3(1.0f, 1.0f, 1.0f);
+        const float dist = length(glm::max(d, 0.0f)) + std::min(std::max(d.x, std::max(d.y, d.z)), 0.0f);
+        if (dist > 0.1f) { continue; }*/
+        if (!ptsInOrOut[j]) { continue; }
+
+        const glm::vec3 point = obbPointsTransformed_A[j] - collisionInfo.point;
+        const float proj = glm::dot(point, glm::vec3(collisionInfo.minimumTranslation));
+
+        // If point is on the back side of the plane and is "more positive" than the previous stored min
+        if (std::fabsf(proj - collisionInfo.minimumTranslation.w) < 0.02f/*0.000000953674316f*/) {
+            contactPoint += obbPointsTransformed_A[j] - obbA.center;
+            ++numContactPoints;
+        }
+    }
+    if (numContactPoints == 0) { // Not good enough resolution of the points, pretend we didn't collide
+        collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
+        collisionInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
+        obbA.e /= meshDataManager->GetMeshData_Physics().scales[indexA];
+        obbB.e /= meshDataManager->GetMeshData_Physics().scales[indexB];
+        return collisionInfo;
+    }
+    contactPoint /= (float)numContactPoints;
+    if (std::isnan(contactPoint.x) || std::isnan(contactPoint.y) || std::isnan(contactPoint.z)) {
+        contactPoint += glm::vec3(0.0f);
+    }
+    collisionInfo.point = contactPoint;
 
     // Return the collision result otherwise.
     // The collision result contains the minimum penetration information necessary to apply the impulse response
