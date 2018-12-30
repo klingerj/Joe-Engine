@@ -120,50 +120,12 @@ private:
 
 public:
     MeshDataManager() : numMeshes(0) {
-        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
-            meshData_Graphics.modelMatrices[i] = glm::mat4(1.0f); // Initialize model matrix to identity matrix
-        }
-        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
-            meshData_Graphics.vertexLists[i] = std::vector<MeshVertex>();
-        }
-        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
-            meshData_Graphics.indexLists[i] = std::vector<uint32_t>();
-        }
-        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
-            meshData_Physics.positions[i] = glm::vec3(0.0f);
-        }
-        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
-            meshData_Physics.velocities[i] = glm::vec3(0.0f);
-        }
-        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
-            meshData_Physics.accelerations[i] = glm::vec3(0.0f);
-        }
-        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
-            meshData_Physics.angularMomentums[i] = glm::vec3(0.0f);
-        }
-        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
-            meshData_Physics.rotations[i] = glm::mat3(1.0f);
-        }
-        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
-            meshData_Physics.scales[i] = glm::vec3(1.0f);
-        }
-        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
-            meshData_Physics.masses[i] = 1.0f;
-        }
-        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
-            meshData_Physics.obbs[i] = { { glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f) },
-                                           glm::vec3(1.0f, 1.0f, 1.0f),
-                                           glm::vec3(0.0f, 0.0f, 0.0f) };
-        }
-        for (uint32_t i = 0; i < MAX_MESHES; ++i) {
-            meshData_Physics.freezeStates[i] = JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION;
-        }
-        screenSpaceTriangle.vertexList = std::vector<MeshVertex>();
-        screenSpaceTriangle.indexList = std::vector<uint32_t>();
+        ResetState();
     }
     ~MeshDataManager() {}
     
     void Cleanup(VkDevice device);
+    void ResetState();
 
     // TODO: add checks for bad indices
     void SetModelMatrix(const glm::mat4& m, uint32_t index) {

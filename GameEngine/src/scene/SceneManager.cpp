@@ -7,37 +7,69 @@ void SceneManager::Initialize(const std::shared_ptr<MeshDataManager>& m) {
     meshDataManager = m;
 }
 
-void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass) {
-    // Meshes
-    meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
-    meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_NONE);
-    meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
-    meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
-    //meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_NONE);
-    meshDataManager->SetMeshPosition(glm::vec3(0.0f, 0.0f, 0.0f), 0);
-    meshDataManager->SetMeshPosition(glm::vec3(0.75f, 2.0f, 0.0f), 1);
-    meshDataManager->SetMeshScale(glm::vec3(1.0f, 1.0f, 1.0f), 0);
-    meshDataManager->SetMeshPosition(glm::vec3(1.1f, -1.0f, 0.0f), 2);
-    meshDataManager->SetMeshPosition(glm::vec3(2.2f, -2.0f, 0.0f), 3);
-    //meshDataManager->SetMeshPosition(glm::vec3(0.0f, 4.0f, 0.0f), 2);
-    //meshDataManager->SetMeshPosition(glm::vec3(0.0f, 6.0f, 0.0f), 3);
-    //meshDataManager->SetMeshPosition(glm::vec3(0.0f, 8.0f, 0.0f), 4);
-    //meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "wahoo.obj", JE_PHYSICS_FREEZE_POSITION);
-    //meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "alienModel_Small.obj", JE_PHYSICS_FREEZE_POSITION);
+void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass, uint32_t sceneId) {
+    currentScene = sceneId;
+    if (sceneId == 0) {
+        // Meshes
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_NONE);
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_NONE);
+        meshDataManager->SetMeshPosition(glm::vec3(0.0f, 0.0f, 0.0f), 0);
+        meshDataManager->SetMeshPosition(glm::vec3(-0.5f, 3.0f, 0.0f), 1);
+        meshDataManager->SetMeshPosition(glm::vec3(1.f, -1.0f, 0.0f), 2);
+        meshDataManager->SetMeshPosition(glm::vec3(2.0f, -2.0f, 0.0f), 3);
+        meshDataManager->SetMeshPosition(glm::vec3(3.0f, -2.0f, 0.0f), 4);
+        meshDataManager->SetMeshPosition(glm::vec3(4.0f, -1.0f, 0.0f), 5);
+        meshDataManager->SetMeshPosition(glm::vec3(5.0f, 0.0f, 0.0f), 6);
+        meshDataManager->SetMeshPosition(glm::vec3(6.0f, 1.0f, 0.0f), 7);
+        meshDataManager->SetMeshPosition(glm::vec3(7.0f, 2.0f, 0.0f), 8);
+        meshDataManager->SetMeshPosition(glm::vec3(6.5f, 10.0f, 0.0f), 9);
 
-    // Screen space triangle setup
-    meshDataManager->CreateScreenSpaceTriangleMesh(physicalDevice, device, commandPool, graphicsQueue);
+        // Screen space triangle setup
+        meshDataManager->CreateScreenSpaceTriangleMesh(physicalDevice, device, commandPool, graphicsQueue);
 
-    // Textures
-    Texture t = Texture(device, physicalDevice, graphicsQueue, commandPool, TEXTURES_DIR + "ducreux.jpg");
-    textures.push_back(t);
+        // Textures
+        Texture t = Texture(device, physicalDevice, graphicsQueue, commandPool, TEXTURES_DIR + "ducreux.jpg");
+        textures.push_back(t);
 
-    // Camera
-    camera = Camera(glm::vec3(0.0f, 4.0f, 12.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height, SCENE_VIEW_NEAR_PLANE, SCENE_VIEW_FAR_PLANE);
-    shadowCamera = Camera(glm::vec3(7.0f, 7.0f, 7.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPass.width / (float)shadowPass.height, SHADOW_VIEW_NEAR_PLANE, SHADOW_VIEW_FAR_PLANE);
+        // Camera
+        camera = Camera(glm::vec3(0.0f, 4.0f, 12.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height, SCENE_VIEW_NEAR_PLANE, SCENE_VIEW_FAR_PLANE);
+        shadowCamera = Camera(glm::vec3(7.0f, 7.0f, 7.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPass.width / (float)shadowPass.height, SHADOW_VIEW_NEAR_PLANE, SHADOW_VIEW_FAR_PLANE);
 
-    // Shaders
-    CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass, deferredPass);
+        // Shaders
+        CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass, deferredPass);
+    } else if (sceneId == 1) {
+        // Meshes
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_NONE);
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_NONE);
+        meshDataManager->SetMeshPosition(glm::vec3(0.0f, 0.0f, 0.0f), 0);
+        meshDataManager->SetMeshPosition(glm::vec3(-0.5f, 3.0f, 0.0f), 1);
+        meshDataManager->SetMeshPosition(glm::vec3(1.f, -1.0f, 0.0f), 2);
+        meshDataManager->SetMeshPosition(glm::vec3(0.75f, 3.0f, 0.0f), 3);
+
+        // Screen space triangle setup
+        meshDataManager->CreateScreenSpaceTriangleMesh(physicalDevice, device, commandPool, graphicsQueue);
+
+        // Textures
+        Texture t = Texture(device, physicalDevice, graphicsQueue, commandPool, TEXTURES_DIR + "ducreux.jpg");
+        textures.push_back(t);
+
+        // Camera
+        camera = Camera(glm::vec3(0.0f, 4.0f, 12.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height, SCENE_VIEW_NEAR_PLANE, SCENE_VIEW_FAR_PLANE);
+        shadowCamera = Camera(glm::vec3(7.0f, 7.0f, 7.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPass.width / (float)shadowPass.height, SHADOW_VIEW_NEAR_PLANE, SHADOW_VIEW_FAR_PLANE);
+
+        // Shaders
+        CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass, deferredPass);
+    }
 }
 
 void SceneManager::CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass) {
@@ -57,6 +89,7 @@ void SceneManager::RecreateResources(VkPhysicalDevice physicalDevice, VkDevice d
 }
 
 void SceneManager::RegisterCallbacks(IOHandler* ioHandler) {
+    // Camera Movement
     CallbackFunction cameraPanForward  = [&] { camera.TranslateAlongLook(camTranslateSensitivity); };
     CallbackFunction cameraPanBackward = [&] { camera.TranslateAlongLook(-camTranslateSensitivity); };
     CallbackFunction cameraPanLeft     = [&] { camera.TranslateAlongRight(-camTranslateSensitivity); };
@@ -84,6 +117,7 @@ void SceneManager::CleanupMeshesAndTextures(VkDevice device) {
     for (Texture t : textures) {
         t.Cleanup(device);
     }
+    textures.clear();
 }
 
 void SceneManager::CleanupShaders(VkDevice device) {
@@ -110,8 +144,8 @@ void SceneManager::UpdateModelMatrices() {
     auto currentTime = std::chrono::high_resolution_clock::now();
     float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-    glm::mat4 mat1 = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 1.0f, 3.0f));
-    //meshDataManager->SetModelMatrix(mat1, 0);
+    glm::mat4 mat1 = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    meshDataManager->SetModelMatrix(mat1, 0);
     
     /*glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, -0.75f, 0.0f));
     mat2 = glm::rotate(mat2, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));

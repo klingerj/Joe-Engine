@@ -30,6 +30,7 @@ void EngineApplication::InitializeEngine() {
     GLFWwindow* window = vulkanRenderer.GetGLFWWindow();
     ioHandler.Initialize(window);
     glfwSetWindowUserPointer(window, this);
+    vulkanRenderer.RegisterCallbacks(&ioHandler);
     sceneManager.RegisterCallbacks(&ioHandler);
 }
 
