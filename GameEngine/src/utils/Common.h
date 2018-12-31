@@ -65,3 +65,13 @@ using CallbackFunction = std::function<void()>;
 #define JE_KEY_LEFT GLFW_KEY_LEFT
 #define JE_KEY_DOWN GLFW_KEY_DOWN
 #define JE_KEY_RIGHT GLFW_KEY_RIGHT
+#define JE_KEY_0 GLFW_KEY_0
+#define JE_KEY_1 GLFW_KEY_1
+#define JE_KEY_2 GLFW_KEY_2
+#define JE_KEY_3 GLFW_KEY_3
+#define JE_KEY_4 GLFW_KEY_4
+#define JE_KEY_5 GLFW_KEY_5
+#define JE_KEY_6 GLFW_KEY_6
+#define JE_KEY_7 GLFW_KEY_7
+#define JE_KEY_8 GLFW_KEY_8
+#define JE_KEY_9 GLFW_KEY_9

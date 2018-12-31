@@ -10,6 +10,7 @@ void EngineApplication::Run() {
         frameStartTime = glfwGetTime();
         ioHandler.PollInput();
         vulkanRenderer.DrawFrame();
+        physicsManager.Update();
         frameEndTime = glfwGetTime();
         if (enableFrameCounter) {
             std::cout << "Frame Time: " << (frameEndTime - frameStartTime) * 1000.0f << " ms" << std::endl;
@@ -21,11 +22,15 @@ void EngineApplication::Run() {
 }
 
 void EngineApplication::InitializeEngine() {
-    sceneManager.Initialize();
+    std::shared_ptr<MeshDataManager> meshDataManager = std::make_shared<MeshDataManager>();
+    physicsManager.Initialize(meshDataManager);
+    sceneManager.Initialize(meshDataManager);
     vulkanRenderer.Initialize(&sceneManager);
+
     GLFWwindow* window = vulkanRenderer.GetGLFWWindow();
     ioHandler.Initialize(window);
     glfwSetWindowUserPointer(window, this);
+    vulkanRenderer.RegisterCallbacks(&ioHandler);
     sceneManager.RegisterCallbacks(&ioHandler);
 }
 

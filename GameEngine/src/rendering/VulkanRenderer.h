@@ -10,6 +10,7 @@
 #include "../utils/VulkanValidationLayers.h"
 
 class SceneManager;
+class IOHandler;
 
 // Rendering-related structs
 
@@ -134,6 +135,7 @@ public:
 
     // Vulkan setup
     void Initialize(SceneManager* sceneManager);
+    void RegisterCallbacks(IOHandler* ioHandler);
 
     // Vulkan cleanup
     void Cleanup();

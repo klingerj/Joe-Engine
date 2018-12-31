@@ -22,13 +22,14 @@
     <ClCompile Include="src\EngineApplication.cpp" />
     <ClCompile Include="src\io\IOHandler.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\rendering\Mesh.cpp" />
+    <ClCompile Include="src\physics\PhysicsManager.cpp" />
     <ClCompile Include="src\rendering\Texture.cpp" />
     <ClCompile Include="src\rendering\VulkanQueue.cpp" />
     <ClCompile Include="src\rendering\VulkanRenderer.cpp" />
     <ClCompile Include="src\rendering\VulkanShader.cpp" />
     <ClCompile Include="src\rendering\VulkanSwapChain.cpp" />
     <ClCompile Include="src\rendering\VulkanWindow.cpp" />
+    <ClCompile Include="src\scene\MeshDataManager.cpp" />
     <ClCompile Include="src\scene\SceneManager.cpp" />
     <ClCompile Include="src\utils\Common.cpp" />
     <ClCompile Include="src\utils\ThreadPool.cpp" />
@@ -37,7 +38,7 @@
   <ItemGroup>
     <ClInclude Include="src\EngineApplication.h" />
     <ClInclude Include="src\io\IOHandler.h" />
-    <ClInclude Include="src\rendering\Mesh.h" />
+    <ClInclude Include="src\physics\PhysicsManager.h" />
     <ClInclude Include="src\rendering\Texture.h" />
     <ClInclude Include="src\rendering\VulkanQueue.h" />
     <ClInclude Include="src\rendering\VulkanRenderer.h" />
@@ -45,6 +46,7 @@
     <ClInclude Include="src\rendering\VulkanSwapChain.h" />
     <ClInclude Include="src\rendering\VulkanWindow.h" />
     <ClInclude Include="src\scene\Camera.h" />
+    <ClInclude Include="src\scene\MeshDataManager.h" />
     <ClInclude Include="src\scene\SceneManager.h" />
     <ClInclude Include="src\utils\Common.h" />
     <ClInclude Include="src\utils\ThreadPool.h" />

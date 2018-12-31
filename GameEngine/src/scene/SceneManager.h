@@ -4,10 +4,10 @@
 
 #include "Camera.h"
 #include "../rendering/Texture.h"
-#include "../rendering/Mesh.h"
 #include "../rendering/VulkanShader.h"
 #include "../rendering/VulkanRenderer.h"
 #include "../io/IOHandler.h"
+#include "MeshDataManager.h"
 
 class SceneManager {
 private:
@@ -17,8 +17,7 @@ private:
     float camTranslateSensitivity, camRotateSensitivity;
 
     // Meshes
-    std::vector<Mesh> meshes;
-    static Mesh screenSpaceTriangle;
+    std::shared_ptr<MeshDataManager> meshDataManager;
 
     // Textures
     std::vector<Texture> textures;
@@ -26,16 +25,19 @@ private:
     // Shaders
     std::vector<VulkanMeshShader> meshShaders;
     std::vector<VulkanShadowPassShader> shadowPassShaders;
-    std::vector<VulkanDeferredPassGeometryShader> deferredPassGeometryShaders;
+    std::vector<VulkanDeferredPassGeometryShader> deferredPassGeometryShaders; // TODO: this probably doesn't need to be a vector
     std::vector<VulkanDeferredPassLightingShader> deferredPassLightingShaders;
 
+    // Scene IDs
+    uint32_t currentScene;
+
 public:
-    SceneManager() : camTranslateSensitivity(0.25f), camRotateSensitivity(0.05f) {}
+    SceneManager() : camTranslateSensitivity(0.25f), camRotateSensitivity(0.05f), currentScene(0) {}
     ~SceneManager() {}
 
     // Creation
-    void Initialize();
-    void LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass);
+    void Initialize(const std::shared_ptr<MeshDataManager>& p);
+    void LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass, uint32_t sceneId);
     void CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass);
     void RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass);
 

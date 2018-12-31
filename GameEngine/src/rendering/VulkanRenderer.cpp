@@ -53,7 +53,7 @@ void VulkanRenderer::Initialize(SceneManager* sceneManager) {
 
     // Load Scene
     this->sceneManager = sceneManager;
-    this->sceneManager->LoadScene(physicalDevice, device, commandPool, renderPass, graphicsQueue, vulkanSwapChain, shadowPass, deferredPass);
+    this->sceneManager->LoadScene(physicalDevice, device, commandPool, renderPass, graphicsQueue, vulkanSwapChain, shadowPass, deferredPass, 0);
 
     // Command buffers
     CreateCommandBuffers();
@@ -82,7 +82,7 @@ void VulkanRenderer::Cleanup() {
     vkDestroySampler(device, deferredPass.sampler, nullptr);
     vkDestroySemaphore(device, deferredPass.semaphore, nullptr);
 
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
         vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
         vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
         vkDestroyFence(device, inFlightFences[i], nullptr);
@@ -938,4 +938,27 @@ void VulkanRenderer::RecreateSwapChain() {
     CreateShadowCommandBuffer();
     CreateDeferredPassGeometryFramebuffer();
     CreateDeferredPassGeometryCommandBuffer();
+}
+
+void VulkanRenderer::RegisterCallbacks(IOHandler* ioHandler) {
+    CallbackFunction loadScene0 = [&] {
+        vkDeviceWaitIdle(device);
+        sceneManager->CleanupMeshesAndTextures(device);
+        sceneManager->CleanupShaders(device);
+        sceneManager->LoadScene(physicalDevice, device, commandPool, renderPass, graphicsQueue, vulkanSwapChain, shadowPass, deferredPass, 0);
+        CreateCommandBuffers();
+        CreateShadowCommandBuffer();
+        CreateDeferredPassGeometryCommandBuffer();
+    };
+    CallbackFunction loadScene1 = [&] {
+        vkDeviceWaitIdle(device);
+        sceneManager->CleanupMeshesAndTextures(device);
+        sceneManager->CleanupShaders(device);
+        sceneManager->LoadScene(physicalDevice, device, commandPool, renderPass, graphicsQueue, vulkanSwapChain, shadowPass, deferredPass, 1);
+        CreateCommandBuffers();
+        CreateShadowCommandBuffer();
+        CreateDeferredPassGeometryCommandBuffer();
+    };
+    ioHandler->AddCallback(JE_KEY_0, loadScene0);
+    ioHandler->AddCallback(JE_KEY_1, loadScene1);
 }
