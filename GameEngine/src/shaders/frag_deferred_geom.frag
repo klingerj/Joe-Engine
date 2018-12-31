@@ -16,13 +16,6 @@ layout(location = 0) out vec4 gbuffers[2];
 
 void main() {
     vec3 albedoColor = texture(albedo, fragUV).xyz;
-    /*vec4 pointShadow = ubo_viewProj_Shadow.viewProj * vec4(fragPos, 1.0);
-    pointShadow.xyz += normalize(vec3(5.0) - pointShadow.xyz) * 0.005;
-    pointShadow /= pointShadow.w;
-    pointShadow.xy = pointShadow.xy * 0.5 + 0.5;
-    float shadowColor = texture(shadowMap, pointShadow.xy).r;
-    float shadow = step(pointShadow.z, shadowColor);*/
-    //outColor = vec4(albedoColor * shadow, 1.0);
     gbuffers[0] = vec4(albedoColor * fragColor, 1.0);
     gbuffers[1] = vec4(vec3(1.0, 0.0, 0.0), 1.0);
 }

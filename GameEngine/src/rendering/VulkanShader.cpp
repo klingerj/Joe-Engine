@@ -768,6 +768,7 @@ void VulkanShadowPassShader::UpdateUniformBuffers(VkDevice device, const Camera&
     glm::mat4 view = shadowCamera.GetView();
     glm::mat4 proj = shadowCamera.GetProj();
     proj[1][1] *= -1.0f;
+    //glm::mat4 proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, shadowCamera.GetNearPlane(), shadowCamera.GetFarPlane());
     ubo_vp.viewProj = proj * view;
 
     for (uint32_t i = 0; i < numMeshes; ++i) {
@@ -1449,7 +1450,7 @@ void VulkanDeferredPassLightingShader::CreateDescriptorSetLayout(VkDevice device
     uboLayoutBinding_vp.binding = 0;
     uboLayoutBinding_vp.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     uboLayoutBinding_vp.descriptorCount = 1;
-    uboLayoutBinding_vp.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    uboLayoutBinding_vp.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     uboLayoutBinding_vp.pImmutableSamplers = nullptr;
 
     VkDescriptorSetLayoutBinding uboLayoutBinding_vp_shadow = {};
@@ -1530,7 +1531,7 @@ void VulkanDeferredPassLightingShader::CreateDescriptorSets(VkDevice device, con
         VkDescriptorBufferInfo bufferInfo_vp = {};
         bufferInfo_vp.buffer = uniformBuffers_ViewProj[i];
         bufferInfo_vp.offset = 0;
-        bufferInfo_vp.range = sizeof(UBO_ViewProj);
+        bufferInfo_vp.range = sizeof(UBO_ViewProj_Inv);
 
         VkDescriptorBufferInfo bufferInfo_vp_shadow = {};
         bufferInfo_vp_shadow.buffer = uniformBuffers_ViewProj_Shadow[i];
@@ -1631,7 +1632,7 @@ void VulkanDeferredPassLightingShader::CreateDescriptorSets(VkDevice device, con
         descriptorWrites[7].dstArrayElement = 0;
         descriptorWrites[7].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         descriptorWrites[7].descriptorCount = 1;
-        descriptorWrites[7].pImageInfo = &imageInfo_gBufferColor;
+        descriptorWrites[7].pImageInfo = &imageInfo_gBufferDepth;
 
         vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
@@ -1639,6 +1640,7 @@ void VulkanDeferredPassLightingShader::CreateDescriptorSets(VkDevice device, con
 
 void VulkanDeferredPassLightingShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages, size_t numModelMatrices) {
     VkDeviceSize bufferSize_viewProj = sizeof(UBO_ViewProj);
+    VkDeviceSize bufferSize_viewProj_inv = sizeof(UBO_ViewProj_Inv);
     uniformBuffers_ViewProj.resize(numSwapChainImages);
     uniformBuffersMemory_ViewProj.resize(numSwapChainImages);
     uniformBuffers_ViewProj_Shadow.resize(numSwapChainImages);
@@ -1660,18 +1662,19 @@ void VulkanDeferredPassLightingShader::CreateUniformBuffers(VkPhysicalDevice phy
     ubo_Dynamic_ModelMat.model = (glm::mat4*)_aligned_malloc(bufferSize_Dynamic_Model, uboDynamicAlignment);
 
     for (size_t i = 0; i < numSwapChainImages; ++i) {
-        CreateBuffer(physicalDevice, device, bufferSize_viewProj, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers_ViewProj[i], uniformBuffersMemory_ViewProj[i]);
+        CreateBuffer(physicalDevice, device, bufferSize_viewProj_inv, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers_ViewProj[i], uniformBuffersMemory_ViewProj[i]);
         CreateBuffer(physicalDevice, device, bufferSize_viewProj, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers_ViewProj_Shadow[i], uniformBuffersMemory_ViewProj_Shadow[i]);
         CreateBuffer(physicalDevice, device, bufferSize_Dynamic_Model, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, uniformBuffers_Dynamic_Model[i], uniformBuffersMemory_Dynamic_Model[i]);
     }
 }
 
 void VulkanDeferredPassLightingShader::UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const Camera& camera, const Camera& shadowCamera) {
-    UBO_ViewProj ubo_vp = {};
+    UBO_ViewProj_Inv ubo_vp_inv = {};
     glm::mat4 view = camera.GetView();
     glm::mat4 proj = camera.GetProj();
     proj[1][1] *= -1.0f;
-    ubo_vp.viewProj = proj * view;
+    ubo_vp_inv.invProj = glm::inverse(proj);
+    ubo_vp_inv.invView = glm::inverse(view);
 
     UBO_ViewProj ubo_vp_shadow = {};
     view = shadowCamera.GetView();
@@ -1684,8 +1687,8 @@ void VulkanDeferredPassLightingShader::UpdateUniformBuffers(VkDevice device, uin
     *modelMat = glm::mat4(1.0f);
 
     void* data;
-    vkMapMemory(device, uniformBuffersMemory_ViewProj[currentImage], 0, sizeof(ubo_vp), 0, &data);
-    memcpy(data, &ubo_vp, sizeof(ubo_vp));
+    vkMapMemory(device, uniformBuffersMemory_ViewProj[currentImage], 0, sizeof(ubo_vp_inv), 0, &data);
+    memcpy(data, &ubo_vp_inv, sizeof(ubo_vp_inv));
     vkUnmapMemory(device, uniformBuffersMemory_ViewProj[currentImage]);
 
     vkMapMemory(device, uniformBuffersMemory_ViewProj_Shadow[currentImage], 0, sizeof(ubo_vp_shadow), 0, &data);

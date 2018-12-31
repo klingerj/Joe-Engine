@@ -13,6 +13,11 @@ struct UBO_ViewProj {
     glm::mat4 viewProj;
 };
 
+struct UBO_ViewProj_Inv {
+    glm::mat4 invProj;
+    glm::mat4 invView;
+};
+
 struct UBODynamic_ModelMat {
     glm::mat4* model = nullptr;
 };

@@ -78,4 +78,10 @@ public:
     glm::mat4 GetProj() const {
         return glm::perspective(FOVY, aspect, nearPlane, farPlane);
     }
+    float GetNearPlane() const {
+        return nearPlane;
+    }
+    float GetFarPlane() const {
+        return farPlane;
+    }
 };

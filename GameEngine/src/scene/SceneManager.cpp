@@ -69,6 +69,25 @@ void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, V
 
         // Shaders
         CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass, deferredPass);
+    } else if (sceneId == 2) {
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "plane.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "wahoo.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "sphere.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+        meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, MODELS_OBJ_DIR + "alienModel_Small.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+
+        // Screen space triangle setup
+        meshDataManager->CreateScreenSpaceTriangleMesh(physicalDevice, device, commandPool, graphicsQueue);
+
+        // Textures
+        Texture t = Texture(device, physicalDevice, graphicsQueue, commandPool, TEXTURES_DIR + "ducreux.jpg");
+        textures.push_back(t);
+
+        // Camera
+        camera = Camera(glm::vec3(0.0f, 4.0f, 12.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height, SCENE_VIEW_NEAR_PLANE, SCENE_VIEW_FAR_PLANE);
+        shadowCamera = Camera(glm::vec3(7.0f, 7.0f, 7.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPass.width / (float)shadowPass.height, SHADOW_VIEW_NEAR_PLANE, SHADOW_VIEW_FAR_PLANE);
+
+        // Shaders
+        CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass, shadowPass, deferredPass);
     }
 }
 
@@ -144,23 +163,31 @@ void SceneManager::UpdateModelMatrices() {
     auto currentTime = std::chrono::high_resolution_clock::now();
     float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-    glm::mat4 mat1 = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-    meshDataManager->SetModelMatrix(mat1, 0);
-    
-    /*glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, -0.75f, 0.0f));
-    mat2 = glm::rotate(mat2, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-    mat2 = glm::scale(mat2, glm::vec3(0.25f, 0.25f, 0.25f));
-    meshDataManager->SetModelMatrix(mat2, 1);*/
+    if (currentScene == 0) {
+        
+    } else if (currentScene == 1) {
 
-    /*glm::mat4 mat3 = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, -0.75f, 0.05f));
-    mat3 = glm::rotate(mat3, time * -1.5708f, glm::vec3(0.0f, 1.0f, 0.0f));
-    mat3 = glm::scale(mat3, glm::vec3(0.15f, 0.15f, 0.15f));
-    meshDataManager->SetModelMatrix(mat3, 2);*/
+    } else if (currentScene == 2) {
+        glm::mat4 mat1 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+        mat1 = glm::rotate(mat1, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+        mat1 = glm::scale(mat1, glm::vec3(8.0f, 8.0f, 8.0f));
+        meshDataManager->SetModelMatrix(mat1, 0);
 
-    /*glm::mat4 mat4 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, std::sinf(time) * 0.05f - 0.75f, 0.75f));
-    mat4 = glm::rotate(mat4, time * -1.5708f, glm::vec3(0.0f, 1.0f, 0.0f));
-    mat4 = glm::scale(mat4, glm::vec3(0.15f, 0.15f, 0.15f));
-    meshDataManager->SetModelMatrix(mat4, 3);*/
+        glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, -0.75f, 0.0f));
+        mat2 = glm::rotate(mat2, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+        mat2 = glm::scale(mat2, glm::vec3(0.25f, 0.25f, 0.25f));
+        meshDataManager->SetModelMatrix(mat2, 1);
+
+        glm::mat4 mat3 = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, -0.75f, 0.05f));
+        mat3 = glm::rotate(mat3, time * -1.5708f, glm::vec3(0.0f, 1.0f, 0.0f));
+        mat3 = glm::scale(mat3, glm::vec3(0.15f, 0.15f, 0.15f));
+        meshDataManager->SetModelMatrix(mat3, 2);
+
+        glm::mat4 mat4 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, std::sinf(time) * 0.05f - 0.75f, 0.75f));
+        mat4 = glm::rotate(mat4, time * -1.5708f, glm::vec3(0.0f, 1.0f, 0.0f));
+        mat4 = glm::scale(mat4, glm::vec3(0.15f, 0.15f, 0.15f));
+        meshDataManager->SetModelMatrix(mat4, 3);
+    }
 }
 
 void SceneManager::UpdateShaderUniformBuffers(VkDevice device, uint32_t imageIndex) {

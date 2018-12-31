@@ -959,6 +959,16 @@ void VulkanRenderer::RegisterCallbacks(IOHandler* ioHandler) {
         CreateShadowCommandBuffer();
         CreateDeferredPassGeometryCommandBuffer();
     };
+    CallbackFunction loadScene2 = [&] {
+        vkDeviceWaitIdle(device);
+        sceneManager->CleanupMeshesAndTextures(device);
+        sceneManager->CleanupShaders(device);
+        sceneManager->LoadScene(physicalDevice, device, commandPool, renderPass, graphicsQueue, vulkanSwapChain, shadowPass, deferredPass, 2);
+        CreateCommandBuffers();
+        CreateShadowCommandBuffer();
+        CreateDeferredPassGeometryCommandBuffer();
+    };
     ioHandler->AddCallback(JE_KEY_0, loadScene0);
     ioHandler->AddCallback(JE_KEY_1, loadScene1);
+    ioHandler->AddCallback(JE_KEY_2, loadScene2);
 }

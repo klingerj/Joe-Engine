@@ -14,7 +14,7 @@ layout(location = 1) in vec3 inColor;
 layout(location = 2) in vec2 inUV;
 
 layout(location = 0) out vec2 fragUV;
-layout(location = 1) out vec3 fragPos;
+layout(location = 1) out vec2 fragPos;
 
 out gl_PerVertex {
     vec4 gl_Position;
@@ -23,5 +23,5 @@ out gl_PerVertex {
 void main() {
     gl_Position = vec4(inPosition, 1.0);
     fragUV = vec2(inUV.x, inUV.y);
-    fragPos = inPosition;
+    fragPos = inPosition.xy;
 }
