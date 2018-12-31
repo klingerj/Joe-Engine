@@ -1,8 +1,8 @@
 # GameEngine
 
 #### Weekly Update
-12/30/18
-Late Update:
+12/30/18  
+Late Update:  
 Physics engine "implemented". It serves as a basic rigidbody simulator for 3D OBB's. It checks for collisions using the Separating Axis Theorem (SAT) and resolves collisions via impulse response. Generally, it is shaky and buggy, and needs to be redone, but does look plausible in some cases.
 
 Other features added/fixed:
@@ -45,3 +45,6 @@ In its current state, the project is nothing more than code from vulkan-tutorial
 [GLM](https://github.com/g-truc/glm/releases)  
 [Tiny OBJ Loader](https://github.com/syoyo/tinyobjloader)  
 [STB Image Loading](https://github.com/nothings/stb)  
+[Real-Time Collision Detection by Christer Ericson](https://realtimecollisiondetection.net/)  
+[Gaffer on Games](https://gafferongames.com/)  
+[Unconstrained Rigidbody Physics by David Baraff, Siggraph course notes](https://www.cs.cmu.edu/~baraff/sigcourse/notesd1.pdf)  
