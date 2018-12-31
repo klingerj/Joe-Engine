@@ -11,11 +11,12 @@ layout(binding = 4) uniform sampler2D shadowMap;
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec2 fragUV;
 layout(location = 2) in vec3 fragPos;
+layout(location = 3) in vec3 fragNor;
 
 layout(location = 0) out vec4 gbuffers[2];
 
 void main() {
     vec3 albedoColor = texture(albedo, fragUV).xyz;
     gbuffers[0] = vec4(albedoColor * fragColor, 1.0);
-    gbuffers[1] = vec4(vec3(1.0, 0.0, 0.0), 1.0);
+    gbuffers[1] = vec4(fragNor, 1.0);
 }

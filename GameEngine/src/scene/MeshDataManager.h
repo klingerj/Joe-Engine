@@ -8,11 +8,12 @@
 
 struct MeshVertex {
     glm::vec3 pos;
+    glm::vec3 normal;
     glm::vec3 color;
     glm::vec2 uv;
 
-    MeshVertex() : MeshVertex(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0, 0.0)) {}
-    MeshVertex(glm::vec3 p, glm::vec3 c, glm::vec2 u) : pos(p), color(c), uv(u) {}
+    MeshVertex() : MeshVertex(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)) {}
+    MeshVertex(glm::vec3 p, glm::vec3 n, glm::vec3 c, glm::vec2 u) : pos(p), color(c), normal(n), uv(u) {}
 
     static VkVertexInputBindingDescription getBindingDescription() {
         VkVertexInputBindingDescription bindingDescription = {};
@@ -22,8 +23,8 @@ struct MeshVertex {
 
         return bindingDescription;
     }
-    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions = {};
+    static std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions = {};
 
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
@@ -33,27 +34,32 @@ struct MeshVertex {
         attributeDescriptions[1].binding = 0;
         attributeDescriptions[1].location = 1;
         attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[1].offset = offsetof(MeshVertex, color);
+        attributeDescriptions[1].offset = offsetof(MeshVertex, normal);
 
         attributeDescriptions[2].binding = 0;
         attributeDescriptions[2].location = 2;
-        attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-        attributeDescriptions[2].offset = offsetof(MeshVertex, uv);
+        attributeDescriptions[2].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[2].offset = offsetof(MeshVertex, color);
+
+        attributeDescriptions[3].binding = 0;
+        attributeDescriptions[3].location = 3;
+        attributeDescriptions[3].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[3].offset = offsetof(MeshVertex, uv);
 
         return attributeDescriptions;
     }
 
     bool operator==(const MeshVertex& other) const {
-        return pos == other.pos && color == other.color && uv == other.uv;
+        return pos == other.pos && normal == other.normal && color == other.color && uv == other.uv;
     }
 };
 
 namespace std {
     template<> struct hash<MeshVertex> {
         size_t operator()(MeshVertex const& vertex) const {
-            return ((hash<glm::vec3>()(vertex.pos) ^
-                (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
-                (hash<glm::vec2>()(vertex.uv) << 1);
+            return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.normal)) ^
+                    (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+                    (hash<glm::vec2>()(vertex.uv) << 1);
         }
     };
 }

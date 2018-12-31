@@ -82,9 +82,9 @@ void MeshDataManager::CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice de
 
 void MeshDataManager::CreateScreenSpaceTriangleMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue) {
     // Setup screen space triangle
-    const std::vector<MeshVertex> screenSpaceTriangleVertices = { { glm::vec3(-1.0, -1.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0, 0.0) },
-                                                                  { glm::vec3(3.0, -1.0, 0.0),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(2.0, 0.0) },
-                                                                  { glm::vec3(-1.0, 3.0, 0.0),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0, 2.0) } };
+    const std::vector<MeshVertex> screenSpaceTriangleVertices = { { glm::vec3(-1.0, -1.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0, 0.0) },
+                                                                  { glm::vec3(3.0, -1.0, 0.0),  glm::vec3(0.0, 0.0, 0.0),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(2.0, 0.0) },
+                                                                  { glm::vec3(-1.0, 3.0, 0.0),  glm::vec3(0.0, 0.0, 0.0),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0, 2.0) } };
     const std::vector<uint32_t> screenSpaceTriangleIndices = { 2, 1, 0 };
     screenSpaceTriangle.vertexList = screenSpaceTriangleVertices;
     screenSpaceTriangle.indexList = screenSpaceTriangleIndices;
@@ -154,6 +154,12 @@ void MeshDataManager::LoadModelFromFile(const std::string& filepath) {
                 attrib.vertices[3 * index.vertex_index + 0],
                 attrib.vertices[3 * index.vertex_index + 1],
                 attrib.vertices[3 * index.vertex_index + 2]
+            };
+
+            vertex.normal = {
+                attrib.normals[3 * index.normal_index + 0],
+                attrib.normals[3 * index.normal_index + 1],
+                attrib.normals[3 * index.normal_index + 2]
             };
 
             vertex.uv = {

@@ -40,5 +40,6 @@ void main() {
     float shadowColor = texture(shadowMap, pointShadow.xy).r;
     float shadow = step(pointShadow.z, shadowColor);
     shadow = max(shadow, 0.15);
-    outColor = vec4(gBuffer_Color * shadow, 1.0);
+    float lambert = clamp(dot(normalize(vec3(5.0)), gBuffer_Normal), 0.0, 1.0);
+    outColor = vec4(gBuffer_Color * shadow * lambert, 1.0);
 }
