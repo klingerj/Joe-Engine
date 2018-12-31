@@ -21,17 +21,20 @@ layout(location = 1) in vec2 fragPos;
 layout(location = 0) out vec4 outColor;
 
 void main() {
+    // Read from G-buffers
     vec3 albedoColor = texture(albedo, fragUV).xyz;
     vec3 gBuffer_Color = texture(gBufferColor, fragUV).xyz;
     vec3 gBuffer_Normal = texture(gBufferNormal, fragUV).xyz;
+
+    // Get world space position from fragment position and depth
     vec3 ndcPos = vec3(fragPos, texture(gBufferDepth, fragUV).x);
     vec4 viewPos = ubo_viewProj_inv.invProj * vec4(ndcPos, 1.0);
     viewPos /= viewPos.w;
     vec3 worldPos = (ubo_viewProj_inv.invView * viewPos).xyz;
-    //outColor = vec4(worldPos, 1.0); return;
 
+    // Shadow mapping
+    worldPos += normalize(vec3(5.0) - worldPos) * 0.005;
     vec4 pointShadow = ubo_viewProj_Shadow.viewProj * vec4(worldPos, 1.0);
-    pointShadow.xyz += normalize(vec3(5.0) - pointShadow.xyz) * 0.005;
     pointShadow /= pointShadow.w;
     pointShadow.xy = pointShadow.xy * 0.5 + 0.5;
     float shadowColor = texture(shadowMap, pointShadow.xy).r;

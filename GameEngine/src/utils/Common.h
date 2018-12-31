@@ -22,7 +22,7 @@ constexpr int DEFAULT_MAX_FRAMES_IN_FLIGHT = 2;
 
 constexpr int DEFAULT_SHADOW_MAP_WIDTH = 2000;
 constexpr int DEFAULT_SHADOW_MAP_HEIGHT = 2000;
-constexpr float DEFAULT_SHADOW_MAP_DEPTH_BIAS_SLOPE = 1.75f;
+constexpr float DEFAULT_SHADOW_MAP_DEPTH_BIAS_SLOPE = 1.5f;
 constexpr float DEFAULT_SHADOW_MAP_DEPTH_BIAS_CONSTANT = 0.0f;
 
 // Camera attributes
@@ -30,7 +30,7 @@ constexpr float DEFAULT_SHADOW_MAP_DEPTH_BIAS_CONSTANT = 0.0f;
 constexpr float SCENE_VIEW_NEAR_PLANE = 0.1f;
 constexpr float SCENE_VIEW_FAR_PLANE = 100.0f;
 constexpr float SHADOW_VIEW_NEAR_PLANE = 0.1f;
-constexpr float SHADOW_VIEW_FAR_PLANE = 20.0f;
+constexpr float SHADOW_VIEW_FAR_PLANE = 50.0f;
 #define FOVY glm::radians(45.0f)
 
 // Various project file paths

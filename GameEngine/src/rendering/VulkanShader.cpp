@@ -766,9 +766,9 @@ void VulkanShadowPassShader::CreateUniformBuffers(VkPhysicalDevice physicalDevic
 void VulkanShadowPassShader::UpdateUniformBuffers(VkDevice device, const Camera& shadowCamera, const glm::mat4* modelMatrices, uint32_t numMeshes) {
     UBO_ViewProj ubo_vp = {};
     glm::mat4 view = shadowCamera.GetView();
-    glm::mat4 proj = shadowCamera.GetProj();
+    const float coord = 7.5f;
+    glm::mat4 proj = glm::ortho(-coord, coord, -coord, coord, shadowCamera.GetNearPlane(), shadowCamera.GetFarPlane());
     proj[1][1] *= -1.0f;
-    //glm::mat4 proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, shadowCamera.GetNearPlane(), shadowCamera.GetFarPlane());
     ubo_vp.viewProj = proj * view;
 
     for (uint32_t i = 0; i < numMeshes; ++i) {
@@ -1678,7 +1678,8 @@ void VulkanDeferredPassLightingShader::UpdateUniformBuffers(VkDevice device, uin
 
     UBO_ViewProj ubo_vp_shadow = {};
     view = shadowCamera.GetView();
-    proj = shadowCamera.GetProj();
+    const float coord = 7.5f;
+    proj = glm::ortho(-coord, coord, -coord, coord, shadowCamera.GetNearPlane(), shadowCamera.GetFarPlane());
     proj[1][1] *= -1.0f;
     ubo_vp_shadow.viewProj = proj * view;
 
