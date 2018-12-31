@@ -42,6 +42,14 @@ typedef struct offscreen_deferred_pass_t {
     VkSemaphore semaphore = VK_NULL_HANDLE; // Semaphore used to synchronize between this and the next render pass
 } OffscreenDeferredPass;
 
+typedef struct post_processing_pass_t {
+    int32_t width = DEFAULT_SCREEN_WIDTH, height = DEFAULT_SCREEN_HEIGHT;
+    VkFramebuffer framebuffer = VK_NULL_HANDLE;
+    FramebufferAttachment texture;
+    VkRenderPass renderPass;
+    VkSampler sampler;
+} PostProcessingPass;
+
 // Class that manages all Vulkan resources and rendering
 
 class VulkanRenderer {
@@ -76,6 +84,11 @@ private:
 
     // Depth buffer
     FramebufferAttachment depthBuffer;
+
+    // Render offscreen for post processing
+    FramebufferAttachment renderedSceneBuffer;
+    VkFramebuffer framebuffer_firstPostProcess;
+    VkRenderPass renderPass_firstPostProcess;
 
     // Renderpass(es)
     VkRenderPass renderPass;
@@ -127,6 +140,15 @@ private:
     void CreateDeferredPassGeometryAttachment(FramebufferAttachment& attachment, VkExtent2D extent, VkImageUsageFlagBits usageBits, VkFormat format);
     void CreateDeferredPassGeometrySampler(VkSampler& sampler);
     void CreateDeferredPassGeometryCommandBuffer();
+    
+    // Post processing
+    std::vector<PostProcessingPass> postProcessingPasses;
+    // The final post processing pass's framebuffer attachment remains uncreated, and rather uses the swap chain framebuffers
+    void CreatePostProcessingPassResources();
+    void CreatePostProcessingPassRenderPass(uint32_t i);
+    void CreatePostProcessingPassFramebuffer(uint32_t i);
+    // Re-use DeferredPassGeometryAttachment function, TODO: rename that
+    // Re-use CreateDepthSampler function, TODO: combine and rename that
 
 public:
     VulkanRenderer() : width(DEFAULT_SCREEN_WIDTH), height(DEFAULT_SCREEN_HEIGHT), MAX_FRAMES_IN_FLIGHT(DEFAULT_MAX_FRAMES_IN_FLIGHT),

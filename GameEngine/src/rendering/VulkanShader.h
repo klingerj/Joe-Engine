@@ -52,13 +52,13 @@ private:
         const VulkanSwapChain& swapChain, VkRenderPass renderPass);
     void CreateDescriptorPool(VkDevice device, size_t numSwapChainImages);
     void CreateDescriptorSetLayout(VkDevice device);
-    void CreateDescriptorSets(VkDevice device, const Texture& texture, const OffscreenShadowPass& shadowPass, size_t numSwapChainImages);
+    void CreateDescriptorSets(VkDevice device, const Texture& texture, const OffscreenShadowPass& shadowPass, const PostProcessingPass& postProcessingPass, VkImageView postImageView, size_t numSwapChainImages);
     void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages, size_t numModelMatrices);
 
 public:
     VulkanMeshShader() : uboDynamicAlignment(0), ubo_Dynamic_ModelMat() {}
-    VulkanMeshShader(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& swapChain, const OffscreenShadowPass& shadowPass, VkRenderPass renderPass,
-                     size_t numModelMatrices, const Texture& texture, const std::string& vertShader, const std::string& fragShader) {
+    VulkanMeshShader(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& swapChain, const OffscreenShadowPass& shadowPass, const PostProcessingPass& postProcessingPass, VkRenderPass renderPass,
+                     size_t numModelMatrices, const Texture& texture, VkImageView postImageView, const std::string& vertShader, const std::string& fragShader) {
         // Read in shader code
         auto vertShaderCode = ReadFile(vertShader);
         auto fragShaderCode = ReadFile(fragShader);
@@ -71,7 +71,7 @@ public:
         CreateUniformBuffers(physicalDevice, device, numSwapChainImages, numModelMatrices);
         CreateDescriptorSetLayout(device);
         CreateDescriptorPool(device, numSwapChainImages);
-        CreateDescriptorSets(device, texture, shadowPass, numSwapChainImages);
+        CreateDescriptorSets(device, texture, shadowPass, postProcessingPass, postImageView, numSwapChainImages);
         CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain, renderPass);
     }
 

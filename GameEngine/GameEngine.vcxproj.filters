@@ -170,6 +170,9 @@
     <None Include="src\shaders\frag_deferred_lighting.frag">
       <Filter>src\Source Files\Shaders\Fragment Shaders</Filter>
     </None>
+    <None Include="src\shaders\frag_post_grayscale.frag">
+      <Filter>src\Source Files\Shaders\Fragment Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="src\scripts\compileShaders.bat">

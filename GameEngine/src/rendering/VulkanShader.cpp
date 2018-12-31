@@ -142,7 +142,7 @@ void VulkanMeshShader::CreateGraphicsPipeline(VkDevice device, VkShaderModule ve
     
     VkPipelineDepthStencilStateCreateInfo depthStencil = {};
     depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depthStencil.depthTestEnable = VK_TRUE;
+    depthStencil.depthTestEnable = VK_FALSE;
     depthStencil.depthWriteEnable = VK_TRUE;
     depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
     depthStencil.depthBoundsTestEnable = VK_FALSE;
@@ -300,7 +300,7 @@ void VulkanMeshShader::CreateDescriptorSetLayout(VkDevice device) {
     }
 }
 
-void VulkanMeshShader::CreateDescriptorSets(VkDevice device, const Texture& texture, const OffscreenShadowPass& shadowPass, size_t numSwapChainImages) {
+void VulkanMeshShader::CreateDescriptorSets(VkDevice device, const Texture& texture, const OffscreenShadowPass& shadowPass, const PostProcessingPass& postProcessingPass, VkImageView postImageView, size_t numSwapChainImages) {
     std::vector<VkDescriptorSetLayout> layouts(numSwapChainImages, descriptorSetLayout);
 
     VkDescriptorSetAllocateInfo allocInfo = {};
@@ -332,8 +332,8 @@ void VulkanMeshShader::CreateDescriptorSets(VkDevice device, const Texture& text
 
         VkDescriptorImageInfo imageInfo = {};
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.imageView = texture.GetImageView();
-        imageInfo.sampler = texture.GetSampler();
+        imageInfo.imageView = postImageView;
+        imageInfo.sampler = postProcessingPass.sampler;
 
         VkDescriptorImageInfo imageInfo_shadowMap = {};
         imageInfo_shadowMap.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
