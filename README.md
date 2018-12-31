@@ -1,6 +1,16 @@
 # GameEngine
 
 #### Weekly Update
+12/30/18
+Late Update:
+Physics engine "implemented". It serves as a basic rigidbody simulator for 3D OBB's. It checks for collisions using the Separating Axis Theorem (SAT) and resolves collisions via impulse response. Generally, it is shaky and buggy, and needs to be redone, but does look plausible in some cases.
+
+Other features added/fixed:
+- Post processing (on a separate branch): easy addition/removal of render passes
+- Shadows now exist in the deferred renderer
+- Swappable scenes in the scene manager
+
+
 11/28/18
 Engine now capable of input handling through glfw and can add custom callback functions for key/mouse interaction. This will be easy to abstract to an API to allow the user to bind custom functionality to key/mouse events.
 
