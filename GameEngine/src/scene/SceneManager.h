@@ -38,9 +38,9 @@ public:
 
     // Creation
     void Initialize(const std::shared_ptr<MeshDataManager>& p);
-    void LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass_firstPostProcess, VkRenderPass renderPass, VkImageView firstPostProcessImageView, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass, std::vector<PostProcessingPass> postProcessingPasses, uint32_t sceneId);
-    void CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass_firstPostProcess, VkRenderPass renderPass, VkImageView firstPostProcessImageView, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass, std::vector<PostProcessingPass> postProcessingPasses);
-    void RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass_firstPostProcess, VkRenderPass renderPass, VkImageView firstPostProcessImageView, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass, std::vector<PostProcessingPass> postProcessingPasses);
+    void LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass_firstPostProcess, VkImageView firstPostProcessImageView, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass, std::vector<PostProcessingPass> postProcessingPasses, uint32_t sceneId);
+    void CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass_deferredLighting, VkImageView deferredLightingImageView, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass, std::vector<PostProcessingPass> postProcessingPasses);
+    void RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass_deferredLighting, VkImageView deferredLightingImageView, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass, std::vector<PostProcessingPass> postProcessingPasses);
 
     // IO
     void RegisterCallbacks(IOHandler* ioHandler);
