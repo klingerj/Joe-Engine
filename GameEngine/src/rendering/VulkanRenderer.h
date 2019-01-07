@@ -86,9 +86,6 @@ private:
     VulkanSwapChain vulkanSwapChain;
     bool framebufferResized;
 
-    // Depth buffer
-    FramebufferAttachment depthBuffer;
-
     // Framebuffers
     std::vector<VkFramebuffer> swapChainFramebuffers;
 
@@ -113,9 +110,9 @@ private:
     void CreateSwapChainFramebuffers();
     void CreateSemaphoresAndFences();
 
-    // Swap chain recreation
-    void CleanupSwapChain();
-    void RecreateSwapChain();
+    // Window-dependent rendering resource recreation
+    void CleanupWindowDependentRenderingResources();
+    void RecreateWindowDependentRenderingResources();
 
     /// Rendering variables and functions
 

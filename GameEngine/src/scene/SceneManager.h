@@ -23,11 +23,10 @@ private:
     std::vector<Texture> textures;
 
     // Shaders
-    std::vector<VulkanMeshShader> meshShaders;
     std::vector<VulkanShadowPassShader> shadowPassShaders;
     std::vector<VulkanDeferredPassGeometryShader> deferredPassGeometryShaders; // TODO: this probably doesn't need to be a vector
     std::vector<VulkanDeferredPassLightingShader> deferredPassLightingShaders;
-    std::vector<VulkanMeshShader> postProcessingShaders;
+    std::vector<VulkanPostProcessShader> postProcessingShaders;
 
     // Scene IDs
     uint32_t currentScene;

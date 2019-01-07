@@ -93,18 +93,18 @@ void SceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, V
 void SceneManager::CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass_deferredLighting, VkImageView deferredLightingImageView, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass, std::vector<PostProcessingPass> postProcessingPasses) {
     shadowPassShaders.emplace_back(VulkanShadowPassShader(physicalDevice, device, shadowPass.renderPass, { static_cast<uint32_t>(shadowPass.width), static_cast<uint32_t>(shadowPass.height) }, meshDataManager->GetNumMeshes(),
                                                           SHADER_DIR + "vert_shadow.spv", SHADER_DIR + "frag_shadow.spv"));
-    deferredPassGeometryShaders.emplace_back(VulkanDeferredPassGeometryShader(physicalDevice, device, vulkanSwapChain, shadowPass, deferredPass.renderPass, meshDataManager->GetNumMeshes(), textures[0],
+    deferredPassGeometryShaders.emplace_back(VulkanDeferredPassGeometryShader(physicalDevice, device, vulkanSwapChain, deferredPass.renderPass, meshDataManager->GetNumMeshes(), textures[0],
                                                                               SHADER_DIR + "vert_deferred_geom.spv", SHADER_DIR + "frag_deferred_geom.spv"));
     deferredPassLightingShaders.emplace_back(VulkanDeferredPassLightingShader(physicalDevice, device, vulkanSwapChain, shadowPass, deferredPass, renderPass_deferredLighting, 1, textures[0],
                                                                               SHADER_DIR + "vert_deferred_lighting.spv", SHADER_DIR + "frag_deferred_lighting.spv"));
     // TODO: Add the shader name or directory to the post processing struct, or the name to some parallel array so this loop can stay.
     for (uint32_t p = 0; p < postProcessingPasses.size(); ++p) {
         if (p == 0) {
-            postProcessingShaders.emplace_back(VulkanMeshShader(physicalDevice, device, vulkanSwapChain, shadowPass, postProcessingPasses[0], postProcessingPasses[0].renderPass, meshDataManager->GetNumMeshes(), textures[0], deferredLightingImageView,
-                SHADER_DIR + "vert_deferred_lighting.spv", SHADER_DIR + "frag_post_grayscale.spv"));
+            postProcessingShaders.emplace_back(VulkanPostProcessShader(physicalDevice, device, vulkanSwapChain, postProcessingPasses[0], postProcessingPasses[0].renderPass, meshDataManager->GetNumMeshes(), deferredLightingImageView,
+                                                                SHADER_DIR + "vert_passthrough.spv", SHADER_DIR + "frag_post_grayscale.spv"));
         } else {
-            postProcessingShaders.emplace_back(VulkanMeshShader(physicalDevice, device, vulkanSwapChain, shadowPass, postProcessingPasses[p], postProcessingPasses[p].renderPass, meshDataManager->GetNumMeshes(), textures[0], postProcessingPasses[p - 1].texture.imageView,
-                SHADER_DIR + "vert_deferred_lighting.spv", SHADER_DIR + "frag_post_grayscale.spv"));
+            postProcessingShaders.emplace_back(VulkanPostProcessShader(physicalDevice, device, vulkanSwapChain, postProcessingPasses[p], postProcessingPasses[p].renderPass, meshDataManager->GetNumMeshes(), postProcessingPasses[p - 1].texture.imageView,
+                                                                SHADER_DIR + "vert_passthrough.spv", SHADER_DIR + "frag_post_grayscale.spv"));
         }
     }
 }
@@ -147,9 +147,6 @@ void SceneManager::CleanupMeshesAndTextures(VkDevice device) {
 }
 
 void SceneManager::CleanupShaders(VkDevice device) {
-    for (auto& meshShader : meshShaders) {
-        meshShader.Cleanup(device);
-    }
     for (auto& shadowPassShader : shadowPassShaders) {
         shadowPassShader.Cleanup(device);
     }
@@ -162,7 +159,6 @@ void SceneManager::CleanupShaders(VkDevice device) {
     for (auto& postProcessingShader : postProcessingShaders) {
         postProcessingShader.Cleanup(device);
     }
-    meshShaders.clear();
     shadowPassShaders.clear();
     deferredPassGeometryShaders.clear();
     deferredPassLightingShaders.clear();
@@ -202,30 +198,17 @@ void SceneManager::UpdateModelMatrices() {
 }
 
 void SceneManager::UpdateShaderUniformBuffers(VkDevice device, uint32_t imageIndex) {
-    for (auto& meshShader : meshShaders) {
-        meshShader.UpdateUniformBuffers(device, imageIndex, camera, shadowCamera, meshDataManager->GetModelMatrices(), meshDataManager->GetNumMeshes());
-    }
     for (auto& shadowPassShader : shadowPassShaders) {
         shadowPassShader.UpdateUniformBuffers(device, shadowCamera, meshDataManager->GetModelMatrices(), meshDataManager->GetNumMeshes());
     }
     for (auto& deferredPassGeomShader : deferredPassGeometryShaders) {
-        deferredPassGeomShader.UpdateUniformBuffers(device, camera, shadowCamera, meshDataManager->GetModelMatrices(), meshDataManager->GetNumMeshes());
+        deferredPassGeomShader.UpdateUniformBuffers(device, camera, meshDataManager->GetModelMatrices(), meshDataManager->GetNumMeshes());
     }
     for (auto& deferredPasslightShader : deferredPassLightingShaders) {
         deferredPasslightShader.UpdateUniformBuffers(device, imageIndex, camera, shadowCamera);
     }
     for (auto& postProcessingShader : postProcessingShaders) {
         postProcessingShader.UpdateUniformBuffers(device, imageIndex, camera, shadowCamera, meshDataManager->GetModelMatrices(), meshDataManager->GetNumMeshes());
-    }
-}
-
-void SceneManager::BindResources(VkCommandBuffer commandBuffer, size_t index) {
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshShaders[0].GetPipeline());
-
-    for (uint32_t j = 0; j < meshDataManager->GetNumMeshes(); ++j) {
-        uint32_t dynamicOffset = j * static_cast<uint32_t>(meshShaders[0].GetDynamicAlignment());
-        meshShaders[0].BindDescriptorSets(commandBuffer, index, dynamicOffset);
-        meshDataManager->DrawMesh(commandBuffer, j);
     }
 }
 
@@ -250,13 +233,12 @@ void SceneManager::BindDeferredPassGeometryResources(VkCommandBuffer commandBuff
 void SceneManager::BindDeferredPassLightingResources(VkCommandBuffer commandBuffer, size_t index) {
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, deferredPassLightingShaders[0].GetPipeline());
     // TODO: update the deferred pass lighting shader dynamic ubo setup to only take one mesh. Later: Is this still a todo?
-    deferredPassLightingShaders[0].BindDescriptorSets(commandBuffer, index, 0);
+    deferredPassLightingShaders[0].BindDescriptorSets(commandBuffer, index);
     meshDataManager->DrawScreenSpaceTriangle(commandBuffer);
 }
 
 void SceneManager::BindPostProcessingPassResources(VkCommandBuffer commandBuffer, size_t index, size_t shaderIndex) {
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, postProcessingShaders[shaderIndex].GetPipeline());
-    // TODO: update the deferred pass lighting shader dynamic ubo setup to only take one mesh. Later: Is this still a todo?
-    postProcessingShaders[shaderIndex].BindDescriptorSets(commandBuffer, index, 0);
+    postProcessingShaders[shaderIndex].BindDescriptorSets(commandBuffer, index);
     meshDataManager->DrawScreenSpaceTriangle(commandBuffer);
 }

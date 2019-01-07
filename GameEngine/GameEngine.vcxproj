@@ -70,6 +70,7 @@
     <None Include="src\shaders\vert_deferred_geom.vert" />
     <None Include="src\shaders\vert_deferred_lighting.vert" />
     <None Include="src\shaders\vert_mesh.vert" />
+    <None Include="src\shaders\vert_passthrough.vert" />
     <None Include="src\shaders\vert_shadow.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

@@ -37,7 +37,7 @@ void VulkanRenderer::Initialize(SceneManager* sceneManager) {
     CreateCommandPool();
 
     // Create deferred lighting pass framebuffer attachments
-    CreateDepthAttachment(depthBuffer, { width, height }, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+    //CreateDepthAttachment(depthBuffer, { width, height }, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
     // Add the post processing passes
     postProcessingPasses.emplace_back(PostProcessingPass());
@@ -70,7 +70,7 @@ void VulkanRenderer::Initialize(SceneManager* sceneManager) {
 }
 
 void VulkanRenderer::Cleanup() {
-    CleanupSwapChain();
+    CleanupWindowDependentRenderingResources();
     sceneManager->CleanupMeshesAndTextures(device);
     
     // Cleanup shadow pass
@@ -947,7 +947,7 @@ void VulkanRenderer::DrawFrame() {
     VkResult result = vkAcquireNextImageKHR(device, vulkanSwapChain.GetSwapChain(), std::numeric_limits<uint64_t>::max(), imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-        RecreateSwapChain();
+        RecreateWindowDependentRenderingResources();
         return;
     } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("failed to acquire swap chain image!");
@@ -1030,7 +1030,7 @@ void VulkanRenderer::DrawFrame() {
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
         framebufferResized = false;
-        RecreateSwapChain();
+        RecreateWindowDependentRenderingResources();
     } else if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to present swap chain image!");
     }
@@ -1038,12 +1038,12 @@ void VulkanRenderer::DrawFrame() {
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void VulkanRenderer::CleanupSwapChain() {
+void VulkanRenderer::CleanupWindowDependentRenderingResources() {
 
     // Depth Buffer TODO: remove me
-    vkDestroyImageView(device, depthBuffer.imageView, nullptr);
+    /*vkDestroyImageView(device, depthBuffer.imageView, nullptr);
     vkDestroyImage(device, depthBuffer.image, nullptr);
-    vkFreeMemory(device, depthBuffer.deviceMemory, nullptr);
+    vkFreeMemory(device, depthBuffer.deviceMemory, nullptr);*/
     
     // Swap Chain Framebuffers
     for (auto framebuffer : swapChainFramebuffers) {
@@ -1090,7 +1090,7 @@ void VulkanRenderer::CleanupSwapChain() {
     vulkanSwapChain.Cleanup(device);
 }
 
-void VulkanRenderer::RecreateSwapChain() {
+void VulkanRenderer::RecreateWindowDependentRenderingResources() {
     int newWidth = 0, newHeight = 0;
     while (newWidth == 0 || newHeight == 0) {
         vulkanWindow.AwaitMaximize(&newWidth, &newHeight);
@@ -1101,15 +1101,9 @@ void VulkanRenderer::RecreateSwapChain() {
 
     vkDeviceWaitIdle(device);
 
-    CleanupSwapChain();
+    CleanupWindowDependentRenderingResources();
     vulkanSwapChain.Create(physicalDevice, device, vulkanWindow, newWidth, newHeight);
 
-    // TODO: remove me
-    //CreateShadowCommandBuffer();
-
-    // TODO Remove me
-    CreateDepthAttachment(depthBuffer, { static_cast<uint32_t>(newWidth), static_cast<uint32_t>(newHeight) }, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
-    
     // Deferred Pass - Geometry
     deferredPass.width = static_cast<uint32_t>(newWidth);
     deferredPass.height = static_cast<uint32_t>(newHeight);
