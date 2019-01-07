@@ -5,11 +5,7 @@ layout(binding = 0) uniform UBO_ViewProj {
     mat4 viewProj;
 } ubo_viewProj;
 
-layout(binding = 1) uniform UBO_ViewProj_Shadow {
-    mat4 viewProj;
-} ubo_viewProj_Shadow;
-
-layout (binding = 2) uniform UBODynamic_ModelMat {
+layout (binding = 1) uniform UBODynamic_ModelMat {
 	mat4 model;
 } uboDynamicModelMatInstance;
 

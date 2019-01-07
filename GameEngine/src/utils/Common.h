@@ -75,3 +75,7 @@ using CallbackFunction = std::function<void()>;
 #define JE_KEY_7 GLFW_KEY_7
 #define JE_KEY_8 GLFW_KEY_8
 #define JE_KEY_9 GLFW_KEY_9
+
+// Post Processing Shaders
+// The Joe Engine provides some built-in post processing shaders, distinguished by index in this array.
+extern const std::string builtInPostShaderPaths[2];

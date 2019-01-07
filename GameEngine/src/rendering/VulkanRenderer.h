@@ -14,14 +14,16 @@ class IOHandler;
 
 // Rendering-related structs
 
+// Generic Framebuffer attachment
 typedef struct framebuffer_attachment_t {
     VkImage image;
     VkDeviceMemory deviceMemory;
     VkImageView imageView;
 } FramebufferAttachment;
 
+// Render pass information for a shadow pass (depth-only)
 typedef struct offscreen_shadow_pass_t {
-    int32_t width = DEFAULT_SHADOW_MAP_WIDTH, height = DEFAULT_SHADOW_MAP_HEIGHT;
+    uint32_t width = DEFAULT_SHADOW_MAP_WIDTH, height = DEFAULT_SHADOW_MAP_HEIGHT;
     VkFramebuffer framebuffer;
     FramebufferAttachment depth;
     VkRenderPass renderPass;
@@ -30,8 +32,9 @@ typedef struct offscreen_shadow_pass_t {
     VkSemaphore semaphore = VK_NULL_HANDLE; // Semaphore used to synchronize between this and the next render pass
 } OffscreenShadowPass;
 
+// Render pass information for a deferred rendering pass (multiple g-buffers)
 typedef struct offscreen_deferred_pass_t {
-    int32_t width = DEFAULT_SCREEN_WIDTH, height = DEFAULT_SCREEN_HEIGHT;
+    uint32_t width = DEFAULT_SCREEN_WIDTH, height = DEFAULT_SCREEN_HEIGHT;
     VkFramebuffer framebuffer;
     FramebufferAttachment color;
     FramebufferAttachment normal;
@@ -41,6 +44,17 @@ typedef struct offscreen_deferred_pass_t {
     VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
     VkSemaphore semaphore = VK_NULL_HANDLE; // Semaphore used to synchronize between this and the next render pass
 } OffscreenDeferredPass;
+
+// Render pass information for a post processing pass (blit)
+typedef struct post_processing_pass_t {
+    uint32_t width = DEFAULT_SCREEN_WIDTH, height = DEFAULT_SCREEN_HEIGHT;
+    VkFramebuffer framebuffer = VK_NULL_HANDLE;
+    FramebufferAttachment texture;
+    VkRenderPass renderPass;
+    VkSampler sampler;
+    uint32_t shaderIndex = -1; // ID indicating which built-in post shader to use. -1 for custom shader.
+    std::string filepath = ""; // Path to custom shader if not using a built-in.
+} PostProcessingPass;
 
 // Class that manages all Vulkan resources and rendering
 
@@ -53,8 +67,8 @@ private:
     VulkanValidationLayers vulkanValidationLayers;
 
     // Application width and height
-    const uint32_t width;
-    const uint32_t height;
+    uint32_t width;
+    uint32_t height;
 
     // Scene Manager
     SceneManager* sceneManager;
@@ -74,12 +88,6 @@ private:
     VulkanSwapChain vulkanSwapChain;
     bool framebufferResized;
 
-    // Depth buffer
-    FramebufferAttachment depthBuffer;
-
-    // Renderpass(es)
-    VkRenderPass renderPass;
-    
     // Framebuffers
     std::vector<VkFramebuffer> swapChainFramebuffers;
 
@@ -100,33 +108,50 @@ private:
     int RateDeviceSuitability(VkPhysicalDevice physicalDevice, const VulkanWindow& vulkanWindow);
     void PickPhysicalDevice();
     void CreateLogicalDevice();
-    void CreateRenderPass();
-    void CreateFramebuffers();
     void CreateCommandPool();
-    void CreateCommandBuffers();
+    void CreateSwapChainFramebuffers();
     void CreateSemaphoresAndFences();
 
-    // Swap chain recreation
-    void CleanupSwapChain();
-    void RecreateSwapChain();
+    // Window-dependent rendering resource recreation
+    void CleanupWindowDependentRenderingResources();
+    void RecreateWindowDependentRenderingResources();
 
-    // Rendering
+    /// Rendering variables and functions
+
+    // Helpers for offscreen rendering
+    void CreateFramebufferAttachment(FramebufferAttachment& depth, VkExtent2D extent, VkImageUsageFlagBits usageBits, VkFormat format);
+    void CreateFramebufferAttachmentSampler(VkSampler& sampler);
+
+    // Shadow pass
     OffscreenShadowPass shadowPass;
     void CreateShadowPassResources();
     void CreateShadowRenderPass();
     void CreateShadowFramebuffer();
-    void CreateDepthAttachment(FramebufferAttachment& depth, VkExtent2D extent, VkImageUsageFlagBits usageBits);
-    void CreateDepthSampler(VkSampler& sampler);
     void CreateShadowCommandBuffer();
 
-    // Deferred Rendering 
+    // Deferred Rendering - geometry pass
     OffscreenDeferredPass deferredPass;
     void CreateDeferredPassGeometryResources();
     void CreateDeferredPassGeometryRenderPass();
     void CreateDeferredPassGeometryFramebuffer();
-    void CreateDeferredPassGeometryAttachment(FramebufferAttachment& attachment, VkExtent2D extent, VkImageUsageFlagBits usageBits, VkFormat format);
-    void CreateDeferredPassGeometrySampler(VkSampler& sampler);
     void CreateDeferredPassGeometryCommandBuffer();
+    
+    // Deferred Rendering - lighting pass (only render offscreen if there is at least one post process)
+    FramebufferAttachment framebufferAttachment_deferredLighting;
+    VkRenderPass renderPass_deferredLighting;
+    VkFramebuffer framebuffer_deferredLighting;
+    void CreateDeferredPassLightingRenderPass();
+    void CreateDeferredPassLightingFramebuffer();
+    void CreateDeferredPassLightingResources();
+
+    // Post processing
+    // The final post processing pass's framebuffer attachment is never created (use the swap chain framebuffers instead)
+    std::vector<PostProcessingPass> postProcessingPasses;
+    void CreatePostProcessingPassResources();
+    void CreatePostProcessingPassRenderPass(uint32_t i);
+    void CreatePostProcessingPassFramebuffer(uint32_t i);
+
+    void CreateDeferredLightingAndPostProcessingCommandBuffer();
 
 public:
     VulkanRenderer() : width(DEFAULT_SCREEN_WIDTH), height(DEFAULT_SCREEN_HEIGHT), MAX_FRAMES_IN_FLIGHT(DEFAULT_MAX_FRAMES_IN_FLIGHT),

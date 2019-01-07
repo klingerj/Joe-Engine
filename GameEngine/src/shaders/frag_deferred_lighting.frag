@@ -10,11 +10,11 @@ layout(binding = 1) uniform UBO_ViewProj_Shadow {
     mat4 viewProj;
 } ubo_viewProj_Shadow;
 
-layout(binding = 3) uniform sampler2D albedo;
-layout(binding = 4) uniform sampler2D shadowMap;
-layout(binding = 5) uniform sampler2D gBufferColor;
-layout(binding = 6) uniform sampler2D gBufferNormal;
-layout(binding = 7) uniform sampler2D gBufferDepth;
+layout(binding = 2) uniform sampler2D albedo;
+layout(binding = 3) uniform sampler2D shadowMap;
+layout(binding = 4) uniform sampler2D gBufferColor;
+layout(binding = 5) uniform sampler2D gBufferNormal;
+layout(binding = 6) uniform sampler2D gBufferDepth;
 
 layout(location = 0) in vec2 fragUV;
 layout(location = 1) in vec2 fragPos;
