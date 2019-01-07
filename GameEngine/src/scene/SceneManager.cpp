@@ -97,16 +97,16 @@ void SceneManager::CreateShaders(VkPhysicalDevice physicalDevice, VkDevice devic
                                                                   SHADER_DIR + "vert_deferred_geom.spv", SHADER_DIR + "frag_deferred_geom.spv");
     deferredPassLightingShader = VulkanDeferredPassLightingShader(physicalDevice, device, vulkanSwapChain, shadowPass, deferredPass, renderPass_deferredLighting, textures[0],
                                                                   SHADER_DIR + "vert_deferred_lighting.spv", SHADER_DIR + "frag_deferred_lighting.spv");
-    // TODO: Add the shader name or directory to the post processing struct, or the name to some parallel array so this loop can stay.
     for (uint32_t p = 0; p < postProcessingPasses.size(); ++p) {
+        PostProcessingPass& currentPass = postProcessingPasses[p];
         if (p == 0) {
             // Use the output of the deferred lighting pass as the input into the first post processing shader
-            postProcessingShaders.emplace_back(VulkanPostProcessShader(physicalDevice, device, vulkanSwapChain, postProcessingPasses[0], postProcessingPasses[0].renderPass, meshDataManager->GetNumMeshes(), deferredLightingImageView,
-                                                                SHADER_DIR + "vert_passthrough.spv", SHADER_DIR + "frag_post_grayscale.spv"));
+            postProcessingShaders.emplace_back(VulkanPostProcessShader(physicalDevice, device, vulkanSwapChain, currentPass, deferredLightingImageView,
+                                                                SHADER_DIR + "vert_passthrough.spv", SHADER_DIR + builtInPostShaderPaths[currentPass.shaderIndex]));
         } else {
             // Use the output of the previous post processing shader as the input into the first post processing shader
-            postProcessingShaders.emplace_back(VulkanPostProcessShader(physicalDevice, device, vulkanSwapChain, postProcessingPasses[p], postProcessingPasses[p].renderPass, meshDataManager->GetNumMeshes(), postProcessingPasses[p - 1].texture.imageView,
-                                                                SHADER_DIR + "vert_passthrough.spv", SHADER_DIR + "frag_post_grayscale.spv"));
+            postProcessingShaders.emplace_back(VulkanPostProcessShader(physicalDevice, device, vulkanSwapChain, postProcessingPasses[p], postProcessingPasses[p - 1].texture.imageView,
+                                                                SHADER_DIR + "vert_passthrough.spv", SHADER_DIR + builtInPostShaderPaths[currentPass.shaderIndex]));
         }
     }
 }

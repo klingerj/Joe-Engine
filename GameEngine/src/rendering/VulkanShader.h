@@ -45,12 +45,12 @@ private:
     void CreateDescriptorPool(VkDevice device, size_t numSwapChainImages);
     void CreateDescriptorSetLayout(VkDevice device);
     void CreateDescriptorSets(VkDevice device, const PostProcessingPass& postProcessingPass, VkImageView postImageView, size_t numSwapChainImages);
-    void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages, size_t numModelMatrices);
+    void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages);
 
 public:
     VulkanPostProcessShader() {}
-    VulkanPostProcessShader(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& swapChain, const PostProcessingPass& postProcessingPass, VkRenderPass renderPass,
-                     size_t numModelMatrices, VkImageView postImageView, const std::string& vertShader, const std::string& fragShader) {
+    VulkanPostProcessShader(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& swapChain, const PostProcessingPass& postProcessingPass,
+                            VkImageView postImageView, const std::string& vertShader, const std::string& fragShader) {
         // Read in shader code
         auto vertShaderCode = ReadFile(vertShader);
         auto fragShaderCode = ReadFile(fragShader);
@@ -60,11 +60,11 @@ public:
         VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
 
         size_t numSwapChainImages = swapChain.GetImageViews().size();
-        CreateUniformBuffers(physicalDevice, device, numSwapChainImages, numModelMatrices);
+        CreateUniformBuffers(physicalDevice, device, numSwapChainImages);
         CreateDescriptorSetLayout(device);
         CreateDescriptorPool(device, numSwapChainImages);
         CreateDescriptorSets(device, postProcessingPass, postImageView, numSwapChainImages);
-        CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain, renderPass);
+        CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain, postProcessingPass.renderPass);
     }
 
     ~VulkanPostProcessShader() {}

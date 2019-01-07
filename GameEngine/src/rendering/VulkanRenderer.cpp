@@ -40,8 +40,11 @@ void VulkanRenderer::Initialize(SceneManager* sceneManager) {
     //CreateDepthAttachment(depthBuffer, { width, height }, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
     // Add the post processing passes
-    postProcessingPasses.emplace_back(PostProcessingPass());
-    //postProcessingPasses.emplace_back(PostProcessingPass());
+    PostProcessingPass p;
+    p.shaderIndex = 0;
+    postProcessingPasses.push_back(p);
+    p.shaderIndex = 1;
+    postProcessingPasses.push_back(p);
 
     // Create the post processing pass(es)
     CreatePostProcessingPassResources();
@@ -86,11 +89,6 @@ void VulkanRenderer::Cleanup() {
     // Deferred Pass - Geometry
     vkDestroySampler(device, deferredPass.sampler, nullptr);
     vkDestroySemaphore(device, deferredPass.semaphore, nullptr);
-
-    for (uint32_t p = 0; p < postProcessingPasses.size(); ++p) {
-        vkDestroySampler(device, postProcessingPasses[p].sampler, nullptr);
-    }
-    postProcessingPasses.clear();
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
         vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
@@ -503,13 +501,6 @@ void VulkanRenderer::CreateShadowRenderPass() {
     }
 }
 
-void VulkanRenderer::CreateDepthAttachment(FramebufferAttachment& depth, VkExtent2D extent, VkImageUsageFlagBits usageBits) {
-    VkFormat depthFormat = FindDepthFormat(physicalDevice);
-    CreateImage(physicalDevice, device, extent.width, extent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, usageBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth.image, depth.deviceMemory);
-    depth.imageView = CreateImageView(device, depth.image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
-    TransitionImageLayout(device, commandPool, graphicsQueue, depth.image, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-}
-
 void VulkanRenderer::CreateShadowFramebuffer() {
     VkImageView depthAttachment = shadowPass.depth.imageView;
 
@@ -581,9 +572,7 @@ void VulkanRenderer::CreateShadowCommandBuffer() {
 }
 
 void VulkanRenderer::CreateShadowPassResources() {
-    // TODO: check if this works
-    //CreateFramebufferAttachment(shadowPass.depth, { shadowPass.width, shadowPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), FindDepthFormat(physicalDevice));
-    CreateDepthAttachment(shadowPass.depth, { shadowPass.width, shadowPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT));
+    CreateFramebufferAttachment(shadowPass.depth, { shadowPass.width, shadowPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), FindDepthFormat(physicalDevice));
     CreateFramebufferAttachmentSampler(shadowPass.depthSampler);
     CreateShadowRenderPass();
     CreateShadowFramebuffer();
@@ -655,22 +644,6 @@ void VulkanRenderer::CreateDeferredPassGeometryRenderPass() {
     if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &deferredPass.renderPass) != VK_SUCCESS) {
         throw std::runtime_error("failed to create render pass!");
     }
-}
-
-void VulkanRenderer::CreateDeferredPassGeometryAttachment(FramebufferAttachment& attachment, VkExtent2D extent, VkImageUsageFlagBits usageBits, VkFormat format) {
-    VkImageAspectFlags aspectMask = 0;
-    VkImageLayout imageLayout;
-    if (usageBits & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) {
-        aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    }
-    if (usageBits & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) {
-        aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-        imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    }
-    CreateImage(physicalDevice, device, extent.width, extent.height, format, VK_IMAGE_TILING_OPTIMAL, usageBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, attachment.image, attachment.deviceMemory);
-    attachment.imageView = CreateImageView(device, attachment.image, format, aspectMask);
-    TransitionImageLayout(device, commandPool, graphicsQueue, attachment.image, format, VK_IMAGE_LAYOUT_UNDEFINED, imageLayout);
 }
 
 void VulkanRenderer::CreateDeferredPassGeometryFramebuffer() {
@@ -747,13 +720,9 @@ void VulkanRenderer::CreateDeferredPassGeometryCommandBuffer() {
 }
 
 void VulkanRenderer::CreateDeferredPassGeometryResources() {
-    // TODO: check if this works
-    //CreateFramebufferAttachment(deferredPass.color, { deferredPass.width, deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
-    //CreateFramebufferAttachment(deferredPass.normal, { deferredPass.width, deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
-    //CreateFramebufferAttachment(deferredPass.depth, { deferredPass.width, deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), FindDepthFormat(physicalDevice));
-    CreateDeferredPassGeometryAttachment(deferredPass.color, { deferredPass.width, deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
-    CreateDeferredPassGeometryAttachment(deferredPass.normal, { deferredPass.width, deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
-    CreateDeferredPassGeometryAttachment(deferredPass.depth, { deferredPass.width, deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), FindDepthFormat(physicalDevice));
+    CreateFramebufferAttachment(deferredPass.color, { deferredPass.width, deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
+    CreateFramebufferAttachment(deferredPass.normal, { deferredPass.width, deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
+    CreateFramebufferAttachment(deferredPass.depth, { deferredPass.width, deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), FindDepthFormat(physicalDevice));
     CreateFramebufferAttachmentSampler(deferredPass.sampler);
     CreateDeferredPassGeometryRenderPass();
     CreateDeferredPassGeometryFramebuffer();
@@ -931,9 +900,9 @@ void VulkanRenderer::CreatePostProcessingPassResources() {
     for (uint32_t i = 0; i < postProcessingPasses.size(); ++i) {
         CreateFramebufferAttachmentSampler(postProcessingPasses[i].sampler);
         if (i == postProcessingPasses.size() - 1) {
-            CreateDeferredPassGeometryAttachment(postProcessingPasses[i].texture, { postProcessingPasses[i].width, postProcessingPasses[i].height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), vulkanSwapChain.GetFormat());
+            CreateFramebufferAttachment(postProcessingPasses[i].texture, { postProcessingPasses[i].width, postProcessingPasses[i].height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), vulkanSwapChain.GetFormat());
         } else {
-            CreateDeferredPassGeometryAttachment(postProcessingPasses[i].texture, { postProcessingPasses[i].width, postProcessingPasses[i].height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R8G8B8A8_UNORM);
+            CreateFramebufferAttachment(postProcessingPasses[i].texture, { postProcessingPasses[i].width, postProcessingPasses[i].height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R8G8B8A8_UNORM);
         }
         CreatePostProcessingPassRenderPass(i);
         CreatePostProcessingPassFramebuffer(i);
@@ -1039,12 +1008,6 @@ void VulkanRenderer::DrawFrame() {
 }
 
 void VulkanRenderer::CleanupWindowDependentRenderingResources() {
-
-    // Depth Buffer TODO: remove me
-    /*vkDestroyImageView(device, depthBuffer.imageView, nullptr);
-    vkDestroyImage(device, depthBuffer.image, nullptr);
-    vkFreeMemory(device, depthBuffer.deviceMemory, nullptr);*/
-    
     // Swap Chain Framebuffers
     for (auto framebuffer : swapChainFramebuffers) {
         vkDestroyFramebuffer(device, framebuffer, nullptr);
@@ -1063,7 +1026,7 @@ void VulkanRenderer::CleanupWindowDependentRenderingResources() {
     vkDestroyRenderPass(device, deferredPass.renderPass, nullptr);
     vkDestroyFramebuffer(device, deferredPass.framebuffer, nullptr);
     vkFreeCommandBuffers(device, commandPool, 1, &deferredPass.commandBuffer);
-
+    
     // Deferred Pass - Lighting
     vkDestroyRenderPass(device, renderPass_deferredLighting, nullptr);
     if (postProcessingPasses.size() > 0) {
@@ -1082,7 +1045,7 @@ void VulkanRenderer::CleanupWindowDependentRenderingResources() {
         if (postProcessingPasses[p].framebuffer != VK_NULL_HANDLE) {
             vkDestroyFramebuffer(device, postProcessingPasses[p].framebuffer, nullptr);
         }
-        
+        vkDestroySampler(device, postProcessingPasses[p].sampler, nullptr);
     }
 
     vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
@@ -1095,7 +1058,6 @@ void VulkanRenderer::RecreateWindowDependentRenderingResources() {
     while (newWidth == 0 || newHeight == 0) {
         vulkanWindow.AwaitMaximize(&newWidth, &newHeight);
     }
-
     width = newWidth;
     height = newHeight;
 
@@ -1105,23 +1067,19 @@ void VulkanRenderer::RecreateWindowDependentRenderingResources() {
     vulkanSwapChain.Create(physicalDevice, device, vulkanWindow, newWidth, newHeight);
 
     // Deferred Pass - Geometry
-    deferredPass.width = static_cast<uint32_t>(newWidth);
-    deferredPass.height = static_cast<uint32_t>(newHeight);
-    // TODO: use the new generic function
-    CreateDeferredPassGeometryAttachment(deferredPass.color, { deferredPass.width, deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
-    CreateDeferredPassGeometryAttachment(deferredPass.normal, { deferredPass.width, deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
-    CreateDeferredPassGeometryAttachment(deferredPass.depth, { deferredPass.width, deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), FindDepthFormat(physicalDevice));
-    CreateDeferredPassGeometryRenderPass();
-    CreateDeferredPassGeometryFramebuffer();
+    deferredPass.width = newWidth;
+    deferredPass.height = newHeight;
+    CreateDeferredPassGeometryResources();
 
     // Post Processing
-    CreateDeferredPassGeometryAttachment(framebufferAttachment_deferredLighting, { width, height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R8G8B8A8_UNORM);
+    postProcessingPasses.clear();
     PostProcessingPass p;
-    p.width = static_cast<uint32_t>(newWidth);
-    p.height = static_cast<uint32_t>(newHeight);
+    p.width = newWidth;
+    p.height = newHeight;
+    p.shaderIndex = 0;
     postProcessingPasses.push_back(p);
-    //postProcessingPasses.push_back(p);
-    CreatePostProcessingPassResources();
+    p.shaderIndex = 1;
+    postProcessingPasses.push_back(p);
 
     // Deferred Pass - Lighting
     CreateDeferredPassLightingRenderPass();
@@ -1130,8 +1088,11 @@ void VulkanRenderer::RecreateWindowDependentRenderingResources() {
         CreateDeferredPassLightingFramebuffer();
     }
 
-    sceneManager->RecreateResources(physicalDevice, device, vulkanSwapChain, renderPass_deferredLighting, framebufferAttachment_deferredLighting.imageView, shadowPass, deferredPass, postProcessingPasses);
+    CreatePostProcessingPassResources();
     CreateSwapChainFramebuffers();
+
+    sceneManager->RecreateResources(physicalDevice, device, vulkanSwapChain, renderPass_deferredLighting, framebufferAttachment_deferredLighting.imageView, shadowPass, deferredPass, postProcessingPasses);
+    CreateShadowCommandBuffer();
     CreateDeferredPassGeometryCommandBuffer();
     CreateDeferredLightingAndPostProcessingCommandBuffer();
 }

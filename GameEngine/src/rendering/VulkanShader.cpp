@@ -272,7 +272,7 @@ void VulkanPostProcessShader::CreateDescriptorSets(VkDevice device, const PostPr
     }
 }
 
-void VulkanPostProcessShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages, size_t numModelMatrices) {
+void VulkanPostProcessShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages) {
     // Nothing to do here
 }
 

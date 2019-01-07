@@ -170,11 +170,14 @@
     <None Include="src\shaders\frag_deferred_lighting.frag">
       <Filter>src\Source Files\Shaders\Fragment Shaders</Filter>
     </None>
-    <None Include="src\shaders\frag_post_grayscale.frag">
-      <Filter>src\Source Files\Shaders\Fragment Shaders</Filter>
-    </None>
     <None Include="src\shaders\vert_passthrough.vert">
       <Filter>src\Source Files\Shaders\Vertex Shaders</Filter>
+    </None>
+    <None Include="src\shaders\frag_post_chromatic_aberration.frag">
+      <Filter>src\Source Files\Shaders\Fragment Shaders</Filter>
+    </None>
+    <None Include="src\shaders\frag_post_blit.frag">
+      <Filter>src\Source Files\Shaders\Fragment Shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

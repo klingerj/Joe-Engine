@@ -52,6 +52,8 @@ typedef struct post_processing_pass_t {
     FramebufferAttachment texture;
     VkRenderPass renderPass;
     VkSampler sampler;
+    uint32_t shaderIndex = -1; // ID indicating which built-in post shader to use. -1 for custom shader.
+    std::string filepath = ""; // Path to custom shader if not using a built-in.
 } PostProcessingPass;
 
 // Class that manages all Vulkan resources and rendering
@@ -125,7 +127,6 @@ private:
     void CreateShadowPassResources();
     void CreateShadowRenderPass();
     void CreateShadowFramebuffer();
-    void CreateDepthAttachment(FramebufferAttachment& depth, VkExtent2D extent, VkImageUsageFlagBits usageBits);
     void CreateShadowCommandBuffer();
 
     // Deferred Rendering - geometry pass
@@ -133,7 +134,6 @@ private:
     void CreateDeferredPassGeometryResources();
     void CreateDeferredPassGeometryRenderPass();
     void CreateDeferredPassGeometryFramebuffer();
-    void CreateDeferredPassGeometryAttachment(FramebufferAttachment& attachment, VkExtent2D extent, VkImageUsageFlagBits usageBits, VkFormat format);
     void CreateDeferredPassGeometryCommandBuffer();
     
     // Deferred Rendering - lighting pass (only render offscreen if there is at least one post process)

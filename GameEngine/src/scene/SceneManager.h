@@ -24,7 +24,7 @@ private:
 
     // Shaders
     std::vector<VulkanShadowPassShader> shadowPassShaders;
-    VulkanDeferredPassGeometryShader deferredPassGeometryShader; // TODO: this probably doesn't need to be a vector
+    VulkanDeferredPassGeometryShader deferredPassGeometryShader;
     VulkanDeferredPassLightingShader deferredPassLightingShader;
     std::vector<VulkanPostProcessShader> postProcessingShaders;
 

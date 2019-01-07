@@ -8,6 +8,8 @@ layout(location = 1) in vec2 fragPos;
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    vec3 albedoColor = texture(albedo, fragUV).xyz;
-    outColor = vec4(vec3(dot(albedoColor, vec3(0.3, 0.59, 0.11))), 1.0);
+    float r = texture(albedo, fragUV + vec2(0.01, 0.0)).r;
+    float g = texture(albedo, fragUV + vec2(0.015, 0.01)).g;
+    float b = texture(albedo, fragUV + vec2(-0.02, 0.01)).b;
+    outColor = vec4(vec3(r, g, b), 1.0);
 }

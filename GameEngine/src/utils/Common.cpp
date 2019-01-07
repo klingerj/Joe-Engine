@@ -1,9 +1,13 @@
 #include "Common.h"
 
+// Paths
 std::string PROJECT_PATH = "C:\\Users\\Joe\\Documents\\Projects\\Code\\GameEngine\\GameEngine\\";
 std::string SHADER_DIR = PROJECT_PATH + "GameEngine\\src\\shaders\\";
 std::string MODELS_OBJ_DIR = PROJECT_PATH + "GameEngine\\res\\models\\OBJs\\";
 std::string TEXTURES_DIR = PROJECT_PATH + "GameEngine\\res\\textures\\";
+
+// Post processing shaders
+const std::string builtInPostShaderPaths[2] = { "frag_post_chromatic_aberration.spv", "frag_post_grayscale.spv" };
 
 VkCommandBuffer BeginSingleTimeCommands(VkDevice device, VkCommandPool commandPool) {
     VkCommandBufferAllocateInfo allocInfo = {};
