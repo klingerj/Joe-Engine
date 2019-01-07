@@ -1379,7 +1379,7 @@ void VulkanDeferredPassLightingShader::CreateDescriptorSets(VkDevice device, con
     }
 }
 
-void VulkanDeferredPassLightingShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages, size_t numModelMatrices) {
+void VulkanDeferredPassLightingShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages) {
     VkDeviceSize bufferSize_viewProj = sizeof(UBO_ViewProj);
     VkDeviceSize bufferSize_viewProj_inv = sizeof(UBO_ViewProj_Inv);
     uniformBuffers_ViewProj.resize(numSwapChainImages);

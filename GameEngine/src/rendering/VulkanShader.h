@@ -230,12 +230,12 @@ private:
     void CreateDescriptorPool(VkDevice device, size_t numSwapChainImages);
     void CreateDescriptorSetLayout(VkDevice device);
     void CreateDescriptorSets(VkDevice device, const Texture& texture, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass, size_t numSwapChainImages);
-    void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages, size_t numModelMatrices);
+    void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages);
 
 public:
     VulkanDeferredPassLightingShader() {}
     VulkanDeferredPassLightingShader(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& swapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass,
-        VkRenderPass renderPass, size_t numModelMatrices, const Texture& texture, const std::string& vertShader, const std::string& fragShader) {
+        VkRenderPass renderPass, const Texture& texture, const std::string& vertShader, const std::string& fragShader) {
         // Read in shader code
         auto vertShaderCode = ReadFile(vertShader);
         auto fragShaderCode = ReadFile(fragShader);
@@ -245,7 +245,7 @@ public:
         VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
 
         size_t numSwapChainImages = swapChain.GetImageViews().size();
-        CreateUniformBuffers(physicalDevice, device, numSwapChainImages, numModelMatrices);
+        CreateUniformBuffers(physicalDevice, device, numSwapChainImages);
         CreateDescriptorSetLayout(device);
         CreateDescriptorPool(device, numSwapChainImages);
         CreateDescriptorSets(device, texture, shadowPass, deferredPass, numSwapChainImages);
