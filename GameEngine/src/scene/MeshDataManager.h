@@ -6,19 +6,19 @@
 #include "../utils/Common.h"
 #include "glm/gtx/hash.hpp"
 
-struct MeshVertex {
+struct JEMeshVertex {
     glm::vec3 pos;
     glm::vec3 normal;
     glm::vec3 color;
     glm::vec2 uv;
 
-    MeshVertex() : MeshVertex(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)) {}
-    MeshVertex(glm::vec3 p, glm::vec3 n, glm::vec3 c, glm::vec2 u) : pos(p), color(c), normal(n), uv(u) {}
+    JEMeshVertex() : JEMeshVertex(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)) {}
+    JEMeshVertex(glm::vec3 p, glm::vec3 n, glm::vec3 c, glm::vec2 u) : pos(p), color(c), normal(n), uv(u) {}
 
     static VkVertexInputBindingDescription getBindingDescription() {
         VkVertexInputBindingDescription bindingDescription = {};
         bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(MeshVertex);
+        bindingDescription.stride = sizeof(JEMeshVertex);
         bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
         return bindingDescription;
@@ -29,34 +29,34 @@ struct MeshVertex {
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
         attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[0].offset = offsetof(MeshVertex, pos);
+        attributeDescriptions[0].offset = offsetof(JEMeshVertex, pos);
 
         attributeDescriptions[1].binding = 0;
         attributeDescriptions[1].location = 1;
         attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[1].offset = offsetof(MeshVertex, normal);
+        attributeDescriptions[1].offset = offsetof(JEMeshVertex, normal);
 
         attributeDescriptions[2].binding = 0;
         attributeDescriptions[2].location = 2;
         attributeDescriptions[2].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[2].offset = offsetof(MeshVertex, color);
+        attributeDescriptions[2].offset = offsetof(JEMeshVertex, color);
 
         attributeDescriptions[3].binding = 0;
         attributeDescriptions[3].location = 3;
         attributeDescriptions[3].format = VK_FORMAT_R32G32_SFLOAT;
-        attributeDescriptions[3].offset = offsetof(MeshVertex, uv);
+        attributeDescriptions[3].offset = offsetof(JEMeshVertex, uv);
 
         return attributeDescriptions;
     }
 
-    bool operator==(const MeshVertex& other) const {
+    bool operator==(const JEMeshVertex& other) const {
         return pos == other.pos && normal == other.normal && color == other.color && uv == other.uv;
     }
 };
 
 namespace std {
-    template<> struct hash<MeshVertex> {
-        size_t operator()(MeshVertex const& vertex) const {
+    template<> struct hash<JEMeshVertex> {
+        size_t operator()(JEMeshVertex const& vertex) const {
             return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.normal)) ^
                     (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
                     (hash<glm::vec2>()(vertex.uv) << 1);
@@ -64,71 +64,70 @@ namespace std {
     };
 }
 
-#define MAX_MESHES 100
+#define JE_MAX_MESHES 100
 // TODO: expand to freeze position x, y, z, etc, same for rotation
 // Also TODO: change this to an enum and update the MeshDataManager's CreateNewMesh function parameters from int to the enum
 #define JE_PHYSICS_FREEZE_NONE 0
 #define JE_PHYSICS_FREEZE_POSITION 1
 #define JE_PHYSICS_FREEZE_ROTATION 2
 
-// TODO: create a linked list of these
-typedef struct mesh_data_graphics_t {
-    VkBuffer vertexBufferArray[MAX_MESHES];
-    VkDeviceMemory vertexBufferMemoryArray[MAX_MESHES];
-    VkBuffer indexBufferArray[MAX_MESHES];
-    VkDeviceMemory indexBufferMemoryArray[MAX_MESHES];
-    glm::mat4 modelMatrices[MAX_MESHES];
-    std::vector<MeshVertex> vertexLists[MAX_MESHES];
-    std::vector<uint32_t> indexLists[MAX_MESHES];
-} MeshData_Graphics;
+typedef struct je_mesh_data_graphics_t {
+    VkBuffer vertexBufferArray[JE_MAX_MESHES];
+    VkDeviceMemory vertexBufferMemoryArray[JE_MAX_MESHES];
+    VkBuffer indexBufferArray[JE_MAX_MESHES];
+    VkDeviceMemory indexBufferMemoryArray[JE_MAX_MESHES];
+    glm::mat4 modelMatrices[JE_MAX_MESHES];
+    std::vector<JEMeshVertex> vertexLists[JE_MAX_MESHES];
+    std::vector<uint32_t> indexLists[JE_MAX_MESHES];
+} JEMeshData_Graphics;
 
-typedef struct oriented_bounding_box_t {
+typedef struct je_oriented_bounding_box_t {
     glm::vec3 u[3]; // Local OBB axes
     glm::vec3 e; // extents of local OBB axes (halfwidths)
     glm::vec3 center; // position of the OBB
-} OBB;
+} JE_OBB;
 
-typedef struct mesh_data_physics_t {
-    glm::vec3 positions[MAX_MESHES];
-    glm::vec3 velocities[MAX_MESHES];
-    glm::vec3 accelerations[MAX_MESHES];
-    glm::vec3 angularMomentums[MAX_MESHES];
-    glm::mat3 rotations[MAX_MESHES]; // TODO: change to quaternion
-    glm::vec3 scales[MAX_MESHES];
-    float masses[MAX_MESHES];
-    OBB obbs[MAX_MESHES];
-    uint32_t freezeStates[MAX_MESHES];
-} MeshData_Physics;
+typedef struct je_mesh_data_physics_t {
+    glm::vec3 positions[JE_MAX_MESHES];
+    glm::vec3 velocities[JE_MAX_MESHES];
+    glm::vec3 accelerations[JE_MAX_MESHES];
+    glm::vec3 angularMomentums[JE_MAX_MESHES];
+    glm::mat3 rotations[JE_MAX_MESHES]; // TODO: change to quaternion
+    glm::vec3 scales[JE_MAX_MESHES];
+    float masses[JE_MAX_MESHES];
+    JE_OBB obbs[JE_MAX_MESHES];
+    uint32_t freezeStates[JE_MAX_MESHES];
+} JEMeshData_Physics;
 
-typedef struct mesh_data_sstri_t {
+typedef struct je_mesh_data_sstri_t {
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
     VkBuffer indexBuffer;
     VkDeviceMemory indexBufferMemory;
-    std::vector<MeshVertex> vertexList;
+    std::vector<JEMeshVertex> vertexList;
     std::vector<uint32_t> indexList;
-} MeshData_SSTriangle;
+} JEMeshData_SSTriangle;
 
 // Class for managing meshes that have graphics and physics needs in a data-oriented fashion.
 
-class MeshDataManager {
+class JEMeshDataManager {
 private:
-    MeshData_Graphics meshData_Graphics;
-    MeshData_Physics meshData_Physics;
+    JEMeshData_Graphics meshData_Graphics;
+    JEMeshData_Physics meshData_Physics;
     uint32_t numMeshes; // # of meshes added so far
     // ScreenSpace Triangle - needed for deferred rendering lighting pass and post processing. Store separately from other mesh data.
-    static MeshData_SSTriangle screenSpaceTriangle;
+    static JEMeshData_SSTriangle screenSpaceTriangle;
 
     // Mesh Creation
-    void CreateVertexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::vector<MeshVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory);
-    void CreateIndexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::vector<uint32_t>& indices, VkBuffer* indexBuffer, VkDeviceMemory* indexBufferMemory);
+    void CreateVertexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const std::vector<JEMeshVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory);
+    void CreateIndexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const std::vector<uint32_t>& indices, VkBuffer* indexBuffer, VkDeviceMemory* indexBufferMemory);
     void LoadModelFromFile(const std::string& filepath);
 
 public:
-    MeshDataManager() : numMeshes(0) {
+    JEMeshDataManager() : numMeshes(0) {
         ResetState();
     }
-    ~MeshDataManager() {}
+    ~JEMeshDataManager() {}
     
     void Cleanup(VkDevice device);
     void ResetState();
@@ -146,11 +145,11 @@ public:
         meshData_Physics.scales[index] = scale;
     }
 
-    void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::string& filepath, int freezeState);
+    void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const std::string& filepath, int freezeState);
 
     // TODO: This is not needed, replace with a function that creates a duplicate of an existing mesh. Later, this will need an offset buffer for instanced rendering.
-    void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::vector<MeshVertex>& vertices, const std::vector<uint32_t>& indices, int freezeState);
-    void CreateScreenSpaceTriangleMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue);
+    void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const std::vector<JEMeshVertex>& vertices, const std::vector<uint32_t>& indices, int freezeState);
+    void CreateScreenSpaceTriangleMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue);
     void DrawMesh(VkCommandBuffer commandBuffer, uint32_t index);
     void DrawScreenSpaceTriangle(VkCommandBuffer commandBuffer);
 
@@ -161,7 +160,7 @@ public:
     uint32_t GetNumMeshes() const {
         return numMeshes;
     }
-    MeshData_Physics& GetMeshData_Physics() {
+    JEMeshData_Physics& GetMeshData_Physics() {
         return meshData_Physics;
     }
     const glm::mat4* GetModelMatrices() const {

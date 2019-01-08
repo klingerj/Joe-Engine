@@ -1,10 +1,10 @@
 #include "ThreadPool.h"
 
 // Define extern threadpool object
-ThreadPool threadPool = ThreadPool();
+JEThreadPool JEthreadPool = JEThreadPool();
 
 // Atomically enqueue a new job
-void ThreadPool::EnqueueJob(thread_job_t job) {
+void JEThreadPool::EnqueueJob(JEThreadJob job) {
     {
         std::unique_lock <std::mutex> lock(mutex_queue);
         jobs.push(job);
@@ -13,21 +13,21 @@ void ThreadPool::EnqueueJob(thread_job_t job) {
 }
 
 // Get a job from the queue - should be called while the queue mutex is locked
-thread_job_t ThreadPool::DequeueJob() {
-    thread_job_t job;
+JEThreadJob JEThreadPool::DequeueJob() {
+    JEThreadJob job;
     job = jobs.front();
     jobs.pop();
     return job;
 }
 
-void ThreadPool::ThreadDoJob(thread_job_t threadJob) {
+void JEThreadPool::ThreadDoJob(JEThreadJob threadJob) {
     threadJob.function(threadJob.data);
 }
 
 // Infinite loop - thread only gets launched once.
-void ThreadPool::ThreadFunction() {
+void JEThreadPool::ThreadFunction() {
     while (true) {
-        thread_job_t job;
+        JEThreadJob job;
         {
             std::unique_lock<std::mutex> lock(mutex_queue);
             cv_queue.wait(lock, [this] { return !jobs.empty() || (jobs.empty() && quit); });
@@ -39,14 +39,14 @@ void ThreadPool::ThreadFunction() {
     }
 }
 
-void ThreadPool::JoinThreads() {
+void JEThreadPool::JoinThreads() {
     StopThreadJobs();
     for (uint32_t i = 0; i < threads.size(); ++i) {
         threads[i].join();
     }
 }
 
-void ThreadPool::StopThreadJobs() {
+void JEThreadPool::StopThreadJobs() {
     quit = true;
     {
         std::unique_lock<std::mutex> lock(mutex_queue);

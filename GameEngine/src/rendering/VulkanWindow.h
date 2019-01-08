@@ -6,16 +6,16 @@
 #include <string>
 #include "../utils/Common.h"
 
-class VulkanRenderer;
+class JEVulkanRenderer;
 
-class VulkanWindow {
+class JEVulkanWindow {
 private:
     GLFWwindow* window;
     VkSurfaceKHR surface;
 
 public:
-    VulkanWindow() {}
-    ~VulkanWindow() {}
+    JEVulkanWindow() {}
+    ~JEVulkanWindow() {}
 
     void Initialize(const int w, const int h, const std::string& n, VkInstance instance);
     void Cleanup(VkInstance instance);

@@ -6,7 +6,7 @@
 #include <set>
 #include <vector>
 
-class VulkanWindow;
+class JEVulkanWindow;
 
 // Queue Family Indices
 struct QueueFamilyIndices {
@@ -21,13 +21,13 @@ struct QueueFamilyIndices {
 QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
 std::vector<VkDeviceQueueCreateInfo> GetQueueCreateInfos(const QueueFamilyIndices& indices);
 
-class VulkanQueue {
+class JEVulkanQueue {
 private:
     VkQueue queue;
 
 public:
-    VulkanQueue() : queue(VK_NULL_HANDLE) {}
-    ~VulkanQueue() {}
+    JEVulkanQueue() : queue(VK_NULL_HANDLE) {}
+    ~JEVulkanQueue() {}
 
     // Setup
     void GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex);

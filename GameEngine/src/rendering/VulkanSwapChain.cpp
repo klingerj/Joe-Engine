@@ -3,14 +3,14 @@
 #include <set>
 #include <algorithm>
 
-bool VulkanSwapChain::CheckDeviceExtensionSupport(VkPhysicalDevice physicalDevice) const {
+bool JEVulkanSwapChain::CheckDeviceExtensionSupport(VkPhysicalDevice physicalDevice) const {
     uint32_t extensionCount;
     vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
 
     std::vector<VkExtensionProperties> availableExtensions(extensionCount);
     vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, availableExtensions.data());
 
-    std::vector<const char*> deviceExtensions = VulkanSwapChain::GetDeviceExtensions();
+    std::vector<const char*> deviceExtensions = JEVulkanSwapChain::GetDeviceExtensions();
     std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
 
     for (const auto& extension : availableExtensions) {
@@ -20,7 +20,7 @@ bool VulkanSwapChain::CheckDeviceExtensionSupport(VkPhysicalDevice physicalDevic
     return requiredExtensions.empty();
 }
 
-SwapChainSupportDetails VulkanSwapChain::QuerySwapChainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) const {
+SwapChainSupportDetails JEVulkanSwapChain::QuerySwapChainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) const {
     SwapChainSupportDetails details;
 
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &details.capabilities);
@@ -44,7 +44,7 @@ SwapChainSupportDetails VulkanSwapChain::QuerySwapChainSupport(VkPhysicalDevice 
     return details;
 }
 
-VkSurfaceFormatKHR VulkanSwapChain::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) const {
+VkSurfaceFormatKHR JEVulkanSwapChain::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) const {
     if (availableFormats.size() == 1 && availableFormats[0].format == VK_FORMAT_UNDEFINED) {
         return { VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
     }
@@ -58,7 +58,7 @@ VkSurfaceFormatKHR VulkanSwapChain::ChooseSwapSurfaceFormat(const std::vector<Vk
     return availableFormats[0];
 }
 
-VkPresentModeKHR VulkanSwapChain::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) const {
+VkPresentModeKHR JEVulkanSwapChain::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) const {
     VkPresentModeKHR bestMode = VK_PRESENT_MODE_FIFO_KHR;
 
     for (const auto& availablePresentMode : availablePresentModes) {
@@ -72,7 +72,7 @@ VkPresentModeKHR VulkanSwapChain::ChooseSwapPresentMode(const std::vector<VkPres
     return bestMode;
 }
 
-VkExtent2D VulkanSwapChain::ChooseSwapExtent(VkSurfaceCapabilitiesKHR capabilities, GLFWwindow* window) const {
+VkExtent2D JEVulkanSwapChain::ChooseSwapExtent(VkSurfaceCapabilitiesKHR capabilities, GLFWwindow* window) const {
     if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
         return capabilities.currentExtent;
     } else {
@@ -91,7 +91,7 @@ VkExtent2D VulkanSwapChain::ChooseSwapExtent(VkSurfaceCapabilitiesKHR capabiliti
     }
 }
 
-void VulkanSwapChain::Create(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanWindow& vulkanWindow, int width, int height) {
+void JEVulkanSwapChain::Create(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanWindow& vulkanWindow, int width, int height) {
     SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(physicalDevice, vulkanWindow.GetSurface());
     VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
     VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
@@ -145,7 +145,7 @@ void VulkanSwapChain::Create(VkPhysicalDevice physicalDevice, VkDevice device, c
     CreateImageViews(physicalDevice, device, vulkanWindow.GetSurface(), width, height);
 }
 
-void VulkanSwapChain::CreateImageViews(VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface, int width, int height) {
+void JEVulkanSwapChain::CreateImageViews(VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface, int width, int height) {
     swapChainImageViews.resize(swapChainImages.size());
 
     for (size_t i = 0; i < swapChainImages.size(); ++i) {
@@ -153,7 +153,7 @@ void VulkanSwapChain::CreateImageViews(VkPhysicalDevice physicalDevice, VkDevice
     }
 }
 
-void VulkanSwapChain::Cleanup(VkDevice device) {
+void JEVulkanSwapChain::Cleanup(VkDevice device) {
     for (auto imageView : swapChainImageViews) {
         vkDestroyImageView(device, imageView, nullptr);
     }

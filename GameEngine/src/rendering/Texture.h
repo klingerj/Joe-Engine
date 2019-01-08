@@ -5,7 +5,7 @@
 
 #include "VulkanQueue.h"
 
-class Texture {
+class JETexture {
 private:
     VkImage textureImage;
     VkDeviceMemory textureImageMemory;
@@ -13,19 +13,19 @@ private:
     VkSampler textureSampler;
     
 public:
-    Texture(VkDevice device, VkPhysicalDevice physicalDevice, const VulkanQueue& graphicsQueue,
+    JETexture(VkDevice device, VkPhysicalDevice physicalDevice, const JEVulkanQueue& graphicsQueue,
             VkCommandPool commandPool, const std::string& filepath) {
         CreateTextureImage(physicalDevice, device, commandPool, graphicsQueue, filepath);
         CreateTextureImageView(device);
         CreateTextureSampler(device);
     }
-    ~Texture() {}
+    ~JETexture() {}
 
     void Cleanup(VkDevice device);
 
     // Creation
-    void CreateTextureImage(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::string& filepath);
-    void CopyBufferToImage(VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+    void CreateTextureImage(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const std::string& filepath);
+    void CopyBufferToImage(VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
     void CreateTextureImageView(VkDevice device);
     void CreateTextureSampler(VkDevice device);
 

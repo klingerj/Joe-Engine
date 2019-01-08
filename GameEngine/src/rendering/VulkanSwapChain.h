@@ -15,7 +15,7 @@ struct SwapChainSupportDetails {
     std::vector<VkPresentModeKHR> presentModes;
 };
 
-class VulkanSwapChain {
+class JEVulkanSwapChain {
 private:
     VkSwapchainKHR swapChain;
     std::vector<VkImage> swapChainImages;
@@ -24,11 +24,11 @@ private:
     std::vector<VkImageView> swapChainImageViews;
 
 public:
-    VulkanSwapChain() {}
-    ~VulkanSwapChain() {}
+    JEVulkanSwapChain() {}
+    ~JEVulkanSwapChain() {}
     
     // Creates the swap chain
-    void Create(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanWindow& vulkanWindow, int width, int height);
+    void Create(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanWindow& vulkanWindow, int width, int height);
     void CreateImageViews(VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface, int width, int height);
     void Cleanup(VkDevice device);
 

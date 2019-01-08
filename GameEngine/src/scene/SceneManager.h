@@ -9,40 +9,40 @@
 #include "../io/IOHandler.h"
 #include "MeshDataManager.h"
 
-class SceneManager {
+class JESceneManager {
 private:
     // Camera(s)
-    Camera camera;
-    Camera shadowCamera;
+    JECamera camera;
+    JECamera shadowCamera;
     float camTranslateSensitivity, camRotateSensitivity;
 
     // Meshes
-    std::shared_ptr<MeshDataManager> meshDataManager;
+    std::shared_ptr<JEMeshDataManager> meshDataManager;
 
     // Textures
-    std::vector<Texture> textures;
+    std::vector<JETexture> textures;
 
     // Shaders
-    std::vector<VulkanShadowPassShader> shadowPassShaders;
-    VulkanDeferredPassGeometryShader deferredPassGeometryShader;
-    VulkanDeferredPassLightingShader deferredPassLightingShader;
-    std::vector<VulkanPostProcessShader> postProcessingShaders;
+    std::vector<JEVulkanShadowPassShader> shadowPassShaders;
+    JEVulkanDeferredPassGeometryShader deferredPassGeometryShader;
+    JEVulkanDeferredPassLightingShader deferredPassLightingShader;
+    std::vector<JEVulkanPostProcessShader> postProcessingShaders;
 
     // Scene IDs
     uint32_t currentScene;
 
 public:
-    SceneManager() : camTranslateSensitivity(0.25f), camRotateSensitivity(0.05f), currentScene(0) {}
-    ~SceneManager() {}
+    JESceneManager() : camTranslateSensitivity(0.25f), camRotateSensitivity(0.05f), currentScene(0) {}
+    ~JESceneManager() {}
 
     // Creation
-    void Initialize(const std::shared_ptr<MeshDataManager>& p);
-    void LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass_firstPostProcess, VkImageView firstPostProcessImageView, const VulkanQueue& graphicsQueue, const VulkanSwapChain& vulkanSwapChain, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass, std::vector<PostProcessingPass> postProcessingPasses, uint32_t sceneId);
-    void CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass_deferredLighting, VkImageView deferredLightingImageView, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass, std::vector<PostProcessingPass> postProcessingPasses);
-    void RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const VulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass_deferredLighting, VkImageView deferredLightingImageView, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass, std::vector<PostProcessingPass> postProcessingPasses);
+    void Initialize(const std::shared_ptr<JEMeshDataManager>& p);
+    void LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass_firstPostProcess, VkImageView firstPostProcessImageView, const JEVulkanQueue& graphicsQueue, const JEVulkanSwapChain& vulkanSwapChain, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, std::vector<JEPostProcessingPass> postProcessingPasses, uint32_t sceneId);
+    void CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass_deferredLighting, VkImageView deferredLightingImageView, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, std::vector<JEPostProcessingPass> postProcessingPasses);
+    void RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass_deferredLighting, VkImageView deferredLightingImageView, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, std::vector<JEPostProcessingPass> postProcessingPasses);
 
     // IO
-    void RegisterCallbacks(IOHandler* ioHandler);
+    void RegisterCallbacks(JEIOHandler* ioHandler);
     
     // Cleanup
     void CleanupMeshesAndTextures(VkDevice device);

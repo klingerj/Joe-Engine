@@ -7,13 +7,13 @@
 #include "rendering/VulkanRenderer.h"
 #include "physics/PhysicsManager.h"
 
-class EngineApplication {
+class JEEngineApplication {
 private:
     // Subsystems
-    SceneManager sceneManager;
-    VulkanRenderer vulkanRenderer;
-    IOHandler ioHandler;
-    PhysicsManager physicsManager;
+    JESceneManager sceneManager;
+    JEVulkanRenderer vulkanRenderer;
+    JEIOHandler ioHandler;
+    JEPhysicsManager physicsManager;
 
     double frameStartTime, frameEndTime; // timing for performance analysis
     bool enableFrameCounter;
@@ -22,12 +22,12 @@ private:
     void InitializeEngine();
 
 public:
-    EngineApplication() : enableFrameCounter(false), frameStartTime(0.0f), frameEndTime(0.0f) {
+    JEEngineApplication() : enableFrameCounter(false), frameStartTime(0.0f), frameEndTime(0.0f) {
         InitializeEngine();
     }
 
     // Destroy resources/subsystems
-    ~EngineApplication() {}
+    ~JEEngineApplication() {}
 
     // Run the main loop
     void Run();
@@ -36,10 +36,10 @@ public:
     void StopEngine();
 
     // Getters
-    VulkanRenderer* GetRenderSubsystem() {
+    JEVulkanRenderer* GetRenderSubsystem() {
         return &vulkanRenderer;
     }
-    IOHandler* GetIOSubsystem() {
+    JEIOHandler* GetIOSubsystem() {
         return &ioHandler;
     }
 };

@@ -4,11 +4,11 @@
 
 #include <iostream>
 
-void PhysicsManager::Initialize(const std::shared_ptr<MeshDataManager>& m) {
+void JEPhysicsManager::Initialize(const std::shared_ptr<JEMeshDataManager>& m) {
     meshDataManager = m;
 }
 
-void PhysicsManager::Update() {
+void JEPhysicsManager::Update() {
     const JE_TIMER globalTime = std::chrono::high_resolution_clock::now();
     double currentTimeDelta = std::chrono::duration<double, std::chrono::milliseconds::period>(globalTime - m_startTime).count();
     if (currentTimeDelta > m_updateRateInMilliseconds) {
@@ -42,13 +42,13 @@ void PhysicsManager::Update() {
 
             glm::vec3 impulse = glm::vec3(0.0f);
             // Compute collisions between each OBB in the scene
-            CollisionInfo collInfo;
+            JECollisionInfo collInfo;
             collInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
             collInfo.point = glm::vec3(0.0f, 0.0f, 0.0f);
             uint32_t numCollisions = 0;
             for (uint32_t j = 0; j < meshDataManager->GetNumMeshes(); ++j) {
                 if ((!(meshPhysicsData.freezeStates[i] & (JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION))) && i != j) {
-                    CollisionInfo collisionInfo = SAT(meshPhysicsData.obbs[i], meshPhysicsData.obbs[j], i, j);
+                    JECollisionInfo collisionInfo = SAT(meshPhysicsData.obbs[i], meshPhysicsData.obbs[j], i, j);
                     if (!(glm::length(glm::vec3(collisionInfo.minimumTranslation)) == 0.0f && collisionInfo.minimumTranslation.w == -1.0f)) {
 
                         //std::cout << "Collided on frame: " << frameCtr << std::endl;
@@ -136,8 +136,8 @@ void PhysicsManager::Update() {
 
 // Checks for intersection between two oriented bounding boxes
 // TODO: change back to const references
-CollisionInfo PhysicsManager::SAT(OBB& obbA, OBB& obbB, uint32_t indexA, uint32_t indexB) {
-    CollisionInfo collisionInfo = {};
+JECollisionInfo JEPhysicsManager::SAT(JE_OBB& obbA, JE_OBB& obbB, uint32_t indexA, uint32_t indexB) {
+    JECollisionInfo collisionInfo = {};
     collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -999999.0f);
 
     const glm::vec3 obbCenterDiff = obbB.center - obbA.center;

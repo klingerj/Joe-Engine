@@ -2,8 +2,8 @@
 
 #include "EngineApplication.h"
 
-void EngineApplication::Run() {
-    const VulkanWindow& window = vulkanRenderer.GetWindow();
+void JEEngineApplication::Run() {
+    const JEVulkanWindow& window = vulkanRenderer.GetWindow();
     ioHandler.Initialize(window.GetWindow());
 
     while (!window.ShouldClose()) {
@@ -21,8 +21,8 @@ void EngineApplication::Run() {
     StopEngine();
 }
 
-void EngineApplication::InitializeEngine() {
-    std::shared_ptr<MeshDataManager> meshDataManager = std::make_shared<MeshDataManager>();
+void JEEngineApplication::InitializeEngine() {
+    std::shared_ptr<JEMeshDataManager> meshDataManager = std::make_shared<JEMeshDataManager>();
     physicsManager.Initialize(meshDataManager);
     sceneManager.Initialize(meshDataManager);
     vulkanRenderer.Initialize(&sceneManager);
@@ -34,6 +34,6 @@ void EngineApplication::InitializeEngine() {
     sceneManager.RegisterCallbacks(&ioHandler);
 }
 
-void EngineApplication::StopEngine() {
+void JEEngineApplication::StopEngine() {
     vulkanRenderer.Cleanup();
 }

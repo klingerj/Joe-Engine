@@ -5,12 +5,12 @@
 #include "../scene/SceneManager.h"
 #include "../EngineApplication.h"
 
-static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-    auto renderer = reinterpret_cast<EngineApplication*>(glfwGetWindowUserPointer(window))->GetRenderSubsystem();
+static void JEFramebufferResizeCallback(GLFWwindow* window, int width, int height) {
+    auto renderer = reinterpret_cast<JEEngineApplication*>(glfwGetWindowUserPointer(window))->GetRenderSubsystem();
     renderer->FramebufferResized();
 }
 
-void VulkanRenderer::Initialize(SceneManager* sceneManager) {
+void JEVulkanRenderer::Initialize(JESceneManager* sceneManager) {
     // Window (GLFW)
     vulkanWindow.Initialize(width, height, "VulkanWindow", instance);
 
@@ -24,7 +24,7 @@ void VulkanRenderer::Initialize(SceneManager* sceneManager) {
 
     // Window surface
     vulkanWindow.SetupVulkanSurface(instance);
-    vulkanWindow.SetFrameBufferCallback(framebufferResizeCallback);
+    vulkanWindow.SetFrameBufferCallback(JEFramebufferResizeCallback);
 
     // Devices
     PickPhysicalDevice();
@@ -40,7 +40,7 @@ void VulkanRenderer::Initialize(SceneManager* sceneManager) {
     //CreateDepthAttachment(depthBuffer, { width, height }, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
     // Add the post processing passes
-    PostProcessingPass p;
+    JEPostProcessingPass p;
     p.shaderIndex = 0;
     postProcessingPasses.push_back(p);
     p.shaderIndex = 1;
@@ -72,7 +72,7 @@ void VulkanRenderer::Initialize(SceneManager* sceneManager) {
     CreateSemaphoresAndFences();
 }
 
-void VulkanRenderer::Cleanup() {
+void JEVulkanRenderer::Cleanup() {
     CleanupWindowDependentRenderingResources();
     sceneManager->CleanupMeshesAndTextures(device);
     
@@ -87,7 +87,6 @@ void VulkanRenderer::Cleanup() {
     vkDestroySemaphore(device, shadowPass.semaphore, nullptr);
     
     // Deferred Pass - Geometry
-    vkDestroySampler(device, deferredPass.sampler, nullptr);
     vkDestroySemaphore(device, deferredPass.semaphore, nullptr);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
@@ -106,7 +105,7 @@ void VulkanRenderer::Cleanup() {
     vkDestroyInstance(instance, nullptr);
 }
 
-std::vector<const char*> VulkanRenderer::GetRequiredExtensions() {
+std::vector<const char*> JEVulkanRenderer::GetRequiredExtensions() {
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions;
     glfwExtensions = vulkanWindow.GetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -120,7 +119,7 @@ std::vector<const char*> VulkanRenderer::GetRequiredExtensions() {
     return extensions;
 }
 
-int VulkanRenderer::RateDeviceSuitability(VkPhysicalDevice physicalDevice, const VulkanWindow& vulkanWindow) {
+int JEVulkanRenderer::RateDeviceSuitability(VkPhysicalDevice physicalDevice, const JEVulkanWindow& vulkanWindow) {
     VkPhysicalDeviceProperties deviceProperties;
     VkPhysicalDeviceFeatures deviceFeatures;
     vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
@@ -170,7 +169,7 @@ int VulkanRenderer::RateDeviceSuitability(VkPhysicalDevice physicalDevice, const
     return score;
 }
 
-void VulkanRenderer::CreateVulkanInstance() {
+void JEVulkanRenderer::CreateVulkanInstance() {
     if (vulkanValidationLayers.AreValidationLayersEnabled() && !vulkanValidationLayers.CheckValidationLayerSupport()) {
         throw std::runtime_error("validation layers requested, but not available!");
     }
@@ -204,7 +203,7 @@ void VulkanRenderer::CreateVulkanInstance() {
     }
 }
 
-void VulkanRenderer::PickPhysicalDevice() {
+void JEVulkanRenderer::PickPhysicalDevice() {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
@@ -231,7 +230,7 @@ void VulkanRenderer::PickPhysicalDevice() {
     }
 }
 
-void VulkanRenderer::CreateLogicalDevice() {
+void JEVulkanRenderer::CreateLogicalDevice() {
     QueueFamilyIndices indices = FindQueueFamilies(physicalDevice, vulkanWindow.GetSurface());
 
     VkDeviceCreateInfo createInfo = {};
@@ -244,7 +243,7 @@ void VulkanRenderer::CreateLogicalDevice() {
     deviceFeatures.samplerAnisotropy = VK_TRUE;
     createInfo.pEnabledFeatures = &deviceFeatures;
 
-    std::vector<const char*> deviceExtensions = VulkanSwapChain::GetDeviceExtensions();
+    std::vector<const char*> deviceExtensions = JEVulkanSwapChain::GetDeviceExtensions();
     createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
     createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
@@ -264,7 +263,7 @@ void VulkanRenderer::CreateLogicalDevice() {
     presentationQueue.GetDeviceQueue(device, indices.presentFamily.value());
 }
 
-void VulkanRenderer::CreateSwapChainFramebuffers() {
+void JEVulkanRenderer::CreateSwapChainFramebuffers() {
     const std::vector<VkImageView>& swapChainImageViews = vulkanSwapChain.GetImageViews();
     swapChainFramebuffers.resize(swapChainImageViews.size());
 
@@ -292,7 +291,7 @@ void VulkanRenderer::CreateSwapChainFramebuffers() {
     }
 }
 
-void VulkanRenderer::CreateCommandPool() {
+void JEVulkanRenderer::CreateCommandPool() {
     QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(physicalDevice, vulkanWindow.GetSurface());
 
     VkCommandPoolCreateInfo poolInfo = {};
@@ -305,7 +304,7 @@ void VulkanRenderer::CreateCommandPool() {
     }
 }
 
-void VulkanRenderer::CreateDeferredLightingAndPostProcessingCommandBuffer() {
+void JEVulkanRenderer::CreateDeferredLightingAndPostProcessingCommandBuffer() {
     commandBuffers.resize(swapChainFramebuffers.size());
 
     VkCommandBufferAllocateInfo allocInfo = {};
@@ -382,7 +381,7 @@ void VulkanRenderer::CreateDeferredLightingAndPostProcessingCommandBuffer() {
     }
 }
 
-void VulkanRenderer::CreateSemaphoresAndFences() {
+void JEVulkanRenderer::CreateSemaphoresAndFences() {
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -403,7 +402,7 @@ void VulkanRenderer::CreateSemaphoresAndFences() {
     }
 }
 
-void VulkanRenderer::CreateFramebufferAttachment(FramebufferAttachment& attachment, VkExtent2D extent, VkImageUsageFlagBits usageBits, VkFormat format) {
+void JEVulkanRenderer::CreateFramebufferAttachment(JEFramebufferAttachment& attachment, VkExtent2D extent, VkImageUsageFlagBits usageBits, VkFormat format) {
     VkImageAspectFlags aspectMask = 0;
     VkImageLayout imageLayout;
     if (usageBits & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) {
@@ -419,7 +418,7 @@ void VulkanRenderer::CreateFramebufferAttachment(FramebufferAttachment& attachme
     TransitionImageLayout(device, commandPool, graphicsQueue, attachment.image, format, VK_IMAGE_LAYOUT_UNDEFINED, imageLayout);
 }
 
-void VulkanRenderer::CreateFramebufferAttachmentSampler(VkSampler& sampler) {
+void JEVulkanRenderer::CreateFramebufferAttachmentSampler(VkSampler& sampler) {
     VkSamplerCreateInfo samplerInfo = {};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -448,7 +447,7 @@ void VulkanRenderer::CreateFramebufferAttachmentSampler(VkSampler& sampler) {
 
 /// Shadow Pass creation
 
-void VulkanRenderer::CreateShadowRenderPass() {
+void JEVulkanRenderer::CreateShadowRenderPass() {
     VkAttachmentDescription depthAttachment = {};
     depthAttachment.format = FindDepthFormat(physicalDevice);
     depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -501,7 +500,7 @@ void VulkanRenderer::CreateShadowRenderPass() {
     }
 }
 
-void VulkanRenderer::CreateShadowFramebuffer() {
+void JEVulkanRenderer::CreateShadowFramebuffer() {
     VkImageView depthAttachment = shadowPass.depth.imageView;
 
     VkFramebufferCreateInfo framebufferInfo = {};
@@ -518,7 +517,7 @@ void VulkanRenderer::CreateShadowFramebuffer() {
     }
 }
 
-void VulkanRenderer::CreateShadowCommandBuffer() {
+void JEVulkanRenderer::CreateShadowCommandBuffer() {
     VkCommandBufferAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = commandPool;
@@ -571,7 +570,7 @@ void VulkanRenderer::CreateShadowCommandBuffer() {
     }
 }
 
-void VulkanRenderer::CreateShadowPassResources() {
+void JEVulkanRenderer::CreateShadowPassResources() {
     CreateFramebufferAttachment(shadowPass.depth, { shadowPass.width, shadowPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), FindDepthFormat(physicalDevice));
     CreateFramebufferAttachmentSampler(shadowPass.depthSampler);
     CreateShadowRenderPass();
@@ -580,7 +579,7 @@ void VulkanRenderer::CreateShadowPassResources() {
 
 /// Deferred Rendering Geometry Pass creation
 
-void VulkanRenderer::CreateDeferredPassGeometryRenderPass() {
+void JEVulkanRenderer::CreateDeferredPassGeometryRenderPass() {
     std::array<VkAttachmentDescription, 3> attachmentDescs = {};
     for (uint32_t i = 0; i < 3; ++i) {
         attachmentDescs[i].samples = VK_SAMPLE_COUNT_1_BIT;
@@ -646,7 +645,7 @@ void VulkanRenderer::CreateDeferredPassGeometryRenderPass() {
     }
 }
 
-void VulkanRenderer::CreateDeferredPassGeometryFramebuffer() {
+void JEVulkanRenderer::CreateDeferredPassGeometryFramebuffer() {
     std::array<VkImageView, 3> attachments = { deferredPass.color.imageView, deferredPass.normal.imageView, deferredPass.depth.imageView };
 
     VkFramebufferCreateInfo framebufferInfo = {};
@@ -663,7 +662,7 @@ void VulkanRenderer::CreateDeferredPassGeometryFramebuffer() {
     }
 }
 
-void VulkanRenderer::CreateDeferredPassGeometryCommandBuffer() {
+void JEVulkanRenderer::CreateDeferredPassGeometryCommandBuffer() {
     VkCommandBufferAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = commandPool;
@@ -719,7 +718,7 @@ void VulkanRenderer::CreateDeferredPassGeometryCommandBuffer() {
     }
 }
 
-void VulkanRenderer::CreateDeferredPassGeometryResources() {
+void JEVulkanRenderer::CreateDeferredPassGeometryResources() {
     CreateFramebufferAttachment(deferredPass.color, { deferredPass.width, deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
     CreateFramebufferAttachment(deferredPass.normal, { deferredPass.width, deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
     CreateFramebufferAttachment(deferredPass.depth, { deferredPass.width, deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), FindDepthFormat(physicalDevice));
@@ -730,7 +729,7 @@ void VulkanRenderer::CreateDeferredPassGeometryResources() {
 
 /// Deferred Rendering Lighting Pass creation
 
-void VulkanRenderer::CreateDeferredPassLightingRenderPass() {
+void JEVulkanRenderer::CreateDeferredPassLightingRenderPass() {
     VkAttachmentDescription attachmentDesc = {};
     attachmentDesc.samples = VK_SAMPLE_COUNT_1_BIT;
     attachmentDesc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -782,7 +781,7 @@ void VulkanRenderer::CreateDeferredPassLightingRenderPass() {
     }
 }
 
-void VulkanRenderer::CreateDeferredPassLightingFramebuffer() {
+void JEVulkanRenderer::CreateDeferredPassLightingFramebuffer() {
     VkImageView attachment = framebufferAttachment_deferredLighting.imageView;
 
     VkFramebufferCreateInfo framebufferInfo = {};
@@ -799,7 +798,7 @@ void VulkanRenderer::CreateDeferredPassLightingFramebuffer() {
     }
 }
 
-void VulkanRenderer::CreateDeferredPassLightingResources() {
+void JEVulkanRenderer::CreateDeferredPassLightingResources() {
     CreateDeferredPassLightingRenderPass();
     // If there are no post processing passes, then this pass should render to the screen, meaning no framebuffer should be created
     // This also means that we do not need to create buffers for the framebuffer attachment
@@ -811,7 +810,7 @@ void VulkanRenderer::CreateDeferredPassLightingResources() {
 
 /// Post Processing passes creation
 
-void VulkanRenderer::CreatePostProcessingPassFramebuffer(uint32_t i) {
+void JEVulkanRenderer::CreatePostProcessingPassFramebuffer(uint32_t i) {
     VkImageView attachment;
     if (i == postProcessingPasses.size() - 1) {
         return; // This post processing pass will use the swap chain framebuffers, which are already created
@@ -833,7 +832,7 @@ void VulkanRenderer::CreatePostProcessingPassFramebuffer(uint32_t i) {
     }
 }
 
-void VulkanRenderer::CreatePostProcessingPassRenderPass(uint32_t i) {
+void JEVulkanRenderer::CreatePostProcessingPassRenderPass(uint32_t i) {
     VkAttachmentDescription attachmentDesc = {};
     if (i == postProcessingPasses.size() - 1) {
         attachmentDesc.format = vulkanSwapChain.GetFormat();
@@ -896,7 +895,7 @@ void VulkanRenderer::CreatePostProcessingPassRenderPass(uint32_t i) {
     }
 }
 
-void VulkanRenderer::CreatePostProcessingPassResources() {
+void JEVulkanRenderer::CreatePostProcessingPassResources() {
     for (uint32_t i = 0; i < postProcessingPasses.size(); ++i) {
         CreateFramebufferAttachmentSampler(postProcessingPasses[i].sampler);
         if (i == postProcessingPasses.size() - 1) {
@@ -909,7 +908,7 @@ void VulkanRenderer::CreatePostProcessingPassResources() {
     }
 }
 
-void VulkanRenderer::DrawFrame() {
+void JEVulkanRenderer::DrawFrame() {
     vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
     uint32_t imageIndex;
@@ -1007,7 +1006,7 @@ void VulkanRenderer::DrawFrame() {
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void VulkanRenderer::CleanupWindowDependentRenderingResources() {
+void JEVulkanRenderer::CleanupWindowDependentRenderingResources() {
     // Swap Chain Framebuffers
     for (auto framebuffer : swapChainFramebuffers) {
         vkDestroyFramebuffer(device, framebuffer, nullptr);
@@ -1026,6 +1025,7 @@ void VulkanRenderer::CleanupWindowDependentRenderingResources() {
     vkDestroyRenderPass(device, deferredPass.renderPass, nullptr);
     vkDestroyFramebuffer(device, deferredPass.framebuffer, nullptr);
     vkFreeCommandBuffers(device, commandPool, 1, &deferredPass.commandBuffer);
+    vkDestroySampler(device, deferredPass.sampler, nullptr);
     
     // Deferred Pass - Lighting
     vkDestroyRenderPass(device, renderPass_deferredLighting, nullptr);
@@ -1053,7 +1053,7 @@ void VulkanRenderer::CleanupWindowDependentRenderingResources() {
     vulkanSwapChain.Cleanup(device);
 }
 
-void VulkanRenderer::RecreateWindowDependentRenderingResources() {
+void JEVulkanRenderer::RecreateWindowDependentRenderingResources() {
     int newWidth = 0, newHeight = 0;
     while (newWidth == 0 || newHeight == 0) {
         vulkanWindow.AwaitMaximize(&newWidth, &newHeight);
@@ -1073,7 +1073,7 @@ void VulkanRenderer::RecreateWindowDependentRenderingResources() {
 
     // Post Processing
     postProcessingPasses.clear();
-    PostProcessingPass p;
+    JEPostProcessingPass p;
     p.width = newWidth;
     p.height = newHeight;
     p.shaderIndex = 0;
@@ -1097,8 +1097,8 @@ void VulkanRenderer::RecreateWindowDependentRenderingResources() {
     CreateDeferredLightingAndPostProcessingCommandBuffer();
 }
 
-void VulkanRenderer::RegisterCallbacks(IOHandler* ioHandler) {
-    CallbackFunction loadScene0 = [&] {
+void JEVulkanRenderer::RegisterCallbacks(JEIOHandler* ioHandler) {
+    JECallbackFunction loadScene0 = [&] {
         vkDeviceWaitIdle(device);
         sceneManager->CleanupMeshesAndTextures(device);
         sceneManager->CleanupShaders(device);
@@ -1107,7 +1107,7 @@ void VulkanRenderer::RegisterCallbacks(IOHandler* ioHandler) {
         CreateDeferredPassGeometryCommandBuffer();
         CreateDeferredLightingAndPostProcessingCommandBuffer();
     };
-    CallbackFunction loadScene1 = [&] {
+    JECallbackFunction loadScene1 = [&] {
         vkDeviceWaitIdle(device);
         sceneManager->CleanupMeshesAndTextures(device);
         sceneManager->CleanupShaders(device);
@@ -1116,7 +1116,7 @@ void VulkanRenderer::RegisterCallbacks(IOHandler* ioHandler) {
         CreateDeferredPassGeometryCommandBuffer();
         CreateDeferredLightingAndPostProcessingCommandBuffer();
     };
-    CallbackFunction loadScene2 = [&] {
+    JECallbackFunction loadScene2 = [&] {
         vkDeviceWaitIdle(device);
         sceneManager->CleanupMeshesAndTextures(device);
         sceneManager->CleanupShaders(device);

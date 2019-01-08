@@ -51,6 +51,6 @@ std::vector<VkDeviceQueueCreateInfo> GetQueueCreateInfos(const QueueFamilyIndice
     return queueCreateInfos;
 }
 
-void VulkanQueue::GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex) {
+void JEVulkanQueue::GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex) {
     vkGetDeviceQueue(device, queueFamilyIndex, 0, &(queue));
 }

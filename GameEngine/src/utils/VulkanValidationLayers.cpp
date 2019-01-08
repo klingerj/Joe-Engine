@@ -1,6 +1,6 @@
 #include "VulkanValidationLayers.h"
 
-bool VulkanValidationLayers::EnableLayers() {
+bool JEVulkanValidationLayers::EnableLayers() {
     #ifdef _DEBUG
     return true;
     #else
@@ -8,7 +8,7 @@ bool VulkanValidationLayers::EnableLayers() {
     #endif
 }
 
-bool VulkanValidationLayers::CheckValidationLayerSupport() const {
+bool JEVulkanValidationLayers::CheckValidationLayerSupport() const {
     uint32_t layerCount;
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
@@ -51,19 +51,19 @@ void DestroyDebugReportCallbackEXT(const VkInstance& instance, VkDebugReportCall
 }
 
 // Destroy the VkDebugReportCallbackEXT object
-void VulkanValidationLayers::DestroyDebugCallback(const VkInstance& instance) {
+void JEVulkanValidationLayers::DestroyDebugCallback(const VkInstance& instance) {
     if (enableValidationLayers) {
         DestroyDebugReportCallbackEXT(instance, callback, nullptr);
     }
 }
 
 // Creates the debug callback function
-void VulkanValidationLayers::SetupDebugCallback(const VkInstance& instance) {
+void JEVulkanValidationLayers::SetupDebugCallback(const VkInstance& instance) {
     if (!enableValidationLayers) return;
     VkDebugReportCallbackCreateInfoEXT createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
     createInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
-    createInfo.pfnCallback = debugCallback;
+    createInfo.pfnCallback = JEDebugCallback;
 
     if (CreateDebugReportCallbackEXT(instance, &createInfo, nullptr, &callback) != VK_SUCCESS) {
         throw std::runtime_error("failed to set up debug callback!");

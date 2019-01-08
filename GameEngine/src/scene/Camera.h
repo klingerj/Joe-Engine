@@ -4,7 +4,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/norm.hpp"
 
-class Camera {
+class JECamera {
 private:
     glm::vec3 eye;
     glm::vec3 ref;
@@ -15,15 +15,15 @@ private:
     float nearPlane, farPlane;
 
 public:
-    Camera() : Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, SCENE_VIEW_NEAR_PLANE, SCENE_VIEW_FAR_PLANE) {}
-    Camera(glm::vec3 e, glm::vec3 r, float a, float n, float f) : eye(e), ref(r), aspect(a), nearPlane(n), farPlane(f) {
+    JECamera() : JECamera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE) {}
+    JECamera(glm::vec3 e, glm::vec3 r, float a, float n, float f) : eye(e), ref(r), aspect(a), nearPlane(n), farPlane(f) {
         ComputeAttributes();
     }
-    ~Camera() {}
+    ~JECamera() {}
 
     void ComputeAttributes() {
         look = glm::normalize(ref - eye);
-        right = glm::normalize(glm::cross(look, WORLD_UP));
+        right = glm::normalize(glm::cross(look, JE_WORLD_UP));
         up = glm::normalize(glm::cross(right, look));
     }
 
@@ -76,7 +76,7 @@ public:
         return o * t;
     }
     glm::mat4 GetProj() const {
-        return glm::perspective(FOVY, aspect, nearPlane, farPlane);
+        return glm::perspective(JE_FOVY, aspect, nearPlane, farPlane);
     }
     float GetNearPlane() const {
         return nearPlane;

@@ -5,14 +5,14 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-void Texture::Cleanup(VkDevice device) {
+void JETexture::Cleanup(VkDevice device) {
     vkDestroySampler(device, textureSampler, nullptr);
     vkDestroyImageView(device, textureImageView, nullptr);
     vkDestroyImage(device, textureImage, nullptr);
     vkFreeMemory(device, textureImageMemory, nullptr);
 }
 
-void Texture::CreateTextureImage(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::string& filepath) {
+void JETexture::CreateTextureImage(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const std::string& filepath) {
     // Load image with stb and copy into staging buffer
     int texWidth, texHeight, texChannels;
     stbi_uc* pixels = stbi_load(filepath.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -43,7 +43,7 @@ void Texture::CreateTextureImage(VkPhysicalDevice physicalDevice, VkDevice devic
     vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
-void Texture::CopyBufferToImage(VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) {
+void JETexture::CopyBufferToImage(VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) {
     VkCommandBuffer commandBuffer = BeginSingleTimeCommands(device, commandPool);
 
     VkBufferImageCopy region = {};
@@ -68,11 +68,11 @@ void Texture::CopyBufferToImage(VkDevice device, VkCommandPool commandPool, cons
     EndSingleTimeCommands(device, commandBuffer, graphicsQueue, commandPool);
 }
 
-void Texture::CreateTextureImageView(VkDevice device) {
+void JETexture::CreateTextureImageView(VkDevice device) {
     textureImageView = CreateImageView(device, textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
-void Texture::CreateTextureSampler(VkDevice device) {
+void JETexture::CreateTextureSampler(VkDevice device) {
     VkSamplerCreateInfo samplerInfo = {};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     samplerInfo.magFilter = VK_FILTER_LINEAR;

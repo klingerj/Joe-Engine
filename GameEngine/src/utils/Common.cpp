@@ -1,13 +1,13 @@
 #include "Common.h"
 
 // Paths
-std::string PROJECT_PATH = "C:\\Users\\Joe\\Documents\\Projects\\Code\\GameEngine\\GameEngine\\";
-std::string SHADER_DIR = PROJECT_PATH + "GameEngine\\src\\shaders\\";
-std::string MODELS_OBJ_DIR = PROJECT_PATH + "GameEngine\\res\\models\\OBJs\\";
-std::string TEXTURES_DIR = PROJECT_PATH + "GameEngine\\res\\textures\\";
+std::string JE_PROJECT_PATH = "C:\\Users\\Joe\\Documents\\Projects\\Code\\GameEngine\\GameEngine\\";
+std::string JE_SHADER_DIR = JE_PROJECT_PATH + "GameEngine\\src\\shaders\\";
+std::string JE_MODELS_OBJ_DIR = JE_PROJECT_PATH + "GameEngine\\res\\models\\OBJs\\";
+std::string JE_TEXTURES_DIR = JE_PROJECT_PATH + "GameEngine\\res\\textures\\";
 
 // Post processing shaders
-const std::string builtInPostShaderPaths[2] = { "frag_post_chromatic_aberration.spv", "frag_post_grayscale.spv" };
+const std::string JEBuiltInPostProcessingShaderPaths[2] = { "frag_post_chromatic_aberration.spv", "frag_post_grayscale.spv" };
 
 VkCommandBuffer BeginSingleTimeCommands(VkDevice device, VkCommandPool commandPool) {
     VkCommandBufferAllocateInfo allocInfo = {};
@@ -28,7 +28,7 @@ VkCommandBuffer BeginSingleTimeCommands(VkDevice device, VkCommandPool commandPo
     return commandBuffer;
 }
 
-void EndSingleTimeCommands(VkDevice device, VkCommandBuffer commandBuffer, const VulkanQueue& graphicsQueue, VkCommandPool commandPool) {
+void EndSingleTimeCommands(VkDevice device, VkCommandBuffer commandBuffer, const JEVulkanQueue& graphicsQueue, VkCommandPool commandPool) {
     vkEndCommandBuffer(commandBuffer);
 
     VkSubmitInfo submitInfo = {};
@@ -86,7 +86,7 @@ void CreateBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkDeviceSize
     vkBindBufferMemory(device, buffer, bufferMemory, 0);
 }
 
-void CopyBuffer(VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
+void CopyBuffer(VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
     VkCommandBuffer commandBuffer = BeginSingleTimeCommands(device, commandPool);
 
     VkBufferCopy copyRegion = {};
@@ -154,7 +154,7 @@ VkImageView CreateImageView(VkDevice device, VkImage image, VkFormat format, VkI
     return imageView;
 }
 
-void TransitionImageLayout(VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) {
+void TransitionImageLayout(VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) {
     VkCommandBuffer commandBuffer = BeginSingleTimeCommands(device, commandPool);
 
     VkImageMemoryBarrier barrier = {};

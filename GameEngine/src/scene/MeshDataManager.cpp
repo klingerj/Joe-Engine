@@ -3,9 +3,9 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 
-MeshData_SSTriangle MeshDataManager::screenSpaceTriangle {};
+JEMeshData_SSTriangle JEMeshDataManager::screenSpaceTriangle {};
 
-void MeshDataManager::Cleanup(VkDevice device) {
+void JEMeshDataManager::Cleanup(VkDevice device) {
     for (uint32_t i = 0; i < numMeshes; ++i) {
         vkDestroyBuffer(device, meshData_Graphics.vertexBufferArray[i], nullptr);
         vkFreeMemory(device, meshData_Graphics.vertexBufferMemoryArray[i], nullptr);
@@ -20,50 +20,50 @@ void MeshDataManager::Cleanup(VkDevice device) {
     ResetState();
 }
 
-void MeshDataManager::ResetState() {
-    for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+void JEMeshDataManager::ResetState() {
+    for (uint32_t i = 0; i < JE_MAX_MESHES; ++i) {
         meshData_Graphics.modelMatrices[i] = glm::mat4(1.0f); // Initialize model matrix to identity matrix
     }
-    for (uint32_t i = 0; i < MAX_MESHES; ++i) {
-        meshData_Graphics.vertexLists[i] = std::vector<MeshVertex>();
+    for (uint32_t i = 0; i < JE_MAX_MESHES; ++i) {
+        meshData_Graphics.vertexLists[i] = std::vector<JEMeshVertex>();
     }
-    for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+    for (uint32_t i = 0; i < JE_MAX_MESHES; ++i) {
         meshData_Graphics.indexLists[i] = std::vector<uint32_t>();
     }
-    for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+    for (uint32_t i = 0; i < JE_MAX_MESHES; ++i) {
         meshData_Physics.positions[i] = glm::vec3(0.0f);
     }
-    for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+    for (uint32_t i = 0; i < JE_MAX_MESHES; ++i) {
         meshData_Physics.velocities[i] = glm::vec3(0.0f);
     }
-    for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+    for (uint32_t i = 0; i < JE_MAX_MESHES; ++i) {
         meshData_Physics.accelerations[i] = glm::vec3(0.0f);
     }
-    for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+    for (uint32_t i = 0; i < JE_MAX_MESHES; ++i) {
         meshData_Physics.angularMomentums[i] = glm::vec3(0.0f);
     }
-    for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+    for (uint32_t i = 0; i < JE_MAX_MESHES; ++i) {
         meshData_Physics.rotations[i] = glm::mat3(1.0f);
     }
-    for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+    for (uint32_t i = 0; i < JE_MAX_MESHES; ++i) {
         meshData_Physics.scales[i] = glm::vec3(1.0f);
     }
-    for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+    for (uint32_t i = 0; i < JE_MAX_MESHES; ++i) {
         meshData_Physics.masses[i] = 1.0f;
     }
-    for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+    for (uint32_t i = 0; i < JE_MAX_MESHES; ++i) {
         meshData_Physics.obbs[i] = { { glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f) },
                                        glm::vec3(1.0f, 1.0f, 1.0f),
                                        glm::vec3(0.0f, 0.0f, 0.0f) };
     }
-    for (uint32_t i = 0; i < MAX_MESHES; ++i) {
+    for (uint32_t i = 0; i < JE_MAX_MESHES; ++i) {
         meshData_Physics.freezeStates[i] = JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION;
     }
-    screenSpaceTriangle.vertexList = std::vector<MeshVertex>();
+    screenSpaceTriangle.vertexList = std::vector<JEMeshVertex>();
     screenSpaceTriangle.indexList = std::vector<uint32_t>();
 }
 
-void MeshDataManager::CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::string& filepath, int freezeState) {
+void JEMeshDataManager::CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const std::string& filepath, int freezeState) {
     LoadModelFromFile(filepath);
     CreateVertexBuffer(physicalDevice, device, commandPool, graphicsQueue, meshData_Graphics.vertexLists[numMeshes], &meshData_Graphics.vertexBufferArray[numMeshes], &meshData_Graphics.vertexBufferMemoryArray[numMeshes]);
     CreateIndexBuffer(physicalDevice, device, commandPool, graphicsQueue, meshData_Graphics.indexLists[numMeshes], &meshData_Graphics.indexBufferArray[numMeshes], &meshData_Graphics.indexBufferMemoryArray[numMeshes]);
@@ -71,8 +71,8 @@ void MeshDataManager::CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice de
     ++numMeshes;
 }
 
-void MeshDataManager::CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::vector<MeshVertex>& vertices, const std::vector<uint32_t>& indices, int freezeState) {
-    meshData_Graphics.vertexLists[numMeshes] = std::vector<MeshVertex>(vertices);
+void JEMeshDataManager::CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const std::vector<JEMeshVertex>& vertices, const std::vector<uint32_t>& indices, int freezeState) {
+    meshData_Graphics.vertexLists[numMeshes] = std::vector<JEMeshVertex>(vertices);
     meshData_Graphics.indexLists[numMeshes] = std::vector<uint32_t>(indices);
     CreateVertexBuffer(physicalDevice, device, commandPool, graphicsQueue, vertices, &meshData_Graphics.vertexBufferArray[numMeshes], &meshData_Graphics.vertexBufferMemoryArray[numMeshes]);
     CreateIndexBuffer(physicalDevice, device, commandPool, graphicsQueue, indices, &meshData_Graphics.indexBufferArray[numMeshes], &meshData_Graphics.indexBufferMemoryArray[numMeshes]);
@@ -80,9 +80,9 @@ void MeshDataManager::CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice de
     ++numMeshes;
 }
 
-void MeshDataManager::CreateScreenSpaceTriangleMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue) {
+void JEMeshDataManager::CreateScreenSpaceTriangleMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue) {
     // Setup screen space triangle
-    const std::vector<MeshVertex> screenSpaceTriangleVertices = { { glm::vec3(-1.0, -1.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0, 0.0) },
+    const std::vector<JEMeshVertex> screenSpaceTriangleVertices = { { glm::vec3(-1.0, -1.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0, 0.0) },
                                                                   { glm::vec3(3.0, -1.0, 0.0),  glm::vec3(0.0, 0.0, 0.0),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(2.0, 0.0) },
                                                                   { glm::vec3(-1.0, 3.0, 0.0),  glm::vec3(0.0, 0.0, 0.0),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0, 2.0) } };
     const std::vector<uint32_t> screenSpaceTriangleIndices = { 2, 1, 0 };
@@ -92,7 +92,7 @@ void MeshDataManager::CreateScreenSpaceTriangleMesh(VkPhysicalDevice physicalDev
     CreateIndexBuffer(physicalDevice, device, commandPool, graphicsQueue, screenSpaceTriangleIndices, &screenSpaceTriangle.indexBuffer, &screenSpaceTriangle.indexBufferMemory);
 }
 
-void MeshDataManager::CreateVertexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::vector<MeshVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory) {
+void JEMeshDataManager::CreateVertexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const std::vector<JEMeshVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory) {
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
@@ -110,7 +110,7 @@ void MeshDataManager::CreateVertexBuffer(VkPhysicalDevice physicalDevice, VkDevi
     vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
-void MeshDataManager::CreateIndexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const VulkanQueue& graphicsQueue, const std::vector<uint32_t>& indices, VkBuffer* indexBuffer, VkDeviceMemory* indexBufferMemory) {
+void JEMeshDataManager::CreateIndexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const std::vector<uint32_t>& indices, VkBuffer* indexBuffer, VkDeviceMemory* indexBufferMemory) {
     VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
@@ -129,7 +129,7 @@ void MeshDataManager::CreateIndexBuffer(VkPhysicalDevice physicalDevice, VkDevic
     vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
-void MeshDataManager::LoadModelFromFile(const std::string& filepath) {
+void JEMeshDataManager::LoadModelFromFile(const std::string& filepath) {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
@@ -139,8 +139,8 @@ void MeshDataManager::LoadModelFromFile(const std::string& filepath) {
         throw std::runtime_error(err);
     }
 
-    std::unordered_map<MeshVertex, uint32_t> uniqueVertices = {};
-    std::vector<MeshVertex>& vertexList = meshData_Graphics.vertexLists[numMeshes];
+    std::unordered_map<JEMeshVertex, uint32_t> uniqueVertices = {};
+    std::vector<JEMeshVertex>& vertexList = meshData_Graphics.vertexLists[numMeshes];
 
     // To compute the mesh's OBB (needed for physics), keep track of the min/max extents
     glm::vec3 minPos = glm::vec3(9999999999.0f);
@@ -148,7 +148,7 @@ void MeshDataManager::LoadModelFromFile(const std::string& filepath) {
 
     for (const auto& shape : shapes) {
         for (const auto& index : shape.mesh.indices) {
-            MeshVertex vertex = {};
+            JEMeshVertex vertex = {};
 
             vertex.pos = {
                 attrib.vertices[3 * index.vertex_index + 0],
@@ -186,7 +186,7 @@ void MeshDataManager::LoadModelFromFile(const std::string& filepath) {
     }
 }
 
-void MeshDataManager::DrawMesh(VkCommandBuffer commandBuffer, uint32_t index) {
+void JEMeshDataManager::DrawMesh(VkCommandBuffer commandBuffer, uint32_t index) {
     VkBuffer vertexBuffers[] = { meshData_Graphics.vertexBufferArray[index] };
     VkDeviceSize offsets[] = { 0 };
 
@@ -195,7 +195,7 @@ void MeshDataManager::DrawMesh(VkCommandBuffer commandBuffer, uint32_t index) {
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(meshData_Graphics.indexLists[index].size()), 1, 0, 0, 0);
 }
 
-void MeshDataManager::DrawScreenSpaceTriangle(VkCommandBuffer commandBuffer) {
+void JEMeshDataManager::DrawScreenSpaceTriangle(VkCommandBuffer commandBuffer) {
     VkBuffer vertexBuffers[] = { screenSpaceTriangle.vertexBuffer };
     VkDeviceSize offsets[] = { 0 };
 

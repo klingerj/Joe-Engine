@@ -33,7 +33,7 @@ VkShaderModule CreateShaderModule(VkDevice device, const std::vector<char>& code
 
 // Mesh Shader
 
-void VulkanPostProcessShader::Cleanup(VkDevice device) {
+void JEVulkanPostProcessShader::Cleanup(VkDevice device) {
     vkDestroyPipeline(device, graphicsPipeline, nullptr);
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);
     vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
@@ -41,8 +41,8 @@ void VulkanPostProcessShader::Cleanup(VkDevice device) {
 }
 
 // Warning: long function
-void VulkanPostProcessShader::CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
-                                          const VulkanSwapChain& swapChain, VkRenderPass renderPass) {
+void JEVulkanPostProcessShader::CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
+                                          const JEVulkanSwapChain& swapChain, VkRenderPass renderPass) {
     // Shader stages
     VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -64,8 +64,8 @@ void VulkanPostProcessShader::CreateGraphicsPipeline(VkDevice device, VkShaderMo
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-    auto bindingDescription = MeshVertex::getBindingDescription();
-    auto attributeDescriptions = MeshVertex::getAttributeDescriptions();
+    auto bindingDescription = JEMeshVertex::getBindingDescription();
+    auto attributeDescriptions = JEMeshVertex::getAttributeDescriptions();
 
     vertexInputInfo.vertexBindingDescriptionCount = 1;
     vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
@@ -203,7 +203,7 @@ void VulkanPostProcessShader::CreateGraphicsPipeline(VkDevice device, VkShaderMo
     vkDestroyShaderModule(device, vertShaderModule, nullptr);
 }
 
-void VulkanPostProcessShader::CreateDescriptorPool(VkDevice device, size_t numSwapChainImages) {
+void JEVulkanPostProcessShader::CreateDescriptorPool(VkDevice device, size_t numSwapChainImages) {
     VkDescriptorPoolSize poolSize;
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     poolSize.descriptorCount = static_cast<uint32_t>(numSwapChainImages);
@@ -219,7 +219,7 @@ void VulkanPostProcessShader::CreateDescriptorPool(VkDevice device, size_t numSw
     }
 }
 
-void VulkanPostProcessShader::CreateDescriptorSetLayout(VkDevice device) {
+void JEVulkanPostProcessShader::CreateDescriptorSetLayout(VkDevice device) {
     VkDescriptorSetLayoutBinding samplerLayoutBinding_texture = {};
     samplerLayoutBinding_texture.binding = 0;
     samplerLayoutBinding_texture.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -238,7 +238,7 @@ void VulkanPostProcessShader::CreateDescriptorSetLayout(VkDevice device) {
     }
 }
 
-void VulkanPostProcessShader::CreateDescriptorSets(VkDevice device, const PostProcessingPass& postProcessingPass, VkImageView postImageView, size_t numSwapChainImages) {
+void JEVulkanPostProcessShader::CreateDescriptorSets(VkDevice device, const JEPostProcessingPass& postProcessingPass, VkImageView postImageView, size_t numSwapChainImages) {
     std::vector<VkDescriptorSetLayout> layouts(numSwapChainImages, descriptorSetLayout);
 
     VkDescriptorSetAllocateInfo allocInfo = {};
@@ -272,21 +272,21 @@ void VulkanPostProcessShader::CreateDescriptorSets(VkDevice device, const PostPr
     }
 }
 
-void VulkanPostProcessShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages) {
+void JEVulkanPostProcessShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages) {
     // Nothing to do here
 }
 
-void VulkanPostProcessShader::UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const Camera& camera, const Camera& shadowCamera, const glm::mat4* modelMatrices, uint32_t numMeshes) {
+void JEVulkanPostProcessShader::UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const JECamera& camera, const JECamera& shadowCamera, const glm::mat4* modelMatrices, uint32_t numMeshes) {
     // Nothing to do here
 }
 
-void VulkanPostProcessShader::BindDescriptorSets(VkCommandBuffer commandBuffer, size_t descriptorSetIndex) {
+void JEVulkanPostProcessShader::BindDescriptorSets(VkCommandBuffer commandBuffer, size_t descriptorSetIndex) {
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[descriptorSetIndex], 0, nullptr);
 }
 
 // Shadow Pass Shader
 
-void VulkanShadowPassShader::Cleanup(VkDevice device) {
+void JEVulkanShadowPassShader::Cleanup(VkDevice device) {
     vkDestroyPipeline(device, graphicsPipeline, nullptr);
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);
     vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
@@ -298,7 +298,7 @@ void VulkanShadowPassShader::Cleanup(VkDevice device) {
 }
 
 // Warning: long function
-void VulkanShadowPassShader::CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule, VkExtent2D extent, VkRenderPass renderPass) {
+void JEVulkanShadowPassShader::CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule, VkExtent2D extent, VkRenderPass renderPass) {
     // Shader stages
     VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -320,8 +320,8 @@ void VulkanShadowPassShader::CreateGraphicsPipeline(VkDevice device, VkShaderMod
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-    auto bindingDescription = MeshVertex::getBindingDescription();
-    auto attributeDescriptions = MeshVertex::getAttributeDescriptions();
+    auto bindingDescription = JEMeshVertex::getBindingDescription();
+    auto attributeDescriptions = JEMeshVertex::getAttributeDescriptions();
 
     vertexInputInfo.vertexBindingDescriptionCount = 1;
     vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
@@ -367,9 +367,9 @@ void VulkanShadowPassShader::CreateGraphicsPipeline(VkDevice device, VkShaderMod
     rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
     rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_TRUE;
-    rasterizer.depthBiasConstantFactor = DEFAULT_SHADOW_MAP_DEPTH_BIAS_CONSTANT;
+    rasterizer.depthBiasConstantFactor = JE_DEFAULT_SHADOW_MAP_DEPTH_BIAS_CONSTANT;
     rasterizer.depthBiasClamp = 0.0f;
-    rasterizer.depthBiasSlopeFactor = DEFAULT_SHADOW_MAP_DEPTH_BIAS_SLOPE;
+    rasterizer.depthBiasSlopeFactor = JE_DEFAULT_SHADOW_MAP_DEPTH_BIAS_SLOPE;
 
     // Multisampling
 
@@ -480,7 +480,7 @@ void VulkanShadowPassShader::CreateGraphicsPipeline(VkDevice device, VkShaderMod
     vkDestroyShaderModule(device, vertShaderModule, nullptr);
 }
 
-void VulkanShadowPassShader::CreateDescriptorPool(VkDevice device) {
+void JEVulkanShadowPassShader::CreateDescriptorPool(VkDevice device) {
     std::array<VkDescriptorPoolSize, 2> poolSizes = {};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     poolSizes[0].descriptorCount = 1;
@@ -498,7 +498,7 @@ void VulkanShadowPassShader::CreateDescriptorPool(VkDevice device) {
     }
 }
 
-void VulkanShadowPassShader::CreateDescriptorSetLayout(VkDevice device) {
+void JEVulkanShadowPassShader::CreateDescriptorSetLayout(VkDevice device) {
     VkDescriptorSetLayoutBinding uboLayoutBinding = {};
     uboLayoutBinding.binding = 0;
     uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -525,7 +525,7 @@ void VulkanShadowPassShader::CreateDescriptorSetLayout(VkDevice device) {
     }
 }
 
-void VulkanShadowPassShader::CreateDescriptorSets(VkDevice device) {
+void JEVulkanShadowPassShader::CreateDescriptorSets(VkDevice device) {
     VkDescriptorSetAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool = descriptorPool;
@@ -539,12 +539,12 @@ void VulkanShadowPassShader::CreateDescriptorSets(VkDevice device) {
     VkDescriptorBufferInfo bufferInfo_vp = {};
     bufferInfo_vp.buffer = uniformBuffers_ViewProj;
     bufferInfo_vp.offset = 0;
-    bufferInfo_vp.range = sizeof(UBO_ViewProj);
+    bufferInfo_vp.range = sizeof(JEUBO_ViewProj);
 
     VkDescriptorBufferInfo bufferInfo_dynModel = {};
     bufferInfo_dynModel.buffer = uniformBuffers_Dynamic_Model;
     bufferInfo_dynModel.offset = 0;
-    bufferInfo_dynModel.range = sizeof(UBODynamic_ModelMat);
+    bufferInfo_dynModel.range = sizeof(JEUBODynamic_ModelMat);
 
     std::array<VkWriteDescriptorSet, 2> descriptorWrites = {};
 
@@ -567,8 +567,8 @@ void VulkanShadowPassShader::CreateDescriptorSets(VkDevice device) {
     vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 }
 
-void VulkanShadowPassShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numModelMatrices) {
-    VkDeviceSize bufferSize_viewProj = sizeof(UBO_ViewProj);
+void JEVulkanShadowPassShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numModelMatrices) {
+    VkDeviceSize bufferSize_viewProj = sizeof(JEUBO_ViewProj);
 
     // Calculate required alignment based on minimum device offset alignment
     VkPhysicalDeviceProperties deviceProperties;
@@ -587,8 +587,8 @@ void VulkanShadowPassShader::CreateUniformBuffers(VkPhysicalDevice physicalDevic
     CreateBuffer(physicalDevice, device, bufferSize_Dynamic_Model, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, uniformBuffers_Dynamic_Model, uniformBuffersMemory_Dynamic_Model);
 }
 
-void VulkanShadowPassShader::UpdateUniformBuffers(VkDevice device, const Camera& shadowCamera, const glm::mat4* modelMatrices, uint32_t numMeshes) {
-    UBO_ViewProj ubo_vp = {};
+void JEVulkanShadowPassShader::UpdateUniformBuffers(VkDevice device, const JECamera& shadowCamera, const glm::mat4* modelMatrices, uint32_t numMeshes) {
+    JEUBO_ViewProj ubo_vp = {};
     glm::mat4 view = shadowCamera.GetView();
     const float coord = 7.5f;
     glm::mat4 proj = glm::ortho(-coord, coord, -coord, coord, shadowCamera.GetNearPlane(), shadowCamera.GetFarPlane());
@@ -619,13 +619,13 @@ void VulkanShadowPassShader::UpdateUniformBuffers(VkDevice device, const Camera&
     vkUnmapMemory(device, uniformBuffersMemory_Dynamic_Model); // TODO: check if i only have to map the memory once
 }
 
-void VulkanShadowPassShader::BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t dynamicOffset) {
+void JEVulkanShadowPassShader::BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t dynamicOffset) {
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 1, &dynamicOffset);
 }
 
 // Deferred Pass Shader - Geometry pass (G-buffers)
 
-void VulkanDeferredPassGeometryShader::Cleanup(VkDevice device) {
+void JEVulkanDeferredPassGeometryShader::Cleanup(VkDevice device) {
     vkDestroyPipeline(device, graphicsPipeline, nullptr);
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);
     vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
@@ -637,8 +637,8 @@ void VulkanDeferredPassGeometryShader::Cleanup(VkDevice device) {
 }
 
 // Warning: long function
-void VulkanDeferredPassGeometryShader::CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
-    const VulkanSwapChain& swapChain, VkRenderPass renderPass) {
+void JEVulkanDeferredPassGeometryShader::CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
+    const JEVulkanSwapChain& swapChain, VkRenderPass renderPass) {
     // Shader stages
     VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -660,8 +660,8 @@ void VulkanDeferredPassGeometryShader::CreateGraphicsPipeline(VkDevice device, V
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-    auto bindingDescription = MeshVertex::getBindingDescription();
-    auto attributeDescriptions = MeshVertex::getAttributeDescriptions();
+    auto bindingDescription = JEMeshVertex::getBindingDescription();
+    auto attributeDescriptions = JEMeshVertex::getAttributeDescriptions();
 
     vertexInputInfo.vertexBindingDescriptionCount = 1;
     vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
@@ -821,7 +821,7 @@ void VulkanDeferredPassGeometryShader::CreateGraphicsPipeline(VkDevice device, V
     vkDestroyShaderModule(device, vertShaderModule, nullptr);
 }
 
-void VulkanDeferredPassGeometryShader::CreateDescriptorPool(VkDevice device) {
+void JEVulkanDeferredPassGeometryShader::CreateDescriptorPool(VkDevice device) {
     std::array<VkDescriptorPoolSize, 3> poolSizes = {};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     poolSizes[0].descriptorCount = 1;
@@ -841,7 +841,7 @@ void VulkanDeferredPassGeometryShader::CreateDescriptorPool(VkDevice device) {
     }
 }
 
-void VulkanDeferredPassGeometryShader::CreateDescriptorSetLayout(VkDevice device) {
+void JEVulkanDeferredPassGeometryShader::CreateDescriptorSetLayout(VkDevice device) {
     VkDescriptorSetLayoutBinding uboLayoutBinding_vp = {};
     uboLayoutBinding_vp.binding = 0;
     uboLayoutBinding_vp.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -874,7 +874,7 @@ void VulkanDeferredPassGeometryShader::CreateDescriptorSetLayout(VkDevice device
     }
 }
 
-void VulkanDeferredPassGeometryShader::CreateDescriptorSets(VkDevice device, const Texture& texture) {
+void JEVulkanDeferredPassGeometryShader::CreateDescriptorSets(VkDevice device, const JETexture& texture) {
     VkDescriptorSetAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool = descriptorPool;
@@ -888,12 +888,12 @@ void VulkanDeferredPassGeometryShader::CreateDescriptorSets(VkDevice device, con
     VkDescriptorBufferInfo bufferInfo_vp = {};
     bufferInfo_vp.buffer = uniformBuffers_ViewProj;
     bufferInfo_vp.offset = 0;
-    bufferInfo_vp.range = sizeof(UBO_ViewProj);
+    bufferInfo_vp.range = sizeof(JEUBO_ViewProj);
 
     VkDescriptorBufferInfo bufferInfo_dynModel = {};
     bufferInfo_dynModel.buffer = uniformBuffers_Dynamic_Model;
     bufferInfo_dynModel.offset = 0;
-    bufferInfo_dynModel.range = sizeof(UBODynamic_ModelMat);
+    bufferInfo_dynModel.range = sizeof(JEUBODynamic_ModelMat);
 
     VkDescriptorImageInfo imageInfo = {};
     imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -929,8 +929,8 @@ void VulkanDeferredPassGeometryShader::CreateDescriptorSets(VkDevice device, con
     vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 }
 
-void VulkanDeferredPassGeometryShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numModelMatrices) {
-    VkDeviceSize bufferSize_viewProj = sizeof(UBO_ViewProj);
+void JEVulkanDeferredPassGeometryShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numModelMatrices) {
+    VkDeviceSize bufferSize_viewProj = sizeof(JEUBO_ViewProj);
 
     // Calculate required alignment based on minimum device offset alignment
     VkPhysicalDeviceProperties deviceProperties;
@@ -949,8 +949,8 @@ void VulkanDeferredPassGeometryShader::CreateUniformBuffers(VkPhysicalDevice phy
     CreateBuffer(physicalDevice, device, bufferSize_Dynamic_Model, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, uniformBuffers_Dynamic_Model, uniformBuffersMemory_Dynamic_Model);
 }
 
-void VulkanDeferredPassGeometryShader::UpdateUniformBuffers(VkDevice device, const Camera& camera, const glm::mat4* modelMatrices, uint32_t numMeshes) {
-    UBO_ViewProj ubo_vp = {};
+void JEVulkanDeferredPassGeometryShader::UpdateUniformBuffers(VkDevice device, const JECamera& camera, const glm::mat4* modelMatrices, uint32_t numMeshes) {
+    JEUBO_ViewProj ubo_vp = {};
     glm::mat4 view = camera.GetView();
     glm::mat4 proj = camera.GetProj();
     proj[1][1] *= -1.0f;
@@ -980,13 +980,13 @@ void VulkanDeferredPassGeometryShader::UpdateUniformBuffers(VkDevice device, con
     vkUnmapMemory(device, uniformBuffersMemory_Dynamic_Model); // TODO: check if i only have to map the memory once
 }
 
-void VulkanDeferredPassGeometryShader::BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t dynamicOffset) {
+void JEVulkanDeferredPassGeometryShader::BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t dynamicOffset) {
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 1, &dynamicOffset);
 }
 
 // Deferred Lighting Pass - read from g-buffers
 
-void VulkanDeferredPassLightingShader::Cleanup(VkDevice device) {
+void JEVulkanDeferredPassLightingShader::Cleanup(VkDevice device) {
     vkDestroyPipeline(device, graphicsPipeline, nullptr);
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);
     vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
@@ -1002,8 +1002,8 @@ void VulkanDeferredPassLightingShader::Cleanup(VkDevice device) {
 }
 
 // Warning: long function
-void VulkanDeferredPassLightingShader::CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
-    const VulkanSwapChain& swapChain, VkRenderPass renderPass) {
+void JEVulkanDeferredPassLightingShader::CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
+    const JEVulkanSwapChain& swapChain, VkRenderPass renderPass) {
     // Shader stages
     VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -1025,8 +1025,8 @@ void VulkanDeferredPassLightingShader::CreateGraphicsPipeline(VkDevice device, V
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-    auto bindingDescription = MeshVertex::getBindingDescription();
-    auto attributeDescriptions = MeshVertex::getAttributeDescriptions();
+    auto bindingDescription = JEMeshVertex::getBindingDescription();
+    auto attributeDescriptions = JEMeshVertex::getAttributeDescriptions();
 
     vertexInputInfo.vertexBindingDescriptionCount = 1;
     vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
@@ -1178,7 +1178,7 @@ void VulkanDeferredPassLightingShader::CreateGraphicsPipeline(VkDevice device, V
     vkDestroyShaderModule(device, vertShaderModule, nullptr);
 }
 
-void VulkanDeferredPassLightingShader::CreateDescriptorPool(VkDevice device, size_t numSwapChainImages) {
+void JEVulkanDeferredPassLightingShader::CreateDescriptorPool(VkDevice device, size_t numSwapChainImages) {
     std::array<VkDescriptorPoolSize, 7> poolSizes = {};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     poolSizes[0].descriptorCount = static_cast<uint32_t>(numSwapChainImages);
@@ -1206,7 +1206,7 @@ void VulkanDeferredPassLightingShader::CreateDescriptorPool(VkDevice device, siz
     }
 }
 
-void VulkanDeferredPassLightingShader::CreateDescriptorSetLayout(VkDevice device) {
+void JEVulkanDeferredPassLightingShader::CreateDescriptorSetLayout(VkDevice device) {
     VkDescriptorSetLayoutBinding uboLayoutBinding_vp = {};
     uboLayoutBinding_vp.binding = 0;
     uboLayoutBinding_vp.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -1267,7 +1267,7 @@ void VulkanDeferredPassLightingShader::CreateDescriptorSetLayout(VkDevice device
     }
 }
 
-void VulkanDeferredPassLightingShader::CreateDescriptorSets(VkDevice device, const Texture& texture, const OffscreenShadowPass& shadowPass, const OffscreenDeferredPass& deferredPass, size_t numSwapChainImages) {
+void JEVulkanDeferredPassLightingShader::CreateDescriptorSets(VkDevice device, const JETexture& texture, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, size_t numSwapChainImages) {
     std::vector<VkDescriptorSetLayout> layouts(numSwapChainImages, descriptorSetLayout);
 
     VkDescriptorSetAllocateInfo allocInfo = {};
@@ -1285,12 +1285,12 @@ void VulkanDeferredPassLightingShader::CreateDescriptorSets(VkDevice device, con
         VkDescriptorBufferInfo bufferInfo_vp = {};
         bufferInfo_vp.buffer = uniformBuffers_ViewProj[i];
         bufferInfo_vp.offset = 0;
-        bufferInfo_vp.range = sizeof(UBO_ViewProj_Inv);
+        bufferInfo_vp.range = sizeof(JEUBO_ViewProj_Inv);
 
         VkDescriptorBufferInfo bufferInfo_vp_shadow = {};
         bufferInfo_vp_shadow.buffer = uniformBuffers_ViewProj_Shadow[i];
         bufferInfo_vp_shadow.offset = 0;
-        bufferInfo_vp_shadow.range = sizeof(UBO_ViewProj);
+        bufferInfo_vp_shadow.range = sizeof(JEUBO_ViewProj);
 
         VkDescriptorImageInfo imageInfo = {};
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -1379,9 +1379,9 @@ void VulkanDeferredPassLightingShader::CreateDescriptorSets(VkDevice device, con
     }
 }
 
-void VulkanDeferredPassLightingShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages) {
-    VkDeviceSize bufferSize_viewProj = sizeof(UBO_ViewProj);
-    VkDeviceSize bufferSize_viewProj_inv = sizeof(UBO_ViewProj_Inv);
+void JEVulkanDeferredPassLightingShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages) {
+    VkDeviceSize bufferSize_viewProj = sizeof(JEUBO_ViewProj);
+    VkDeviceSize bufferSize_viewProj_inv = sizeof(JEUBO_ViewProj_Inv);
     uniformBuffers_ViewProj.resize(numSwapChainImages);
     uniformBuffersMemory_ViewProj.resize(numSwapChainImages);
     uniformBuffers_ViewProj_Shadow.resize(numSwapChainImages);
@@ -1393,15 +1393,15 @@ void VulkanDeferredPassLightingShader::CreateUniformBuffers(VkPhysicalDevice phy
     }
 }
 
-void VulkanDeferredPassLightingShader::UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const Camera& camera, const Camera& shadowCamera) {
-    UBO_ViewProj_Inv ubo_vp_inv = {};
+void JEVulkanDeferredPassLightingShader::UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const JECamera& camera, const JECamera& shadowCamera) {
+    JEUBO_ViewProj_Inv ubo_vp_inv = {};
     glm::mat4 view = camera.GetView();
     glm::mat4 proj = camera.GetProj();
     proj[1][1] *= -1.0f;
     ubo_vp_inv.invProj = glm::inverse(proj);
     ubo_vp_inv.invView = glm::inverse(view);
 
-    UBO_ViewProj ubo_vp_shadow = {};
+    JEUBO_ViewProj ubo_vp_shadow = {};
     view = shadowCamera.GetView();
     const float coord = 7.5f;
     proj = glm::ortho(-coord, coord, -coord, coord, shadowCamera.GetNearPlane(), shadowCamera.GetFarPlane());
@@ -1418,6 +1418,6 @@ void VulkanDeferredPassLightingShader::UpdateUniformBuffers(VkDevice device, uin
     vkUnmapMemory(device, uniformBuffersMemory_ViewProj_Shadow[currentImage]);
 }
 
-void VulkanDeferredPassLightingShader::BindDescriptorSets(VkCommandBuffer commandBuffer, size_t descriptorSetIndex) {
+void JEVulkanDeferredPassLightingShader::BindDescriptorSets(VkCommandBuffer commandBuffer, size_t descriptorSetIndex) {
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[descriptorSetIndex], 0, nullptr);
 }
