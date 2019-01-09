@@ -1,6 +1,10 @@
 # GameEngine
 
 #### Weekly Update
+1/9/18  
+Many bug fixes and issues closed. Also added appveyor for continuous integration.
+
+
 12/30/18  
 Late Update:  
 Physics engine "implemented". It serves as a basic rigidbody simulator for 3D OBB's. It checks for collisions using the Separating Axis Theorem (SAT) and resolves collisions via impulse response. Generally, it is shaky and buggy, and needs to be redone, but does look plausible in some cases.
