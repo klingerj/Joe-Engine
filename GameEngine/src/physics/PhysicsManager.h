@@ -20,7 +20,7 @@ namespace JoeEngine {
         std::shared_ptr<JEMeshDataManager> m_meshDataManager;
 
         using JE_TIMER = std::chrono::time_point<std::chrono::steady_clock>;
-        const JE_TIMER m_startTime; // Start time of the physics system
+        JE_TIMER m_startTime; // Start time of the physics system
         double m_currentTime; // Current time of the physics system
         const double m_updateRateInMilliseconds; // in ms
         const float m_updateRateFactor; // For physics integration
@@ -29,7 +29,7 @@ namespace JoeEngine {
         JECollisionInfo SAT(JE_OBB& obbA, JE_OBB& obbB, uint32_t indexA, uint32_t indexB); // TODO make me const
 
     public:
-        JEPhysicsManager() : m_startTime(std::chrono::high_resolution_clock::now()), m_currentTime(0.0), m_updateRateInMilliseconds(16.667), m_updateRateFactor(1.0f / 60.0f), m_frameCtr(0) {}
+        JEPhysicsManager() : m_startTime(), m_currentTime(0.0), m_updateRateInMilliseconds(16.667), m_updateRateFactor(1.0f / 60.0f), m_frameCtr(0) {}
         ~JEPhysicsManager() {}
 
         void Initialize(const std::shared_ptr<JEMeshDataManager>& m);

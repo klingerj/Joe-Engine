@@ -4,13 +4,17 @@
 
 namespace JoeEngine {
     void JEPhysicsManager::Initialize(const std::shared_ptr<JEMeshDataManager>& m) {
+        m_startTime = std::chrono::high_resolution_clock::now();
         m_meshDataManager = m;
     }
 
     void JEPhysicsManager::Update() {
         const JE_TIMER globalTime = std::chrono::high_resolution_clock::now();
         double currentTimeDelta = std::chrono::duration<double, std::chrono::milliseconds::period>(globalTime - m_startTime).count();
-        if (currentTimeDelta > m_updateRateInMilliseconds) {
+        if (m_currentTime == 0.0) { // Set current time to be 
+            m_currentTime = currentTimeDelta;
+        }
+        if (currentTimeDelta > m_currentTime) {
             auto& meshPhysicsData = m_meshDataManager->GetMeshData_Physics();
             for (uint32_t i = 0; i < m_meshDataManager->GetNumMeshes(); ++i) { // TODO: Process multiple meshes at a time with AVX
                 meshPhysicsData.obbs[i].center = meshPhysicsData.positions[i];
