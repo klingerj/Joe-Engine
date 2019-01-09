@@ -1,58 +1,60 @@
 #include "ThreadPool.h"
 
-// Define extern threadpool object
-ThreadPool threadPool = ThreadPool();
+namespace JoeEngine {
+    // Define extern threadpool object
+    JEThreadPool JEthreadPool = JEThreadPool();
 
-// Atomically enqueue a new job
-void ThreadPool::EnqueueJob(thread_job_t job) {
-    {
-        std::unique_lock <std::mutex> lock(mutex_queue);
-        jobs.push(job);
-    }
-    cv_queue.notify_one();
-}
-
-// Get a job from the queue - should be called while the queue mutex is locked
-thread_job_t ThreadPool::DequeueJob() {
-    thread_job_t job;
-    job = jobs.front();
-    jobs.pop();
-    return job;
-}
-
-void ThreadPool::ThreadDoJob(thread_job_t threadJob) {
-    threadJob.function(threadJob.data);
-}
-
-// Infinite loop - thread only gets launched once.
-void ThreadPool::ThreadFunction() {
-    while (true) {
-        thread_job_t job;
+    // Atomically enqueue a new job
+    void JEThreadPool::EnqueueJob(JEThreadJob job) {
         {
-            std::unique_lock<std::mutex> lock(mutex_queue);
-            cv_queue.wait(lock, [this] { return !jobs.empty() || (jobs.empty() && quit); });
-            if (quit) return;
-            job = DequeueJob();
+            std::unique_lock <std::mutex> lock(m_mutex_queue);
+            m_jobs.push(job);
         }
-        ThreadDoJob(job);
-        job.complete = true;
+        m_cv_queue.notify_one();
     }
-}
 
-void ThreadPool::JoinThreads() {
-    StopThreadJobs();
-    for (uint32_t i = 0; i < threads.size(); ++i) {
-        threads[i].join();
+    // Get a job from the queue - should be called while the queue mutex is locked
+    JEThreadJob JEThreadPool::DequeueJob() {
+        JEThreadJob job;
+        job = m_jobs.front();
+        m_jobs.pop();
+        return job;
     }
-}
 
-void ThreadPool::StopThreadJobs() {
-    quit = true;
-    {
-        std::unique_lock<std::mutex> lock(mutex_queue);
-        while (!jobs.empty()) {
-            jobs.pop();
+    void JEThreadPool::ThreadDoJob(JEThreadJob threadJob) {
+        threadJob.function(threadJob.data);
+    }
+
+    // Infinite loop - thread only gets launched once.
+    void JEThreadPool::ThreadFunction() {
+        while (true) {
+            JEThreadJob job;
+            {
+                std::unique_lock<std::mutex> lock(m_mutex_queue);
+                m_cv_queue.wait(lock, [this] { return !m_jobs.empty() || (m_jobs.empty() && m_quit); });
+                if (m_quit) return;
+                job = DequeueJob();
+            }
+            ThreadDoJob(job);
+            job.complete = true;
         }
     }
-    cv_queue.notify_all();
+
+    void JEThreadPool::JoinThreads() {
+        StopThreadJobs();
+        for (uint32_t i = 0; i < m_threads.size(); ++i) {
+            m_threads[i].join();
+        }
+    }
+
+    void JEThreadPool::StopThreadJobs() {
+        m_quit = true;
+        {
+            std::unique_lock<std::mutex> lock(m_mutex_queue);
+            while (!m_jobs.empty()) {
+                m_jobs.pop();
+            }
+        }
+        m_cv_queue.notify_all();
+    }
 }

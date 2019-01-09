@@ -4,84 +4,86 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/norm.hpp"
 
-class Camera {
-private:
-    glm::vec3 eye;
-    glm::vec3 ref;
-    glm::vec3 look;
-    glm::vec3 right;
-    glm::vec3 up;
-    float aspect;
-    float nearPlane, farPlane;
+namespace JoeEngine {
+    class JECamera {
+    private:
+        glm::vec3 m_eye;
+        glm::vec3 m_ref;
+        glm::vec3 m_look;
+        glm::vec3 m_right;
+        glm::vec3 m_up;
+        float m_aspect;
+        float m_nearPlane, farPlane;
 
-public:
-    Camera() : Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, SCENE_VIEW_NEAR_PLANE, SCENE_VIEW_FAR_PLANE) {}
-    Camera(glm::vec3 e, glm::vec3 r, float a, float n, float f) : eye(e), ref(r), aspect(a), nearPlane(n), farPlane(f) {
-        ComputeAttributes();
-    }
-    ~Camera() {}
+    public:
+        JECamera() : JECamera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE) {}
+        JECamera(glm::vec3 e, glm::vec3 r, float a, float n, float f) : m_eye(e), m_ref(r), m_aspect(a), m_nearPlane(n), farPlane(f) {
+            ComputeAttributes();
+        }
+        ~JECamera() {}
 
-    void ComputeAttributes() {
-        look = glm::normalize(ref - eye);
-        right = glm::normalize(glm::cross(look, WORLD_UP));
-        up = glm::normalize(glm::cross(right, look));
-    }
+        void ComputeAttributes() {
+            m_look = glm::normalize(m_ref - m_eye);
+            m_right = glm::normalize(glm::cross(m_look, JE_WORLD_UP));
+            m_up = glm::normalize(glm::cross(m_right, m_look));
+        }
 
-    // Camera Movement and rotation
-    void TranslateAlongLook(float amount) {
-        ref += look * amount;
-        eye += look * amount;
-    }
-    void TranslateAlongRight(float amount) {
-        ref += right * amount;
-        eye += right * amount;
-    }
-    void TranslateAlongUp(float amount) {
-        ref += up * amount;
-        eye += up * amount;
-    }
-    void RotateAboutLook(float amount) {
-        up = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, look) * glm::vec4(up, 1.0f)));
-        right = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, look) * glm::vec4(right, 1.0f)));
-    }
-    void RotateAboutRight(float amount) {
-        look = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, right) * glm::vec4(look, 1.0f)));
-        up = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, right) * glm::vec4(up, 1.0f)));
-        ref = eye + look;
-    }
-    void RotateAboutUp(float amount) {
-        look = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, up) * glm::vec4(look, 1.0f)));
-        right = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, up) * glm::vec4(right, 1.0f)));
-        ref = eye + look;
-    }
+        // Camera Movement and rotation
+        void TranslateAlongLook(float amount) {
+            m_ref += m_look * amount;
+            m_eye += m_look * amount;
+        }
+        void TranslateAlongRight(float amount) {
+            m_ref += m_right * amount;
+            m_eye += m_right * amount;
+        }
+        void TranslateAlongUp(float amount) {
+            m_ref += m_up * amount;
+            m_eye += m_up * amount;
+        }
+        void RotateAboutLook(float amount) {
+            m_up = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, m_look) * glm::vec4(m_up, 1.0f)));
+            m_right = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, m_look) * glm::vec4(m_right, 1.0f)));
+        }
+        void RotateAboutRight(float amount) {
+            m_look = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, m_right) * glm::vec4(m_look, 1.0f)));
+            m_up = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, m_right) * glm::vec4(m_up, 1.0f)));
+            m_ref = m_eye + m_look;
+        }
+        void RotateAboutUp(float amount) {
+            m_look = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, m_up) * glm::vec4(m_look, 1.0f)));
+            m_right = glm::normalize(glm::vec3(glm::rotate(glm::mat4(1.0f), amount, m_up) * glm::vec4(m_right, 1.0f)));
+            m_ref = m_eye + m_look;
+        }
 
-    void SetAspect(float a) {
-        aspect = a;
-    }
-    void SetEye(glm::vec3 e) {
-        eye = e;
-        ComputeAttributes();
-    }
+        void SetAspect(float a) {
+            m_aspect = a;
+        }
+        void SetEye(glm::vec3 e) {
+            m_eye = e;
+            ComputeAttributes();
+        }
 
-    // Getters
-    glm::mat4 GetView() const {
-        glm::mat4 t = glm::mat4(1.0);
-        t[3] = glm::vec4(-eye.x, -eye.y, -eye.z, 1.0);
+        // Getters
+        glm::mat4 GetView() const {
+            glm::mat4 t = glm::mat4(1.0);
+            t[3] = glm::vec4(-m_eye.x, -m_eye.y, -m_eye.z, 1.0);
 
-        glm::mat4 o = glm::mat4(1.0);
-        o[0] = glm::vec4(right.x, up.x, look.x, 0.0);
-        o[1] = glm::vec4(right.y, up.y, look.y, 0.0);
-        o[2] = glm::vec4(right.z, up.z, look.z, 0.0);
+            glm::mat4 o = glm::mat4(1.0);
+            o[0] = glm::vec4(m_right.x, m_up.x, m_look.x, 0.0);
+            o[1] = glm::vec4(m_right.y, m_up.y, m_look.y, 0.0);
+            o[2] = glm::vec4(m_right.z, m_up.z, m_look.z, 0.0);
 
-        return o * t;
-    }
-    glm::mat4 GetProj() const {
-        return glm::perspective(FOVY, aspect, nearPlane, farPlane);
-    }
-    float GetNearPlane() const {
-        return nearPlane;
-    }
-    float GetFarPlane() const {
-        return farPlane;
-    }
-};
+            return o * t;
+        }
+        glm::mat4 GetProj() const {
+            return glm::perspective(JE_FOVY, m_aspect, m_nearPlane, farPlane);
+        }
+        float GetNearPlane() const {
+            return m_nearPlane;
+        }
+        float GetFarPlane() const {
+            return farPlane;
+        }
+    };
+}
