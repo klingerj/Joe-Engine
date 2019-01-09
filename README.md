@@ -52,3 +52,4 @@ In its current state, the project is nothing more than code from vulkan-tutorial
 [Real-Time Collision Detection by Christer Ericson](https://realtimecollisiondetection.net/)  
 [Gaffer on Games](https://gafferongames.com/)  
 [Unconstrained Rigidbody Physics by David Baraff, Siggraph course notes](https://www.cs.cmu.edu/~baraff/sigcourse/notesd1.pdf)  
+[AppVeyor](https://www.appveyor.com/)  
