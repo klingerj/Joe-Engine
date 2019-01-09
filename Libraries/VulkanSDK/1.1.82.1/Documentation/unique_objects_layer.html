@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link rel="icon" href="vulkan_lunarg_icon.png">
+<link rel="stylesheet" href="github-markdown.css">
+<style>
+    body {
+        box-sizing: border-box;
+        min-width: 200px;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 45px;
+    }
+</style>
+</head>
+<body>
+<article class="markdown-body">
+<h1>
+<a id="user-content-vk_layer_google_unique_objects" class="anchor" href="#user-content-vk_layer_google_unique_objects" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>VK_LAYER_GOOGLE_unique_objects</h1>
+<p>The <code>VK_LAYER_LUNARG_unique_objects</code> is a validation-supporting utility layer which enables consistent and coherent validation in addition to proper operation on systems which return non-unique object handles.  This layer aliases all non-dispatchable Vulkan objects with a unique identifier at object-creation time. The aliased handles are used during validation to ensure that duplicate object handles are correctly managed and tracked by the validation layers.</p>
+<p>Note:</p>
+<ul>
+<li>For optimal efficiency, this layer MUST be last in the chain (closest to the display driver).</li>
+<li>If you are developing Vulkan extensions which include new APIs taking one or more Vulkan dispatchable objects as parameters, you may find it necessary to disable the unique objects layer in order use the validation layers. The best way to do this is to explicitly load the layers in the optimal order specified earlier but without this layer. This should result in a minimal decrease in functionality but still allow you to benefit from using the validation layers.</li>
+</ul>
+</article>
+</body>
+</html>

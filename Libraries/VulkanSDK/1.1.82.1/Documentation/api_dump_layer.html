@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link rel="icon" href="vulkan_lunarg_icon.png">
+<link rel="stylesheet" href="github-markdown.css">
+<style>
+    body {
+        box-sizing: border-box;
+        min-width: 200px;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 45px;
+    }
+</style>
+</head>
+<body>
+<article class="markdown-body">
+<h1>
+<a id="user-content-vk_layer_lunarg_api_dump" class="anchor" href="#user-content-vk_layer_lunarg_api_dump" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>VK_LAYER_LUNARG_api_dump</h1>
+<p>The <code>VK_LAYER_LUNARG_api_dump</code> utility layer prints API calls, parameters, and values to the identified output stream.</p>
+<p><code>VK_LAYER_LUNARG_api_dump</code> has three custom settings that can be set to <code>TRUE</code> or <code>FALSE</code> values:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lunarg_api_dump.detailed</code></td>
+<td>if <code>TRUE</code> (the default), dump all function parameters and values; if <code>FALSE</code>, dump only function signatures</td>
+</tr>
+<tr>
+<td><code>lunarg_api_dump.file</code></td>
+<td>dump to file; otherwise dump to <code>stdout</code>
+</td>
+</tr>
+<tr>
+<td><code>lunarg_api_dump.no_addr</code></td>
+<td>if <code>TRUE</code>, replace all addresses with static string "<code>address</code>"</td>
+</tr>
+<tr>
+<td><code>lunarg_api_dump.flush</code></td>
+<td>if <code>TRUE</code>, force I/O flush after every line</td>
+</tr>
+</tbody>
+</table>
+<h3>
+<a id="user-content-android" class="anchor" href="#user-content-android" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Android</h3>
+<p>To enable, make the following changes to vk_layer_settings.txt</p>
+<pre><code>-lunarg_api_dump.file = FALSE
++lunarg_api_dump.file = TRUE
+
+-lunarg_api_dump.log_filename = stdout
++lunarg_api_dump.log_filename = /sdcard/Android/vk_apidump.txt
+</code></pre>
+<p>Then:</p>
+<pre><code>adb push vk_layer_settings.txt /sdcard/Android
+</code></pre>
+</article>
+</body>
+</html>

@@ -138,12 +138,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\include;$(Solution_Dir)..\Libraries\glm-0.9.9.2\glm;$(Solution_Dir)..\Libraries\tinyobjloader;$(Solution_Dir)..\Libraries\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(Solution_Dir)..\Libraries\VulkanSDK\1.1.82.1\Include;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\include;$(Solution_Dir)..\Libraries\glm-0.9.9.2\glm;$(Solution_Dir)..\Libraries\tinyobjloader;$(Solution_Dir)..\Libraries\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/arch:AVX /W3 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(Solution_Dir)..\Libraries\VulkanSDK\1.1.82.1\Lib;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
@@ -183,14 +183,14 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\include;$(Solution_Dir)..\Libraries\glm-0.9.9.2\glm;$(Solution_Dir)..\Libraries\tinyobjloader;$(Solution_Dir)..\Libraries\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(Solution_Dir)..\Libraries\VulkanSDK\1.1.82.1\Include;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\include;$(Solution_Dir)..\Libraries\glm-0.9.9.2\glm;$(Solution_Dir)..\Libraries\tinyobjloader;$(Solution_Dir)..\Libraries\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/arch:AVX /W3 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(Solution_Dir)..\Libraries\VulkanSDK\1.1.82.1\Lib;$(Solution_Dir)..\Libraries\glfw-3.2.1.bin.WIN64\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuild>

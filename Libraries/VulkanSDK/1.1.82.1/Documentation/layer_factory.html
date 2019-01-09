@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link rel="icon" href="vulkan_lunarg_icon.png">
+<link rel="stylesheet" href="github-markdown.css">
+<style>
+    body {
+        box-sizing: border-box;
+        min-width: 200px;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 45px;
+    }
+</style>
+</head>
+<body>
+<article class="markdown-body">
+<h1>
+<a id="user-content-vulkan-layer-factory" class="anchor" href="#user-content-vulkan-layer-factory" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Vulkan Layer Factory</h1>
+<h2>
+<a id="user-content-overview" class="anchor" href="#user-content-overview" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Overview</h2>
+<p>The Vulkan Layer Factory is a framework based on the canonical Vulkan layer model that
+facilitates the creation of Vulkan Layers. The layer factory hides the majority of the
+loader-layer interface, layer boilerplate, setup and initialization, and complexities
+of layer development.</p>
+<p>A complete layer with the attendant support files can be produced by using the included
+Vulkan Layer Factory Visual Studio template to generate a new layer project, and adding the specific intercepts for
+the functions you wouldd like to target for your layer. The resulting layer can be used just as any other Vulkan layer.</p>
+<p>The Vulkan Layer Factory framework produces 'Factory Layers' comprising one or more
+'interceptor' objects. Interceptor objects override functions to be called before (<code>PreCallApiName</code>)
+or after (<code>PostCallApiName</code>) each Vulkan entrypoint of interest. Each interceptor is independent
+of all others within a single Factory layer.  If multiple interceptors attach to the same API call the calling
+order is indeterminate.</p>
+<h3>
+<a id="user-content-layer-factory-sample-code" class="anchor" href="#user-content-layer-factory-sample-code" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Layer Factory sample code</h3>
+<p>The base installation of the layer factory contains the source code for three factory layers including the Vulkan
+Assistant Layer, Starter Layer, and Demo Layer. For the most simple and basic example, see the Starter Layer.
+The Demo Layer serves as a slightly more featured example of a layer implementation,
+exhibiting some new VLF ease-of-use features including global intercepts and various output options. The Assistant
+Layer is a production layer uses multiple interceptors and functions to highlight performance issues and
+to enforce best-practices for applications.</p>
+<p>Source for all three layers is included with the SDK, while the Demo Layer is additionally included in the Visual
+Studio Demos project, allowing easy inspection of the operation of the layer and its source. The Assistant Layer is also provided
+as a binary located alongside the other production layers.</p>
+<p>To help with Layer Factory creation and use, a Visual Studio Layer Factory Template has also been included, and its use
+is described below.</p>
+<h3>
+<a id="user-content-create-a-factory-layer" class="anchor" href="#user-content-create-a-factory-layer" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Create a Factory Layer</h3>
+<p><strong>Initial Setup:</strong></p>
+<p>Copy the Vulkan Layer Factory Visual Studio template file into your Visual Studio template directory.
+The Layer Factory template is located at:</p>
+<pre><code>    %VULKAN_SDK%\Templates\Visual Studio 201x\VulkanLayer.zip
+</code></pre>
+<p>By default, the Visual Studio template directory is:</p>
+<pre><code>     C:\Users\username\Documents\Visual Studio 201x\Templates\ProjectTemplates\Visual C++ Project
+</code></pre>
+<p><strong>Step 1:</strong> Create a new project using the Vulkan Layer Factory template.</p>
+<p>Create a new project through in Visual Studio by selecting File -&gt; New -&gt; Project from the menus.
+Then in the dialog windows that will pop up, select the Visual C++ category and the "Vulkan Layer" project.
+The name used for the project will be the name of the resultant layer, so avoid using spaces in the project name.
+For example, a project named 'my_layer' will produce VkLayer_my_layer.dll and be loaded as VK_LAYER_LUNARG_my_layer</p>
+<p><strong>Step 2:</strong> Modify or add your interceptor file(s) to your project.</p>
+<p>The new project that is generated will be a copy of the Demo Layer, but with your custom name.
+You can use modify, add, or remove source files to change the functionality of this layer.
+The header file of each interceptor must be added to the projects interceptor_objects.h file.</p>
+<p><strong>Step 3:</strong> Build your layer factory project</p>
+<p>When you build the project, the required layer *.json file will be created along with and placed in the same directory as your layer
+factory DLL.</p>
+<p>Note that the default configuration for the project will build a 32-bit binary, which is incompatible
+with 64-bit Vulkan applications.
+To make a layer which is compatible with 64-bit apps, you will have to change the solution platform
+to 'x64' in the dropdown menu in Visual Studio.</p>
+<h2>
+<a id="user-content-using-layers" class="anchor" href="#user-content-using-layers" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Using Layers</h2>
+<ol>
+<li>Place the layer library DLL in the same directory as your Vulkan test or application</li>
+</ol>
+<p>This is required for the Loader to be able to scan and enumerate your library.
+Alternatively, use the <code>VK_LAYER_PATH</code> environment variable to specify where the layer libraries reside.</p>
+<ol start="2">
+<li>Specify which layers to activate using environment variables.</li>
+</ol>
+<pre><code>    set VK_INSTANCE_LAYERS=VK_LAYER_LUNARG_demo_layer;VK_LAYER_LUNARG_my_layer
+</code></pre>
+<h3>
+<a id="user-content-layer-factory-features" class="anchor" href="#user-content-layer-factory-features" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Layer Factory Features</h3>
+<p>The layer factory provides helper functions for layer authors to simplify layer tasks. These include some
+simpler output functions, debug facilities, and simple global intercept functions.</p>
+<p><em>Output Helpers:</em></p>
+<p>Interceptors can use base-class defined output helpers for easy access to Debug Report Extension output.
+These include Information(), Warning(), Performance_Warning(), and Error(), corresponding to the
+VkDebugReportFlagBitsEXT enumerations. Alternatively, the standard layer-provided log_msg() call can be used
+directly, as can printf for standard-out or OutputDebugString for Windows.</p>
+<p><em>Debug Helpers:</em></p>
+<p>A BreakPoint() helper can be used in an intercepted function which will generate a break in a Windows or Linux
+debugger.</p>
+<p><em>Global Intercept Helpers:</em></p>
+<p>There are two global intercept helpers, PreCallApiFunction() and PostCallApiFunction(). Overriding these virtual
+functions in your interceptor will result in them being called for EVERY API call.</p>
+<h3>
+<a id="user-content-details" class="anchor" href="#user-content-details" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Details</h3>
+<p>By creating a layer framework object, the factory will generate a full layer and call any functions overridden
+in your interceptor.</p>
+<p>Here is a simple, and complete, interceptor (the starter_layer). This layer intercepts the memory allocate and free
+functions, tracking the number and total size of device memory allocations. The QueuePresent() function is also intercepted, and
+results are outputted on every 60th frame.  Note that the function signatures are and must be identical to those in the specification.</p>
+<p>In this example, there is a single interceptor in which the child object is named 'MemAllocLevel' and is instantiated as
+'mem_allocation_stats'. A layer can contain many interceptors as long as the instantiated object names are unique within that layer.</p>
+<pre><code>    #pragma once
+    #include &lt;sstream&gt;
+    #include &lt;unordered_map&gt;
+
+    static uint32_t display_rate = 60;
+
+    class MemAllocLevel : public layer_factory {
+        public:
+            // Constructor for interceptor
+            MemAllocLevel() : layer_factory(this), number_mem_objects_(0), total_memory_(0), present_count_(0) {};
+
+            // Intercept memory allocation calls and increment counter
+            VkResult PostCallAllocateMemory(VkDevice device, const VkMemoryAllocateInfo *pAllocateInfo,
+                    const VkAllocationCallbacks *pAllocator, VkDeviceMemory *pMemory) {
+                number_mem_objects_++;
+                total_memory_ += pAllocateInfo-&gt;allocationSize;
+                mem_size_map_[*pMemory] = pAllocateInfo-&gt;allocationSize;
+                return VK_SUCCESS;
+            };
+
+            // Intercept free memory calls and update totals
+            void PreCallFreeMemory(VkDevice device, VkDeviceMemory memory, const VkAllocationCallbacks *pAllocator) {
+                if (memory != VK_NULL_HANDLE) {
+                    number_mem_objects_--;
+                    VkDeviceSize this_alloc = mem_size_map_[memory];
+                    total_memory_ -= this_alloc;
+                }
+            }
+
+            VkResult PreCallQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR *pPresentInfo) {
+                present_count_++;
+                if (present_count_ &gt;= display_rate) {
+                    present_count_ = 0;
+                    std::stringstream message;
+                    message &lt;&lt; "Memory Allocation Count: " &lt;&lt; number_mem_objects_ &lt;&lt; "\n";
+                    message &lt;&lt; "Total Memory Allocation Size: " &lt;&lt; total_memory_ &lt;&lt; "\n\n";
+                    Information(message.str());
+                }
+                return VK_SUCCESS;
+            }
+
+        private:
+            // Counter for the number of currently active memory allocations
+            uint32_t number_mem_objects_;
+            VkDeviceSize total_memory_;
+            uint32_t present_count_;
+            std::unordered_map&lt;VkDeviceMemory, VkDeviceSize&gt; mem_size_map_;
+    };
+
+    MemAllocLevel memory_allocation_stats;
+</code></pre>
+</article>
+</body>
+</html>

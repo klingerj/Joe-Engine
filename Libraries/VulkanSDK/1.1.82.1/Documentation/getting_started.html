@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link rel="icon" href="vulkan_lunarg_icon.png">
+<link rel="stylesheet" href="github-markdown.css">
+<style>
+    body {
+        box-sizing: border-box;
+        min-width: 200px;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 45px;
+    }
+</style>
+</head>
+<body>
+<article class="markdown-body">
+<p><a href="https://www.LunarG.com/" TARGET="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/8284916f56546b1d1a9e4af0c8e308ef3b233e6d/68747470733a2f2f76756c6b616e2e6c756e6172672e636f6d2f696d672f4c756e6172474c6f676f2e706e67" alt="LunarG" title="www.LunarG.com" data-canonical-src="https://vulkan.lunarg.com/img/LunarGLogo.png" style="max-width:100%;"></a></p>
+<h1>
+<a id="user-content-getting-started-with-the-vulkan-sdk" class="anchor" href="#user-content-getting-started-with-the-vulkan-sdk" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Getting Started with the Vulkan SDK</h1>
+<h4>
+<a id="user-content-version-for-windows" class="anchor" href="#user-content-version-for-windows" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Version for Windows</h4>
+<p>Copyright © 2015-2018 LunarG, Inc.</p>
+<p><a href="https://creativecommons.org/licenses/by-nd/4.0/" TARGET="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/769ad34d33c3c36b21baa4c4838b311433fcdcd3/68747470733a2f2f692e6372656174697665636f6d6d6f6e732e6f72672f6c2f62792d6e642f342e302f38387833312e706e67" alt="Creative Commons" title="Creative Commons License" data-canonical-src="https://i.creativecommons.org/l/by-nd/4.0/88x31.png" style="max-width:100%;"></a></p>
+<p><br></p>
+<p>This guide describes the requirements and procedure for installing the LunarG Vulkan SDK for Windows.  It also includes compilation and runtime instructions for demo Vulkan applications.  Refer to the LunarG Vulkan SDK, Documentation and Known Issues at <a href="https://Vulkan.LunarG.com" TARGET="_blank" title="LunarXchange" rel="nofollow">Vulkan.LunarG.com</a> for the most up to date SDK information.</p>
+<p>The Vulkan API is a low overhead, explicit, cross-platform graphics API that provides applications with direct control over the GPU, maximizing application performance.  For more information on the Vulkan specification and API, refer to <a href="https://khronos.org/registry/vulkan" TARGET="_blank" title="Khronos Vulkan website" rel="nofollow">Khronos.org</a>.
+For tutorial-level information, refer to LunarG's Vulkan tutorial, which can be found in the SDK in the
+<code>Documentation\Tutorial\html</code> directory and on the <a href="https://vulkan.lunarg.com/doc/sdk/latest/windows/tutorial/html/index.html" TARGET="_blank" rel="nofollow">LunarXchange website</a>.</p>
+<p>This SDK does NOT include a Vulkan driver.  Please contact your GPU hardware vendor for a Vulkan Installable Client Driver (ICD).  This SDK will allow you to build Vulkan applications but you will need a Vulkan driver (ICD) to execute them.</p>
+<h2>
+<a id="user-content-versioning" class="anchor" href="#user-content-versioning" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Versioning</h2>
+<p>The LunarG Vulkan SDK provides the development and runtime components required to build, run, and debug Vulkan applications. This SDK is based on the Khronos Vulkan API header, whose version is reflected in the Vulkan SDK version number (for example, SDK version 1.1.70.0 indicates that the SDK uses Vulkan header revision 1.1.70). The SDK also includes certain Vulkan extensions for window system integration and debug extensions (refer to the release notes for further details).</p>
+<p>Note that this version number does not indicate that an application cannot be developed for earlier Vulkan versions. As such, a 1.1 SDK can still be used to develop Vulkan 1.0 applications, but cannot be used to develop applications for future versions of Vulkan. Furthermore, the presence of a 1.1 SDK does not necessarily indicate that a system can actually run Vulkan 1.1. A Vulkan 1.1 driver is required for applications to use most Vulkan 1.1 functionality. For more information on how to query Vulkan versions programmatically, see the 1.1 samples in the SDK.</p>
+<h2>
+<a id="user-content-terminology" class="anchor" href="#user-content-terminology" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Terminology</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ICD</td>
+<td>Installable Client Driver — A Vulkan-compatible display driver</td>
+</tr>
+<tr>
+<td>GLSL</td>
+<td>OpenGL Shading Language</td>
+</tr>
+<tr>
+<td>Layer</td>
+<td>A library designed to work as a plug-in for the loader.  It usually serves to provide validation and debugging functionality to applications</td>
+</tr>
+<tr>
+<td>Loader</td>
+<td>A library which implements the Vulkan API entry points and manages layers, extensions, and drivers. It can be found in the SDK, as well as independent hardware vendor driver installs</td>
+</tr>
+<tr>
+<td>SPIR-V</td>
+<td>Standard Portable Intermediate Representation — A cross-API intermediate language that natively represents parallel compute and graphics programs</td>
+</tr>
+<tr>
+<td>Vulkan</td>
+<td>A low overhead, explicit graphics API developed by the Khronos Group and member companies</td>
+</tr>
+<tr>
+<td>WSI</td>
+<td>Window System Integration</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-system-requirements" class="anchor" href="#user-content-system-requirements" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>System Requirements</h2>
+<p>Vulkan development using the LunarG Vulkan SDK requires a Windows development system to meet specific hardware and software requirements. These specifications are as follows:</p>
+<ul>
+<li>Windows 7, 8, 8.1, or 10 (64-bit and 32-bit)
+<ul>
+<li>
+<strong>Note:</strong> 64-bit is preferred and better tested</li>
+</ul>
+</li>
+<li>Graphics card and ICD that support Vulkan.  Contact your graphics hardware supplier for information on Vulkan support.</li>
+<li>8 GB memory</li>
+<li>Sufficient free disk space to install the Vulkan SDK (approximately 1 GB)</li>
+</ul>
+<p>In addition, to build the samples and demos, one must install the following programs:</p>
+<ul>
+<li>CMake 3.2 or newer (samples only)</li>
+<li>Python 3.0 or newer (samples only)</li>
+<li>Visual Studio 2015, or newer (Visual Studio 2013 may work in a limited capacity)
+<ul>
+<li>
+<strong>Note:</strong>
+<ul>
+<li>Starting with Vulkan SDK 1.0.54.0, all binaries in the SDK are generated using Visual Studio 2015.
+<ul>
+<li>This change was made to allow building the Runtime with Control Flow Guard protection.</li>
+</ul>
+</li>
+<li>If you continue to use Visual Studio 2013, you may encounter the following issues:
+<ul>
+<li>Linking a project built with Visual Studio 2013 to the static Vulkan runtime library or shaderc included in the SDK, may no longer succeed.</li>
+<li>Attempting to debug an executable or library included with this SDK may not provide all debug information available.
+If either of these is important to you, we suggest that you upgrade to using Visual Studio 2015, or newer.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2>
+<a id="user-content-download-the-sdk" class="anchor" href="#user-content-download-the-sdk" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Download the SDK</h2>
+<p>Download the LunarG Vulkan SDK from  <a href="https://Vulkan.LunarG.com" TARGET="_blank" title="LunarXchange" rel="nofollow">Vulkan.LunarG.com</a> by clicking on the 'Download Vulkan Tools for Windows' button.  The SDK download file is named <code>VulkanSDK-</code><em><code>version</code></em><code>-Installer.exe</code>.  Make note of the directory to which the file was downloaded.</p>
+<h2>
+<a id="user-content-install-the-sdk" class="anchor" href="#user-content-install-the-sdk" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Install the SDK</h2>
+<p>The LunarG Vulkan SDK For Windows is a self-extracting installer.  Run the downloaded <code>.exe</code> file to install the SDK. The default SDK install location is <code>C:\VulkanSDK\</code><em><code>version</code></em>.</p>
+<p>Installing the LunarG Vulkan SDK sets the system environment variable <code>VULKAN_SDK</code> to the directory in which the SDK is installed, which will look like <code>C:\VulkanSDK\1.0.0.0</code>, but with the version number being the version that was installed.  Installing the LunarG Vulkan SDK also prepends the expansion of <code>%VULKAN_SDK%\Bin</code> (<code>%VULKAN_SDK%\Bin32</code> on 32-bit Windows)  to the system <code>PATH</code> environment variable.  The system environment variable <code>VK_SDK_PATH</code> is set to the same value as <code>VULKAN_SDK</code> for compatibility with prior releases.  Note that programs and command shells that were running during installation may not see the updated environment variables until they are restarted.</p>
+<p>The Vulkan loader, <code>vulkan-1.dll</code>, is installed in <code>C:\Windows\System32</code>.  This will be a 32-bit DLL on 32-bit Windows targets and a 64-bit DLL on 64-bit Windows targets.  64-bit targets will also have the 32-bit Vulkan loader (of the same name) installed in <code>C:\Windows\SysWOW64</code>.  Vulkan applications will find and use the appropriate library by default.</p>
+<p>By default, the SDK installer will bring up a window to guide you through the installation. This may be problematic for anyone wishing to install the SDK through an automated mechanism. In order to install the SDK without any prompts, pass the <code>/S</code> flag to the SDK installer. For example, silently installing an SDK from the command prompt would look like:</p>
+<pre><code>VulkanSDK-1.0.0.0.exe /S
+</code></pre>
+<h2>
+<a id="user-content-sdk-contents" class="anchor" href="#user-content-sdk-contents" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>SDK Contents</h2>
+<p>The LunarG Vulkan SDK provides the development and runtime components to create, trace, and replay Vulkan applications.  The SDK also includes the runtime components to load and run Vulkan Application Validation and Debug Layers. The SDK installation process installs contents as described in the table below.  Paths are relative to the directory in which the SDK is installed.</p>
+<table>
+<thead>
+<tr>
+<th>Directory</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Bin</code></td>
+<td>64-bit Release build of executables that belong in the system path (<strong>Note:</strong> This folder is not present on 32-bit Windows installs)</td>
+</tr>
+<tr>
+<td><code>Bin32</code></td>
+<td>32-bit Release build of executables that belong in the system path</td>
+</tr>
+<tr>
+<td><code>Config</code></td>
+<td>Sample layer settings file</td>
+</tr>
+<tr>
+<td><code>Demos</code></td>
+<td>Source and MS Visual Studio project files for the cube and vulkaninfo programs</td>
+</tr>
+<tr>
+<td><code>Documentation</code></td>
+<td>Release notes, getting started guide, tutorial, Vulkan specifications and other documentation</td>
+</tr>
+<tr>
+<td><code>glslang</code></td>
+<td>Source and header files for glslang; used by the programs in Samples</td>
+</tr>
+<tr>
+<td><code>Include</code></td>
+<td>Header files required to compile Vulkan applications</td>
+</tr>
+<tr>
+<td><code>LayerFactory</code></td>
+<td>Source files and a Visual Studio project that are necessary to build layers using the Vulkan Layer Factory</td>
+</tr>
+<tr>
+<td><code>Lib</code></td>
+<td>64-bit libraries for loader, layers and tools. <strong>Note:</strong> This folder is not present on 32-bit Windows installs</td>
+</tr>
+<tr>
+<td><code>Lib32</code></td>
+<td>32-bit libraries for loader, layers and tools</td>
+</tr>
+<tr>
+<td><code>RunTimeInstaller</code></td>
+<td>Vulkan runtime installer; this installer can be included by a Vulkan application or driver installer to install the Vulkan runtime libraries during an application or driver install; see <code>README.txt</code> for more information</td>
+</tr>
+<tr>
+<td><code>Samples</code></td>
+<td>A collection of Vulkan C++ samples</td>
+</tr>
+<tr>
+<td><code>shaderc</code></td>
+<td>The source code for shaderc, a command line tool and library to compile shaders</td>
+</tr>
+<tr>
+<td><code>Source\layers</code></td>
+<td>Source code for the debug layers libraries; enables source level debugging of layers</td>
+</tr>
+<tr>
+<td><code>Source\lib</code></td>
+<td>64-bit pre-built debug libraries for selected Vulkan components; used by Demos debug build (<strong>Note:</strong> This folder is not present on 32-bit Windows installs)</td>
+</tr>
+<tr>
+<td><code>Source\lib32</code></td>
+<td>32-bit pre-built debug libraries for selected Vulkan components; used by Demos debug build</td>
+</tr>
+<tr>
+<td><code>Source\loader</code></td>
+<td>Source code for the debug loader library (<code>vulkan-1.dll</code>); enables source level debugging of the loader</td>
+</tr>
+<tr>
+<td><code>spirv-tools</code></td>
+<td>Source and header files for spirv-tools; used by the programs in Samples</td>
+</tr>
+<tr>
+<td><code>Templates</code></td>
+<td>Visual Studio Vulkan project templates</td>
+</tr>
+<tr>
+<td><code>Third-Party</code></td>
+<td>Libraries that are not used by the SDK, but which may be useful for developers and which may be required for templates Currently, GLM and SDL are included</td>
+</tr>
+<tr>
+<td><code>Tools</code></td>
+<td>64-bit binaries for tools that do not belong in the system path. (<strong>Note:</strong> This folder is not present on 32-bit Windows installs)</td>
+</tr>
+<tr>
+<td><code>Tools32</code></td>
+<td>32-bit binaries for tools that do not belong in the system path</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note:</strong> To aid in debugging, the SDK includes PDB files for the Vulkan loader. The PDB files for the loader shipped in the Vulkan runtime are located in <code>Lib</code> (64-bit) and <code>Lib32</code> (32-bit). These PDB files correspond to <code>vulkan-1.dll</code>, found in <code>System32</code> and <code>SysWOW64</code>. These PDB files should not be confused with the PDB files for the debug build, which are located in <code>Source\lib</code>.</p>
+<h2>
+<a id="user-content-set-up-the-runtime-environment" class="anchor" href="#user-content-set-up-the-runtime-environment" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Set up the Runtime Environment</h2>
+<p>Be sure that you have installed a graphics driver that includes ICD support for Vulkan.  Please contact your graphics hardware vendor for the appropriate drivers.</p>
+<h3>
+<a id="user-content-run-with-alternate-sdk" class="anchor" href="#user-content-run-with-alternate-sdk" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Run with Alternate SDK</h3>
+<p>If more than one version of the SDK is installed on the system, the path to the <code>Bin</code> directory of the most recently installed SDK version will be referenced first in the <code>PATH</code> environment variable.  To switch between different versions of the SDK, simply re-install the SDK version you wish to use; it is not a requirement to remove an SDK before re-installing another.</p>
+<h3>
+<a id="user-content-icd-and-layer-configuration" class="anchor" href="#user-content-icd-and-layer-configuration" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>ICD and Layer Configuration</h3>
+<p>The Vulkan loader library <code>vulkan-1.dll</code> examines string values in the Windows registry to determine the location of ICD libraries, the location of layer libraries, and which layers are active.</p>
+<h2>
+<a id="user-content-verify-the-installation" class="anchor" href="#user-content-verify-the-installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Verify the Installation</h2>
+<p>Verify the installation of the LunarG Vulkan SDK by running a few things:</p>
+<ol>
+<li>Run LunarG's Vulkan Installation Analyzer (VIA) to determine if it believes everything can execute properly.</li>
+</ol>
+<ul>
+<li>VIA can be found as a shortcut under the Start Menu</li>
+<li>
+<code>Start Menu-&gt;Vulkan SDK &lt;</code><em><code>version</code></em><code>&gt;-&gt;via</code>
+</li>
+<li>More information on VIA can be found in the <code>VIA.html</code> doc found in this SDK's Documentation section</li>
+</ul>
+<ol start="2">
+<li>Run a demo Vulkan application like <code>vulkaninfo</code>. (See the <a href="./vulkaninfo.html">Vulkan Info</a> webpage for more information about the <code>vulkaninfo</code> application and how to use it.)</li>
+</ol>
+<p>You can also run the cube demo program by selecting the program in <code>Start Menu-&gt;Vulkan SDK &lt;version&gt;</code>.</p>
+<h2>
+<a id="user-content-build-the-demo-programs" class="anchor" href="#user-content-build-the-demo-programs" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Build the Demo Programs</h2>
+<p>The LunarG Vulkan SDK includes the source for two demo applications: <code>vulkaninfo</code> and <code>cube</code>. There are two versions of the <code>cube</code> example: one written in C using <code>vulkan.h</code>, and another written in C++11 using <code>vulkan.hpp</code>. The <code>vulkan.hpp</code> header file is a low-level C++11 API for Vulkan.</p>
+<p>The Vulkan demo applications use Microsoft Visual Studio solution files.  To build the demo programs, open the <code>&lt;</code><em><code>InstallPath</code></em><code>&gt;\Demos\DEMOS.sln</code> file.  This will launch Microsoft Visual Studio, opening the solution with a default build configuration of Debug/Win32. Select the desired build configuration (i.e., <code>Debug/x64</code>).  Building the solution will build all of the demo applications. If you are using a version of Visual Studio newer than 2015, you will be prompted to update the project files. Doing so should not present any issue.</p>
+<h2>
+<a id="user-content-trace-and-replay" class="anchor" href="#user-content-trace-and-replay" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Trace and Replay</h2>
+<p>The LunarG Vulkan SDK supports tracing and replaying Vulkan applications.  Refer to the <a href="./trace_tools.html">Vulkan Trace and Replay Tools</a> guide for detailed information on Vulkan trace and replay.</p>
+<ol>
+<li>
+<p>Trace the <code>cube</code> demo program by running the following commands from a command prompt:</p>
+<pre><code>cd %VULKAN_SDK%\Bin
+vktrace -p cube.exe -o cube_trace.vktrace -a "--c 250"
+</code></pre>
+<p>The program will close on it's own after a few seconds.  Do not stop the program by using <code>ctrl+c</code> as doing so may result in an incomplete trace file.  Notice the trace options used in the command above.</p>
+<p><code>-p, --Program &lt;string&gt;</code> — name of the program to trace<br>
+<code>-o, --OutputTrace &lt;string&gt;</code> — name of the generated trace file — this must have an extension of '.vktrace'.<br>
+<code>-a, --Arguments &lt;string&gt;</code> — arguments to pass to the program — in this case we passed the <code>--c 250</code> arguments to cube, which tells it to exit after 250 frames</p>
+</li>
+<li>
+<p>The generated trace file, <code>cube_trace.vktrace</code>, is created in the current directory.</p>
+</li>
+<li>
+<p>Replay the cube trace file you just generated:</p>
+<pre><code>vkreplay -o cube_trace.vktrace -l 2
+</code></pre>
+<p>Notice the options used in the command above.</p>
+<p><code>-o, --Open &lt;string&gt;</code> — name of trace file to replay<br>
+<code>-l, --NumLoops &lt;uint&gt;</code> — number of times to replay the trace</p>
+<p>The <code>-l 2</code> option replays the trace twice.</p>
+</li>
+</ol>
+<h2>
+<a id="user-content-enable-validation-and-utility-layers" class="anchor" href="#user-content-enable-validation-and-utility-layers" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Enable Validation and Utility Layers</h2>
+<p>The LunarG Vulkan SDK includes runtime support for validation and utility layers.  These layers can be enabled for an application run or a trace replay by setting the <code>VK_INSTANCE_LAYERS</code> environment variable to a semi-colon-separated list of layer or extension names, as found in the layer manifest files.  Refer to the <a href="./layer_configuration.html">Vulkan Validation and Utility Layers</a> document for more information on layer manifest files.</p>
+<p>The LunarG Vulkan SDK includes the following layers:</p>
+<table>
+<thead>
+<tr>
+<th>Layer Name</th>
+<th>Layer Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="./api_dump_layer.html"><code>VK_LAYER_LUNARG_api_dump</code></a></td>
+<td>utility</td>
+<td>print API calls and their parameters and values</td>
+</tr>
+<tr>
+<td><a href="./core_validation_layer.html"><code>VK_LAYER_LUNARG_core_validation</code></a></td>
+<td>validation</td>
+<td>print and validate the descriptor set, pipeline state, and dynamic state; validate the interfaces between SPIR-V modules and the graphics pipeline; track and validate GPU memory and its binding to objects and command buffers; validate texture formats and render target formats</td>
+</tr>
+<tr>
+<td><a href="./device_simulation_layer.html"><code>VK_LAYER_LUNARG_device_simulation</code></a></td>
+<td>utility</td>
+<td>allows modification of an actual device's reported features, limits, and capabilities</td>
+</tr>
+<tr>
+<td><a href="./monitor_layer.html"><code>VK_LAYER_LUNARG_monitor</code></a></td>
+<td>utility</td>
+<td>outputs the frames-per-second of the target application in the applications title bar</td>
+</tr>
+<tr>
+<td><a href="./object_tracker_layer.html"><code>VK_LAYER_LUNARG_object_tracker</code></a></td>
+<td>validation</td>
+<td>track all Vulkan objects and flag invalid objects and object memory leaks</td>
+</tr>
+<tr>
+<td><a href="./parameter_validation_layer.html"><code>VK_LAYER_LUNARG_parameter_validation</code></a></td>
+<td>validation</td>
+<td>validate API parameter values</td>
+</tr>
+<tr>
+<td><a href="./screenshot_layer.html"><code>VK_LAYER_LUNARG_screenshot</code></a></td>
+<td>utility</td>
+<td>outputs specified frames to an image file as they are presented</td>
+</tr>
+<tr>
+<td><a href="./threading_layer.html"><code>VK_LAYER_GOOGLE_threading</code></a></td>
+<td>validation</td>
+<td>check validity of multi-threaded API usage</td>
+</tr>
+<tr>
+<td><a href="./unique_objects_layer.html"><code>VK_LAYER_GOOGLE_unique_objects</code></a></td>
+<td>utility</td>
+<td>wrap all Vulkan objects in a unique pointer at create time and unwrap them at use time</td>
+</tr>
+</tbody>
+</table>
+<p>In addition to these layers, there is a built-in meta-layer definition which will load a standard set of validation layers in the optimal order:</p>
+<pre><code>    VK_LAYER_LUNARG_standard_validation
+</code></pre>
+<p>Loading this layer definition is equivalent to specifying the following layers in this order:</p>
+<pre><code>     VK_LAYER_GOOGLE_threading
+     VK_LAYER_LUNARG_parameter_validation
+     VK_LAYER_LUNARG_object_tracker
+     VK_LAYER_LUNARG_core_validation
+     VK_LAYER_GOOGLE_unique_objects
+</code></pre>
+<p>Refer to the <a href="./layer_configuration.html">Vulkan Validation and Utility Layers</a> documentation for detailed information on layers.</p>
+<p>As an example, you can turn on the api dump layer to examine the Vulkan API calls from an application.  The <code>VK_LAYER_LUNARG_api_dump</code> layer is a debug layer which will print API calls, parameters, and values.</p>
+<ol>
+<li>
+<p>Explicitly activate <code>VK_LAYER_LUNARG_api_dump</code> by setting Windows environment variables as shown below.  You'll use this layer with an application that was built in a previous section.</p>
+<pre><code>set VK_INSTANCE_LAYERS=VK_LAYER_LUNARG_api_dump
+</code></pre>
+</li>
+<li>
+<p>Run the <code>cube</code> program:</p>
+<pre><code>cd %VULKAN_SDK%\Bin
+.\cube &gt; api_dump.txt
+</code></pre>
+<p>Note that you must redirect the output to a file (as <code>cube.exe</code> is not a console application).  Stop the program after a few seconds and examine the file to see the api dump layer output. The <code>VK_LAYER_LUNARG_api_dump</code> debug layer will print API calls, parameters, and values.</p>
+</li>
+<li>
+<p>Deactivate the explicit layer just enabled.</p>
+<pre><code>set VK_INSTANCE_LAYERS=
+</code></pre>
+</li>
+</ol>
+<h2>
+<a id="user-content-create-a-new-visual-studio-project" class="anchor" href="#user-content-create-a-new-visual-studio-project" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Create a New Visual Studio Project</h2>
+<p>The Vulkan SDK includes Visual Studio templates so that a programmer can easily create a Vulkan project, without setting up include paths and libraries. The templates are located in SDK install directory, in a subdirectory called "Templates". In order to make these templates appear in Visual Studio, they must be copied into the directory where Visual Studio searches for C++ templates. By default, this is located at:</p>
+<pre><code>C:\Users\username\Documents\Visual Studio 201x\Templates\ProjectTemplates\Visual C++ Project
+</code></pre>
+<p>The Vulkan SDK includes separate templates for Visual Studio 2013, 2015, and 2017. The templates can be enabled by copying the zip files from the SDK template directory into the Visual Studio path given above. Note that it is possible to point Visual Studio at the templates in the SDK, without any copying, but doing so means that any additional templates would have to be put into the Vulkan SDK installation. As a result, copying the files is the recommended approach.</p>
+<p><strong>Note:</strong> The included templates require the Windows 8.1 and Windows 10 (26624) SDKs to be installed with Visual Studio 2017.
+If these SDKs are not installed, you will still be able to use the templates, but any projects created through the templates will need to be retargeted to an installed Windows SDK before they can be built. Note that SDK 26624 was previously referred to as 10240.</p>
+<p>Once you have copied the templates, you can now create a new project or solution from these templates. Open the project creation dialog by going to <code>File -&gt; New -&gt; Project</code>. Then locate the list of <code>Visual C++</code> templates.  (The exact location of the list depends on your version of Visual Studio, but should be easy to find in the New Project dialog.)  You should see a list of the built-in templates, and at the bottom should be the Vulkan templates. The included templates are described below:</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vulkan Program</td>
+<td>A simple Vulkan program with no dependencies, except the Vulkan loader and validation layers. This program creates and then destroys a simple Vulkan instance using the C Vulkan API.</td>
+</tr>
+<tr>
+<td>Vulkan Windowed Program</td>
+<td>A Vulkan program that depends upon SDL and GLM. This program creates a blank window, initializes a Vulkan surface on that window, and then waits for the user to close the window. This template uses the C Vulkan API.</td>
+</tr>
+<tr>
+<td>Vulkan C++ Program</td>
+<td>A simple Vulkan program with no dependencies, except the Vulkan loader and validation layers. This program creates and then destroys a simple Vulkan instance using the C++ Vulkan API.</td>
+</tr>
+<tr>
+<td>Vulkan C++ Windowed Program</td>
+<td>A Vulkan program that depends on SDL and GLM. This program creates a blank window, initializes a Vulkan surface on that window, and then waits for the user to close the window. This template uses the C++ Vulkan API.</td>
+</tr>
+<tr>
+<td>Vulkan Layer</td>
+<td>A Vulkan layer that is built using the Vulkan Layer Factory framework.</td>
+</tr>
+</tbody>
+</table>
+<p>Choose "Vulkan Windowed Program", enter a name for your project, and click OK. You should see a new solution and project open in Visual Studio. Build and run the project. When you run the project, you should see a blank window pop up, and when you close the window the program should exit with code 0. Now, change the configuration to x64, build, and run the project again. You should see the same results, but now with a 64-bit build.</p>
+<p>You should take some time to examine the source code in this project. The project enables validation layers if the project is built in a debug mode. This project is creating a Vulkan surface on the window, but does not render anything to the screen.</p>
+<p>You now have a working Vulkan project. Feel free to use this as a base for larger projects. For additional information on using Vulkan, be sure to go through the LunarG Vulkan samples, or find the many samples available online.</p>
+<h2>
+<a id="user-content-using-vulkan-in-cmake-projects" class="anchor" href="#user-content-using-vulkan-in-cmake-projects" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Using Vulkan in CMake Projects</h2>
+<p>As an alternative to starting with Visual Studio templates, you can also define
+a Vulkan project with CMake.</p>
+<p>CMake versions 3.7 and later ship with a <code>FindVulkan.cmake</code> module that uses the
+<code>VULKAN_SDK</code> environment variable to locate the Vulkan include files and libraries
+needed for building Vulkan applications.
+This module makes it easy to add the Vulkan support files to your application.
+For example, this <code>CMakeLists.txt</code> file can be used to build the <code>vulkaninfo</code>
+application:</p>
+<div class="highlight highlight-source-cmake"><pre><span class="pl-c1">cmake_minimum_required</span>(<span class="pl-k">VERSION</span> 3.7 <span class="pl-k">FATAL_ERROR</span>)
+<span class="pl-c1">project</span>(vulkaninfo)
+<span class="pl-c1">find_package</span>(Vulkan <span class="pl-k">REQUIRED</span>)
+<span class="pl-c1">add_executable</span>(vulkaninfo vulkaninfo.c)
+<span class="pl-c1">target_compile_definitions</span>(vulkaninfo <span class="pl-k">PRIVATE</span> VK_USE_PLATFORM_WIN32_KHR)
+<span class="pl-c1">target_include_directories</span>(vulkaninfo <span class="pl-k">PRIVATE</span> Vulkan::Vulkan)
+<span class="pl-c1">target_link_libraries</span>(vulkaninfo Vulkan::Vulkan)</pre></div>
+<p>Create a <code>CMakeLists.txt</code> file with the above contents and
+copy <code>vulkaninfo.c</code> from the SDK into the same location as the <code>CMakeLists.txt</code> file.</p>
+<p>Generate the build files for the project:</p>
+<div class="highlight highlight-source-shell"><pre>mkdir build
+<span class="pl-c1">cd</span> build
+cmake ..</pre></div>
+<p>Use <code>cmake -A x64 ..</code> for 64-bit builds.</p>
+<p>You can open the <code>vulkaninfo.sln</code> Visual Studio solution file that was generated by
+this step with Visual Studio and build the application from there.</p>
+<p>Or you can build the application from the command line with:</p>
+<div class="highlight highlight-source-shell"><pre>cmake --build <span class="pl-c1">.</span></pre></div>
+<p>Note that early versions of <code>FindVulkan.cmake</code> were not able to find
+the Vulkan library on Windows.
+You will get error messages saying <code>Vulkan_LIBRARY</code> is missing if you have the version
+with this problem.
+Download a newer version from the <a href="https://github.com/Kitware/CMake" TARGET="_blank">CMake GitHub site</a> if needed.
+Put this newer version in the same directory as <code>CMakeLists.txt</code> and add the following line
+to <code>CMakeLists.txt</code> after the <code>project</code> statement:</p>
+<div class="highlight highlight-source-cmake"><pre><span class="pl-c1">set</span>(<span class="pl-k">CMAKE_MODULE_PATH</span> <span class="pl-s">"<span class="pl-smi">${CMAKE_CURRENT_SOURCE_DIR}</span>"</span> <span class="pl-smi">${CMAKE_MODULE_PATH}</span>)</pre></div>
+<h2>
+<a id="user-content-renderdoc-debugger" class="anchor" href="#user-content-renderdoc-debugger" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>RenderDoc Debugger</h2>
+<p>The RenderDoc graphics debugger is installed as part of the Windows SDK.  For information about RenderDoc, see <a href="https://renderdoc.org" TARGET="_blank" rel="nofollow">https://RenderDoc.org</a>
+Note that this component is <em>NOT</em> uninstalled as part of uninstalling the SDK.</p>
+<h2>
+<a id="user-content-examine-vulkan-sample-code" class="anchor" href="#user-content-examine-vulkan-sample-code" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Examine Vulkan Sample Code</h2>
+<p>The Samples folder in the Vulkan SDK install folder contains Vulkan sample programs. This set of Vulkan code <a href="./samples_index.html">Samples</a> is a work in progress.  Refer to the <a href="./vulkan_samples.html">Vulkan Samples</a> guide for information about building and running the sample programs.</p>
+<p>Contact LunarG if you are interested in contributing to this effort.</p>
+<h2>
+<a id="user-content-next-steps" class="anchor" href="#user-content-next-steps" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Next Steps</h2>
+<p>This guide provided an introduction to the main components and tools in the LunarG Vulkan SDK.  Refer to <a href="https://Vulkan.LunarG.com" TARGET="_blank" title="LunarXchange" rel="nofollow">Vulkan.LunarG.com</a> for the most up to date SDK information, including the complete set of SDK documentation.</p>
+</article>
+</body>
+</html>

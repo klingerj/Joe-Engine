@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link rel="icon" href="vulkan_lunarg_icon.png">
+<link rel="stylesheet" href="github-markdown.css">
+<style>
+    body {
+        box-sizing: border-box;
+        min-width: 200px;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 45px;
+    }
+</style>
+</head>
+<body>
+<article class="markdown-body">
+<h1>
+<a id="user-content-vk_layer_lunarg_object_tracker" class="anchor" href="#user-content-vk_layer_lunarg_object_tracker" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>VK_LAYER_LUNARG_object_tracker</h1>
+<p>The <code>VK_LAYER_LUNARG_object_tracker</code> layer tracks all Vulkan objects. Object lifetimes are validated along with issues related to unknown objects and object destruction and cleanup.</p>
+<p>All Vulkan dispatchable and non-dispatchable objects are tracked by the <code>VK_LAYER_LUNARG_object_tracker</code> layer.</p>
+<p>This layer validates that:</p>
+<ul>
+<li>only known objects are referenced and destroyed</li>
+<li>lookups are performed only on objects being tracked</li>
+<li>objects are correctly freed/destroyed.</li>
+</ul>
+<p>The <code>VK_LAYER_LUNARG_object_tracker</code> layer will print errors if validation checks are not correctly met and warnings if improper reference of objects is detected.</p>
+</article>
+</body>
+</html>

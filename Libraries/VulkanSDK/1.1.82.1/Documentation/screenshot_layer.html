@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link rel="icon" href="vulkan_lunarg_icon.png">
+<link rel="stylesheet" href="github-markdown.css">
+<style>
+    body {
+        box-sizing: border-box;
+        min-width: 200px;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 45px;
+    }
+</style>
+</head>
+<body>
+<article class="markdown-body">
+<h1>
+<a id="user-content-vk_layer_lunarg_screenshot" class="anchor" href="#user-content-vk_layer_lunarg_screenshot" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>VK_LAYER_LUNARG_screenshot</h1>
+<p>The <code>VK_LAYER_LUNARG_screenshot</code> layer records frames to image files. The environment variable <code>VK_SCREENSHOT_FRAMES</code> can be set to a comma-separated list of frame numbers. When the frames corresponding to these numbers are presented, the screenshot layer will record the image buffer to PPM files in the working directory. For example, if <code>VK_SCREENSHOT_FRAMES</code> is set to "4,8,15,16,23,42", the files created will be: 4.ppm, 8.ppm, 15.ppm, etc.</p>
+<p>Checks include:</p>
+<ul>
+<li>validating that handles used are valid</li>
+<li>if an extension's function is used, it must have been enabled (including for the appropriate <code>VkInstance</code> or <code>VkDevice</code>)</li>
+<li>the query functions must be called before creating a swapchain</li>
+<li>the results of the query functions are compared with the values used to create a swapchain</li>
+<li>all <code>VkSwapchainKHR</code>s associated with a <code>VkDevice</code> must be destroyed before the <code>VkDevice</code> is destroyed</li>
+<li>applications should not call <code>vkAcquireNextImageKHR()</code> so many times that the call cannot succeed</li>
+<li>applications must own an image (i.e. by calling <code>vkAcquireNextImageKHR()</code>) in order to present</li>
+<li>image indices must be within range.</li>
+</ul>
+<h3>
+<a id="user-content-android" class="anchor" href="#user-content-android" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Android</h3>
+<p>To enable, set a property that contains target frame:</p>
+<pre><code>adb shell setprop debug.vulkan.screenshot &lt;framenumber&gt;
+</code></pre>
+<p>For production builds, be sure your application has access to read and write to external storage by adding the following to AndroidManifest.xml:</p>
+<pre><code>&lt;!-- This allows writing log files to sdcard --&gt;
+&lt;uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/&gt;
+&lt;uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/&gt;
+</code></pre>
+<p>You may also need to grant it access with package manager:</p>
+<pre><code>adb shell pm grant com.example.Cube android.permission.READ_EXTERNAL_STORAGE
+adb shell pm grant com.example.Cube android.permission.WRITE_EXTERNAL_STORAGE
+</code></pre>
+<p>Result screenshot will be in:</p>
+<pre><code>/sdcard/Android/&lt;framenumber&gt;.ppm
+</code></pre>
+</article>
+</body>
+</html>

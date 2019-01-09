@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link rel="icon" href="vulkan_lunarg_icon.png">
+<link rel="stylesheet" href="github-markdown.css">
+<style>
+    body {
+        box-sizing: border-box;
+        min-width: 200px;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 45px;
+    }
+</style>
+</head>
+<body>
+<article class="markdown-body">
+<h1>
+<a id="user-content-vk_layer_lunarg_core_validation" class="anchor" href="#user-content-vk_layer_lunarg_core_validation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>VK_LAYER_LUNARG_core_validation</h1>
+<p>The <code>VK_LAYER_LUNARG_core_validation</code> layer validates the status of descriptor sets, command buffers, shader modules, pipeline states, renderpass usage, synchronization, dynamic states and is the workhorse layer for many other types of valid usage.</p>
+<p><code>VK_LAYER_LUNARG_core_validation</code> validates that:</p>
+<ul>
+<li>the descriptor set state and pipeline state at each draw call are consistent</li>
+<li>pipelines are created correctly, known when used and bound at draw time</li>
+<li>descriptor sets are known and consist of valid types, formats, and layout</li>
+<li>descriptor set regions are valid, bound, and updated appropriately</li>
+<li>command buffers referenced are known and valid</li>
+<li>command sequencing for specific state dependencies and renderpass use is correct</li>
+<li>memory is available</li>
+<li>dynamic state is correctly set.</li>
+</ul>
+<p>The <code>VK_LAYER_LUNARG_core_validation</code> layer will print errors if validation checks are not correctly met.  <code>VK_LAYER_LUNARG_core_validation</code> will also display the values of the objects tracked.</p>
+<h2>
+<a id="user-content-memoryresource-related-functionality" class="anchor" href="#user-content-memoryresource-related-functionality" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Memory/Resource related functionality</h2>
+<p>This layer additionally attempts to ensure that memory objects are managed correctly by the application.  These memory objects may be bound to pipelines, objects, and command buffers, and then submitted to the GPU for work. Specifically the layer validates that:</p>
+<ul>
+<li>the correct memory objects have been bound</li>
+<li>memory objects are specified correctly upon command buffer submittal</li>
+<li>only existing memory objects are referenced</li>
+<li>destroyed memory objects are not referenced</li>
+<li>the application has confirmed any memory objects to be reused or destroyed have been properly unbound</li>
+<li>checks texture formats and render target formats.</li>
+</ul>
+<p>Errors will be printed if validation checks are not correctly met and warnings if improper (but not illegal) use of memory is detected.  This validation layer also dumps all memory references and bindings for each operation.</p>
+<h2>
+<a id="user-content-shader-validation-functionality" class="anchor" href="#user-content-shader-validation-functionality" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Shader validation functionality</h2>
+<p>Checks performed by this layer apply to the VS-&gt;FS and FS-&gt;CB interfaces with the pipeline.  These checks include:</p>
+<ul>
+<li>validating that all variables which are part of a shader interface are  decorated with either <code>spv::DecLocation</code> or <code>spv::DecBuiltin</code> (that is, only the SSO rendezvous-by-location model is supported)</li>
+<li>emitting a warning if a location is declared only in the producing stage (useless work is being done)</li>
+<li>emitting an error if a location is declared only in the consuming stage (garbage will be read).</li>
+</ul>
+<p>A special error checking case invoked when the FS stage writes a built-in corresponding to the legacy <code>gl_FragColor</code>.  In this case, an error is emitted if</p>
+<ul>
+<li>the FS also writes any user-defined output</li>
+<li>the CB has any attachment with a <code>UINT</code> or <code>SINT</code> type.</li>
+</ul>
+<p>These extra checks are to ensure that the legacy broadcast of <code>gl_FragColor</code> to all bound color attachments is well-defined.</p>
+<h2>
+<a id="user-content-swapchain-validation-functionality" class="anchor" href="#user-content-swapchain-validation-functionality" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Swapchain validation functionality</h2>
+<p>This area of functionality validates the use of the WSI (Window System Integration) "swapchain" extensions (i.e., <code>VK_EXT_KHR_swapchain</code> and <code>VK_EXT_KHR_device_swapchain</code>).</p>
+</article>
+</body>
+</html>

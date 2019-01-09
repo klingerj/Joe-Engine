@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link rel="icon" href="vulkan_lunarg_icon.png">
+<link rel="stylesheet" href="github-markdown.css">
+<style>
+    body {
+        box-sizing: border-box;
+        min-width: 200px;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 45px;
+    }
+</style>
+</head>
+<body>
+<article class="markdown-body">
+<h1>
+<a id="user-content-vulkan-validation-layers" class="anchor" href="#user-content-vulkan-validation-layers" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Vulkan Validation Layers</h1>
+<h2>
+<a id="user-content-validation-layers-included-in-the-sdk" class="anchor" href="#user-content-validation-layers-included-in-the-sdk" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Validation Layers Included in the SDK</h2>
+<p>The LunarG Vulkan SDK includes the following validation layers:</p>
+<table>
+<thead>
+<tr>
+<th>Layer Name</th>
+<th>Layer Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="./core_validation_layer.html"><code>VK_LAYER_LUNARG_core_validation</code></a></td>
+<td>validation</td>
+<td>validate the descriptor set, pipeline state, and dynamic state; validate the interfaces between SPIR-V modules and the graphics pipeline; track and validate GPU memory and its binding to objects and command buffers; validate texture formats and render target formats</td>
+</tr>
+<tr>
+<td><a href="./object_tracker_layer.html"><code>VK_LAYER_LUNARG_object_tracker</code></a></td>
+<td>validation</td>
+<td>track all Vulkan objects and flag invalid objects and object memory leaks</td>
+</tr>
+<tr>
+<td><a href="./parameter_validation_layer.html"><code>VK_LAYER_LUNARG_parameter_validation</code></a></td>
+<td>validation</td>
+<td>validate API parameter values</td>
+</tr>
+<tr>
+<td><a href="./threading_layer.html"><code>VK_LAYER_GOOGLE_threading</code></a></td>
+<td>validation</td>
+<td>check validity of multi-threaded API usage</td>
+</tr>
+<tr>
+<td><a href="./unique_objects_layer.html"><code>VK_LAYER_GOOGLE_unique_objects</code></a></td>
+<td>utility</td>
+<td>wrap all Vulkan objects in a unique pointer at create time and unwrap them at use time</td>
+</tr>
+</tbody>
+</table>
+<p>Note: <code>VK_LAYER_GOOGLE_unique_objects</code> is classified as a <a href="./utility_layers.html">utility layer</a> for the purpose of enabling validation. It is worth mentioning here because usage by itself is limited.</p>
+<h2>
+<a id="user-content-vk_layer_lunarg_standard_validation-meta-layer" class="anchor" href="#user-content-vk_layer_lunarg_standard_validation-meta-layer" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>VK_LAYER_LUNARG_standard_validation meta-layer</h2>
+<p>In addition to individually specified layers, a built-in meta-layer definition is provided to simplify validation for applications.  Specifying this short-hand layer definition loads a standard set of validation layers in the optimal order:</p>
+<pre><code>     VK_LAYER_LUNARG_standard_validation
+</code></pre>
+<p>Specifying this layer definition will load the following layers in the order show below:</p>
+<pre><code>     VK_LAYER_GOOGLE_threading
+     VK_LAYER_LUNARG_parameter_validation
+     VK_LAYER_LUNARG_object_tracker
+     VK_LAYER_LUNARG_core_validation
+     VK_LAYER_GOOGLE_unique_objects
+</code></pre>
+<p>This is done by the Vulkan loader. The loader will remove redundant layer specifications and enforce the order of the standard validation layer. Layers not included in the meta-layer will be added to the layer chain as expected.</p>
+<p>Use of <code>VK_LAYER_LUNARG_standard_validation</code> is recommended as the order and names of Vulkan validation layers may change. Using the standard validation layer on the desktop will help isolate applications from these changes.</p>
+<p><strong>See the</strong> <a href="./layer_configuration.html">Layers Overview and Configuration</a> <strong>document for more information on how to configure Vulkan validation layers and message logging.</strong></p>
+</article>
+</body>
+</html>
