@@ -38,7 +38,6 @@ namespace JoeEngine {
         CreateCommandPool();
 
         // Create deferred lighting pass framebuffer attachments
-        //CreateDepthAttachment(depthBuffer, { width, height }, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
         // Add the post processing passes
         JEPostProcessingPass p;
