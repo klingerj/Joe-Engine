@@ -9,53 +9,54 @@
 #include "../io/IOHandler.h"
 #include "MeshDataManager.h"
 
-class JESceneManager {
-private:
-    // Camera(s)
-    JECamera camera;
-    JECamera shadowCamera;
-    float camTranslateSensitivity, camRotateSensitivity;
+namespace JoeEngine {
+    class JESceneManager {
+    private:
+        // Camera(s)
+        JECamera m_camera;
+        JECamera m_shadowCamera;
+        float m_camTranslateSensitivity, m_camRotateSensitivity;
 
-    // Meshes
-    std::shared_ptr<JEMeshDataManager> meshDataManager;
+        // Meshes
+        ::std::shared_ptr<JEMeshDataManager> m_meshDataManager;
 
-    // Textures
-    std::vector<JETexture> textures;
+        // Textures
+        ::std::vector<JETexture> m_textures;
 
-    // Shaders
-    std::vector<JEVulkanShadowPassShader> shadowPassShaders;
-    JEVulkanDeferredPassGeometryShader deferredPassGeometryShader;
-    JEVulkanDeferredPassLightingShader deferredPassLightingShader;
-    std::vector<JEVulkanPostProcessShader> postProcessingShaders;
+        // Shaders
+        ::std::vector<JEVulkanShadowPassShader> m_shadowPassShaders;
+        JEVulkanDeferredPassGeometryShader m_deferredPassGeometryShader;
+        JEVulkanDeferredPassLightingShader m_deferredPassLightingShader;
+        ::std::vector<JEVulkanPostProcessShader> m_postProcessingShaders;
 
-    // Scene IDs
-    uint32_t currentScene;
+        // Scene IDs
+        uint32_t m_currentScene;
 
-public:
-    JESceneManager() : camTranslateSensitivity(0.25f), camRotateSensitivity(0.05f), currentScene(0) {}
-    ~JESceneManager() {}
+    public:
+        JESceneManager() : m_camTranslateSensitivity(0.25f), m_camRotateSensitivity(0.05f), m_currentScene(0) {}
+        ~JESceneManager() {}
 
-    // Creation
-    void Initialize(const std::shared_ptr<JEMeshDataManager>& p);
-    void LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass_firstPostProcess, VkImageView firstPostProcessImageView, const JEVulkanQueue& graphicsQueue, const JEVulkanSwapChain& vulkanSwapChain, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, std::vector<JEPostProcessingPass> postProcessingPasses, uint32_t sceneId);
-    void CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass_deferredLighting, VkImageView deferredLightingImageView, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, std::vector<JEPostProcessingPass> postProcessingPasses);
-    void RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass_deferredLighting, VkImageView deferredLightingImageView, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, std::vector<JEPostProcessingPass> postProcessingPasses);
+        // Creation
+        void Initialize(const ::std::shared_ptr<JEMeshDataManager>& p);
+        void LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass_firstPostProcess, VkImageView firstPostProcessImageView, const JEVulkanQueue& graphicsQueue, const JEVulkanSwapChain& vulkanSwapChain, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, ::std::vector<JEPostProcessingPass> postProcessingPasses, uint32_t sceneId);
+        void CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass_deferredLighting, VkImageView deferredLightingImageView, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, ::std::vector<JEPostProcessingPass> postProcessingPasses);
+        void RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass_deferredLighting, VkImageView deferredLightingImageView, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, ::std::vector<JEPostProcessingPass> postProcessingPasses);
 
-    // IO
-    void RegisterCallbacks(JEIOHandler* ioHandler);
-    
-    // Cleanup
-    void CleanupMeshesAndTextures(VkDevice device);
-    void CleanupShaders(VkDevice device);
+        // IO
+        void RegisterCallbacks(JEIOHandler* ioHandler);
 
-    // Updating of resources, called every frame
-    void UpdateModelMatrices();
-    void UpdateShaderUniformBuffers(VkDevice device, uint32_t imageIndex);
+        // Cleanup
+        void CleanupMeshesAndTextures(VkDevice device);
+        void CleanupShaders(VkDevice device);
 
-    // Resource binding, called during command buffer generation
-    void BindResources(VkCommandBuffer commandBuffer, size_t index);
-    void BindShadowPassResources(VkCommandBuffer commandBuffer);
-    void BindDeferredPassGeometryResources(VkCommandBuffer commandBuffer);
-    void BindDeferredPassLightingResources(VkCommandBuffer commandBuffer, size_t index);
-    void BindPostProcessingPassResources(VkCommandBuffer commandBuffer, size_t index, size_t shaderIndex);
-};
+        // Updating of resources, called every frame
+        void UpdateModelMatrices();
+        void UpdateShaderUniformBuffers(VkDevice device, uint32_t imageIndex);
+
+        // Resource binding, called during command buffer generation
+        void BindShadowPassResources(VkCommandBuffer commandBuffer);
+        void BindDeferredPassGeometryResources(VkCommandBuffer commandBuffer);
+        void BindDeferredPassLightingResources(VkCommandBuffer commandBuffer, size_t index);
+        void BindPostProcessingPassResources(VkCommandBuffer commandBuffer, size_t index, size_t shaderIndex);
+    };
+}

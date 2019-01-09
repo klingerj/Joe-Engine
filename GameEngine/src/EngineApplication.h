@@ -7,39 +7,41 @@
 #include "rendering/VulkanRenderer.h"
 #include "physics/PhysicsManager.h"
 
-class JEEngineApplication {
-private:
-    // Subsystems
-    JESceneManager sceneManager;
-    JEVulkanRenderer vulkanRenderer;
-    JEIOHandler ioHandler;
-    JEPhysicsManager physicsManager;
+namespace JoeEngine {
+    class JEEngineApplication {
+    private:
+        // Subsystems
+        JESceneManager m_sceneManager;
+        JEVulkanRenderer m_vulkanRenderer;
+        JEIOHandler m_ioHandler;
+        JEPhysicsManager m_physicsManager;
 
-    double frameStartTime, frameEndTime; // timing for performance analysis
-    bool enableFrameCounter;
+        double m_frameStartTime, m_frameEndTime; // timing for performance analysis
+        bool m_enableFrameCounter;
 
-    // Initialize subsystems
-    void InitializeEngine();
+        // Initialize subsystems
+        void InitializeEngine();
 
-public:
-    JEEngineApplication() : enableFrameCounter(false), frameStartTime(0.0f), frameEndTime(0.0f) {
-        InitializeEngine();
-    }
+    public:
+        JEEngineApplication() : m_enableFrameCounter(false), m_frameStartTime(0.0f), m_frameEndTime(0.0f) {
+            InitializeEngine();
+        }
 
-    // Destroy resources/subsystems
-    ~JEEngineApplication() {}
+        // Destroy resources/subsystems
+        ~JEEngineApplication() {}
 
-    // Run the main loop
-    void Run();
+        // Run the main loop
+        void Run();
 
-    // Shutdown engine
-    void StopEngine();
+        // Shutdown engine
+        void StopEngine();
 
-    // Getters
-    JEVulkanRenderer* GetRenderSubsystem() {
-        return &vulkanRenderer;
-    }
-    JEIOHandler* GetIOSubsystem() {
-        return &ioHandler;
-    }
-};
+        // Getters
+        JEVulkanRenderer* GetRenderSubsystem() {
+            return &m_vulkanRenderer;
+        }
+        JEIOHandler* GetIOSubsystem() {
+            return &m_ioHandler;
+        }
+    };
+}

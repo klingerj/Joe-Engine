@@ -3,7 +3,7 @@
 
 int RunApp() {
     try {
-        JEEngineApplication app = JEEngineApplication();
+        JoeEngine::JEEngineApplication app = JoeEngine::JEEngineApplication();
         app.Run();
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;

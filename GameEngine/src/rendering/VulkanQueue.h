@@ -6,34 +6,36 @@
 #include <set>
 #include <vector>
 
-class JEVulkanWindow;
+namespace JoeEngine {
+    class JEVulkanWindow;
 
-// Queue Family Indices
-struct QueueFamilyIndices {
-    std::optional<uint32_t> graphicsFamily;
-    std::optional<uint32_t> presentFamily;
+    // Queue Family Indices
+    struct QueueFamilyIndices {
+        std::optional<uint32_t> graphicsFamily;
+        std::optional<uint32_t> presentFamily;
 
-    bool IsComplete() const {
-        return graphicsFamily.has_value() && presentFamily.has_value();
-    }
-};
+        bool IsComplete() const {
+            return graphicsFamily.has_value() && presentFamily.has_value();
+        }
+    };
 
-QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
-std::vector<VkDeviceQueueCreateInfo> GetQueueCreateInfos(const QueueFamilyIndices& indices);
+    QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
+    std::vector<VkDeviceQueueCreateInfo> GetQueueCreateInfos(const QueueFamilyIndices& indices);
 
-class JEVulkanQueue {
-private:
-    VkQueue queue;
+    class JEVulkanQueue {
+    private:
+        VkQueue m_queue;
 
-public:
-    JEVulkanQueue() : queue(VK_NULL_HANDLE) {}
-    ~JEVulkanQueue() {}
+    public:
+        JEVulkanQueue() : m_queue(VK_NULL_HANDLE) {}
+        ~JEVulkanQueue() {}
 
-    // Setup
-    void GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex);
+        // Setup
+        void GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex);
 
-    // Getters
-    VkQueue GetQueue() const {
-        return queue;
-    }
-};
+        // Getters
+        VkQueue GetQueue() const {
+            return m_queue;
+        }
+    };
+}

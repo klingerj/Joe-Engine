@@ -2,38 +2,40 @@
 
 #include "EngineApplication.h"
 
-void JEEngineApplication::Run() {
-    const JEVulkanWindow& window = vulkanRenderer.GetWindow();
-    ioHandler.Initialize(window.GetWindow());
+namespace JoeEngine {
+    void JEEngineApplication::Run() {
+        const JEVulkanWindow& window = m_vulkanRenderer.GetWindow();
+        m_ioHandler.Initialize(window.GetWindow());
 
-    while (!window.ShouldClose()) {
-        frameStartTime = glfwGetTime();
-        ioHandler.PollInput();
-        vulkanRenderer.DrawFrame();
-        physicsManager.Update();
-        frameEndTime = glfwGetTime();
-        if (enableFrameCounter) {
-            std::cout << "Frame Time: " << (frameEndTime - frameStartTime) * 1000.0f << " ms" << std::endl;
+        while (!window.ShouldClose()) {
+            m_frameStartTime = glfwGetTime();
+            m_ioHandler.PollInput();
+            m_vulkanRenderer.DrawFrame();
+            m_physicsManager.Update();
+            m_frameEndTime = glfwGetTime();
+            if (m_enableFrameCounter) {
+                std::cout << "Frame Time: " << (m_frameEndTime - m_frameStartTime) * 1000.0f << " ms" << std::endl;
+            }
         }
+
+        vkDeviceWaitIdle(m_vulkanRenderer.GetDevice());
+        StopEngine();
     }
 
-    vkDeviceWaitIdle(vulkanRenderer.GetDevice());
-    StopEngine();
-}
+    void JEEngineApplication::InitializeEngine() {
+        std::shared_ptr<JEMeshDataManager> meshDataManager = std::make_shared<JEMeshDataManager>();
+        m_physicsManager.Initialize(meshDataManager);
+        m_sceneManager.Initialize(meshDataManager);
+        m_vulkanRenderer.Initialize(&m_sceneManager);
 
-void JEEngineApplication::InitializeEngine() {
-    std::shared_ptr<JEMeshDataManager> meshDataManager = std::make_shared<JEMeshDataManager>();
-    physicsManager.Initialize(meshDataManager);
-    sceneManager.Initialize(meshDataManager);
-    vulkanRenderer.Initialize(&sceneManager);
+        GLFWwindow* window = m_vulkanRenderer.GetGLFWWindow();
+        m_ioHandler.Initialize(window);
+        glfwSetWindowUserPointer(window, this);
+        m_vulkanRenderer.RegisterCallbacks(&m_ioHandler);
+        m_sceneManager.RegisterCallbacks(&m_ioHandler);
+    }
 
-    GLFWwindow* window = vulkanRenderer.GetGLFWWindow();
-    ioHandler.Initialize(window);
-    glfwSetWindowUserPointer(window, this);
-    vulkanRenderer.RegisterCallbacks(&ioHandler);
-    sceneManager.RegisterCallbacks(&ioHandler);
-}
-
-void JEEngineApplication::StopEngine() {
-    vulkanRenderer.Cleanup();
+    void JEEngineApplication::StopEngine() {
+        m_vulkanRenderer.Cleanup();
+    }
 }
