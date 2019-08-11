@@ -1,5 +1,2 @@
-Debug/
-x64/
-.vs/
-*.opendb
+Build/
 *.spv

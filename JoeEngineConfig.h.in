@@ -1,0 +1,3 @@
+// the configured options and settings for JoeEngine
+#define JoeEngine_VERSION_MAJOR @JoeEngine_VERSION_MAJOR@
+#define JoeEngine_VERSION_MINOR @JoeEngine_VERSION_MINOR@
