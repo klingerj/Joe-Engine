@@ -1,9 +1,61 @@
 version: 1.0.{build}
+
 pull_requests:
+
   do_not_increment_build_number: true
+
 image: Visual Studio 2017
-configuration: Release
-platform: x64
+
+configuration:
+
+- Debug
+
+- Release
+
+platform:
+
+- x64
+
+- x86
+
+init:
+
+- cmd: >-
+
+    cmake --version
+
+
+
+    if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
+
+environment:
+
+  VULKAN_SDK: C:\VulkanSDK\1.1.82.1
+
+install:
+
+- cmd: >-
+
+    curl -L --show-error --output VulkanSDK.exe https://vulkan.lunarg.com/sdk/download/1.1.82.1/windows/VulkanSDK-1.1.82.1-Installer.exe?Human=true
+
+
+
+    .\VulkanSDK.exe /S
+
+before_build:
+
+- cmd: >-
+
+    cd Build
+
+
+
+    cmake .. -G %generator%
+
 build:
-  project: GameEngine/GameEngine.vcxproj
-  verbosity: minimal
+
+  project: Build/ALL_BUILD.vcxproj
+
+  parallel: true
+
+  verbosity: normal

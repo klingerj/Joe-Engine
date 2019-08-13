@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.15.2)
+cmake_minimum_required (VERSION 3.15.1)
 project(JoeEngine)
 # The version number.
 set(JoeEngine_VERSION_MAJOR 1)
