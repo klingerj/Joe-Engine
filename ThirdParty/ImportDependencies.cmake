@@ -5,8 +5,7 @@ if (WIN32)
 endif()
 
 # Verify Vulkan SDK installation
-
-#message(STATUS "Attempting to auto-locate Vulkan...")
+message(STATUS "Attempting to auto-locate Vulkan...")
     
 # Find Vulkan Path using CMake's Vulkan Module
 find_package(Vulkan REQUIRED)
@@ -17,29 +16,12 @@ if (NOT ${Vulkan_INCLUDE_DIRS} STREQUAL "")
     STRING(REGEX REPLACE "/Include" "" VULKAN_PATH ${VULKAN_PATH})
 endif()
 
-#if(NOT Vulkan_FOUND)
-    # CMake may fail to locate the libraries but could be able to 
-    # provide some path in Vulkan SDK include directory variable
-    # 'Vulkan_INCLUDE_DIRS', try to extract path from this.
-#    #message(STATUS "Failed to locate Vulkan SDK, retrying")
-#    if(EXISTS "${VULKAN_PATH}")
-#       message(STATUS "Successfully located the Vulkan SDK: ${VULKAN_PATH}")
-#    else()
-#        message("Error: Unable to locate Vulkan SDK")
-#        return()
-#    endif()
-#endif()
-
-# Include necessary Vulkan headers
+# Include necessary Vulkan headers and link
 include_directories(${VULKAN_PATH}/Include)
-
-# Link
 target_link_libraries(JoeEngine ${Vulkan_LIBRARIES})
 
-# Grab third party libraries
-
+# Fetch third party libraries
 set(THIRDPARTY_SOURCE_DIR "${CMAKE_BINARY_DIR}/ThirdParty")
-
 include(ExternalProject)
 
 # GLFW
@@ -55,6 +37,34 @@ set_target_properties(glfw PROPERTIES IMPORTED_LOCATION
                       ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_STATIC_LIBRARY_SUFFIX})
 target_link_libraries(JoeEngine glfw)
 set(GLFW_INCLUDE_DIR ${CMAKE_BINARY_DIR}/glfw)
+
+# If on macOS, import additional dependencies for GLFW
+# Should be located in /System/Library/Frameworks/
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    find_library(COCOA Cocoa)
+    if (NOT COCOA)
+        message(FATAL_ERROR "Cocoa framework not found")
+    endif()
+    target_link_libraries(JoeEngine ${COCOA})
+    
+    find_library(IOKIT IOKit)
+    if (NOT IOKIT)
+        message(FATAL_ERROR "IOKit framework not found")
+    endif()
+    target_link_libraries(JoeEngine ${IOKIT})
+    
+    find_library(CORE_VIDEO CoreVideo)
+    if (NOT CORE_VIDEO)
+        message(FATAL_ERROR "CoreVideo framework not found")
+    endif()
+    target_link_libraries(JoeEngine ${CORE_VIDEO})
+    
+    find_library(OPENGL OpenGL)
+    if (NOT OPENGL)
+        message(FATAL_ERROR "OpenGL framework not found")
+    endif()
+    target_link_libraries(JoeEngine ${OPENGL})
+endif()
 
 # GLM
 ExternalProject_Add(

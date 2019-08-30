@@ -1,4 +1,5 @@
 #include "VulkanShader.h"
+#include "../Utils/MemAllocUtils.h"
 #include "../scene/MeshDataManager.h"
 
 namespace JoeEngine {
@@ -35,10 +36,10 @@ namespace JoeEngine {
     // Mesh Shader
 
     void JEVulkanPostProcessShader::Cleanup(VkDevice device) {
+        vkDestroyPipelineLayout(device, m_pipelineLayout, nullptr);
         vkDestroyPipeline(device, m_graphicsPipeline, nullptr);
         vkDestroyDescriptorPool(device, m_descriptorPool, nullptr);
         vkDestroyDescriptorSetLayout(device, m_descriptorSetLayout, nullptr);
-        vkDestroyPipelineLayout(device, m_pipelineLayout, nullptr);
     }
 
     // Warning: long function
@@ -288,10 +289,10 @@ namespace JoeEngine {
     // Shadow Pass Shader
 
     void JEVulkanShadowPassShader::Cleanup(VkDevice device) {
+        vkDestroyPipelineLayout(device, m_pipelineLayout, nullptr);
         vkDestroyPipeline(device, m_graphicsPipeline, nullptr);
         vkDestroyDescriptorPool(device, m_descriptorPool, nullptr);
         vkDestroyDescriptorSetLayout(device, m_descriptorSetLayout, nullptr);
-        vkDestroyPipelineLayout(device, m_pipelineLayout, nullptr);
         vkDestroyBuffer(device, m_uniformBuffers_ViewProj, nullptr);
         vkFreeMemory(device, m_uniformBuffersMemory_ViewProj, nullptr);
         vkDestroyBuffer(device, m_uniformBuffers_Dynamic_Model, nullptr);
@@ -299,19 +300,13 @@ namespace JoeEngine {
     }
 
     // Warning: long function
-    void JEVulkanShadowPassShader::CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule, VkExtent2D extent, VkRenderPass renderPass) {
+    void JEVulkanShadowPassShader::CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkExtent2D extent, VkRenderPass renderPass) {
         // Shader stages
         VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
         vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
         vertShaderStageInfo.module = vertShaderModule;
         vertShaderStageInfo.pName = "main";
-
-        VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
-        fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragShaderStageInfo.module = fragShaderModule;
-        fragShaderStageInfo.pName = "main";
 
         VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo };
 
@@ -477,7 +472,6 @@ namespace JoeEngine {
             throw std::runtime_error("failed to create graphics pipeline!");
         }
 
-        vkDestroyShaderModule(device, fragShaderModule, nullptr);
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
     }
 
@@ -582,7 +576,7 @@ namespace JoeEngine {
 
         size_t bufferSize_Dynamic_Model = numModelMatrices * m_uboDynamicAlignment;
 
-        m_ubo_Dynamic_ModelMat.model = (glm::mat4*)_aligned_malloc(bufferSize_Dynamic_Model, m_uboDynamicAlignment);
+        m_ubo_Dynamic_ModelMat.model = (glm::mat4*)MemAllocUtils::alignedAlloc(m_uboDynamicAlignment, bufferSize_Dynamic_Model);//  _aligned_malloc(bufferSize_Dynamic_Model, m_uboDynamicAlignment);
 
         CreateBuffer(physicalDevice, device, bufferSize_viewProj, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_uniformBuffers_ViewProj, m_uniformBuffersMemory_ViewProj);
         CreateBuffer(physicalDevice, device, bufferSize_Dynamic_Model, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, m_uniformBuffers_Dynamic_Model, m_uniformBuffersMemory_Dynamic_Model);
@@ -627,10 +621,10 @@ namespace JoeEngine {
     // Deferred Pass Shader - Geometry pass (G-buffers)
 
     void JEVulkanDeferredPassGeometryShader::Cleanup(VkDevice device) {
+        vkDestroyPipelineLayout(device, m_pipelineLayout, nullptr);
         vkDestroyPipeline(device, m_graphicsPipeline, nullptr);
         vkDestroyDescriptorPool(device, m_descriptorPool, nullptr);
         vkDestroyDescriptorSetLayout(device, m_descriptorSetLayout, nullptr);
-        vkDestroyPipelineLayout(device, m_pipelineLayout, nullptr);
         vkDestroyBuffer(device, m_uniformBuffers_ViewProj, nullptr);
         vkFreeMemory(device, m_uniformBuffersMemory_ViewProj, nullptr);
         vkDestroyBuffer(device, m_uniformBuffers_Dynamic_Model, nullptr);
@@ -944,7 +938,7 @@ namespace JoeEngine {
 
         size_t bufferSize_Dynamic_Model = numModelMatrices * m_uboDynamicAlignment;
 
-        m_ubo_Dynamic_ModelMat.model = (glm::mat4*)_aligned_malloc(bufferSize_Dynamic_Model, m_uboDynamicAlignment);
+        m_ubo_Dynamic_ModelMat.model = (glm::mat4*)MemAllocUtils::alignedAlloc(m_uboDynamicAlignment, bufferSize_Dynamic_Model); //_aligned_malloc(bufferSize_Dynamic_Model, m_uboDynamicAlignment);
 
         CreateBuffer(physicalDevice, device, bufferSize_viewProj, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_uniformBuffers_ViewProj, m_uniformBuffersMemory_ViewProj);
         CreateBuffer(physicalDevice, device, bufferSize_Dynamic_Model, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, m_uniformBuffers_Dynamic_Model, m_uniformBuffersMemory_Dynamic_Model);
@@ -988,10 +982,10 @@ namespace JoeEngine {
     // Deferred Lighting Pass - read from g-buffers
 
     void JEVulkanDeferredPassLightingShader::Cleanup(VkDevice device) {
+        vkDestroyPipelineLayout(device, m_pipelineLayout, nullptr);
         vkDestroyPipeline(device, m_graphicsPipeline, nullptr);
         vkDestroyDescriptorPool(device, m_descriptorPool, nullptr);
         vkDestroyDescriptorSetLayout(device, m_descriptorSetLayout, nullptr);
-        vkDestroyPipelineLayout(device, m_pipelineLayout, nullptr);
         for (size_t i = 0; i < m_uniformBuffers_ViewProj.size(); ++i) {
             vkDestroyBuffer(device, m_uniformBuffers_ViewProj[i], nullptr);
             vkFreeMemory(device, m_uniformBuffersMemory_ViewProj[i], nullptr);
