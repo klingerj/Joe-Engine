@@ -3,10 +3,19 @@
 
 namespace JoeEngine {
     // Paths
-    const std::string JE_PROJECT_PATH = "..\\";
+    #ifdef JOE_ENGINE_PLATFORM_WINDOWS
+    const std::string JE_PROJECT_PATH = std::string("..\\");
     const std::string JE_SHADER_DIR = JE_PROJECT_PATH + "Source\\Shaders\\";
     const std::string JE_MODELS_OBJ_DIR = JE_PROJECT_PATH + "Resources\\Models\\OBJs\\";
     const std::string JE_TEXTURES_DIR = JE_PROJECT_PATH + "Resources\\Textures\\";
+    #endif
+
+    #ifdef JOE_ENGINE_PLATFORM_APPLE
+    const std::string JE_PROJECT_PATH = std::string("../");
+    const std::string JE_SHADER_DIR = JE_PROJECT_PATH + "Source\\Shaders\\";
+    const std::string JE_MODELS_OBJ_DIR = JE_PROJECT_PATH + "Resources\\Models\\OBJs\\";
+    const std::string JE_TEXTURES_DIR = JE_PROJECT_PATH + "Resources\\Textures\\";
+    #endif
 
     // Post processing shaders
     const std::string JEBuiltInPostProcessingShaderPaths[2] = { "frag_post_chromatic_aberration.spv", "frag_post_grayscale.spv" };

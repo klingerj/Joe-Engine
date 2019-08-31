@@ -1,6 +1,6 @@
 #! /bin/bash
 echo Compiling Shaders...
-cd ../Shaders/
+cd ../Source/Shaders/
 glslPath=/usr/local/Caskroom/vulkan-sdk/1.1.114.0/macOS/bin/glslangValidator
 
 for f in *.vert
