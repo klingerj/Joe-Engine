@@ -1,6 +1,7 @@
 # The Joe Engine
 
 [![](https://ci.appveyor.com/api/projects/status/kml8nhwm1lu4tr1c?svg=true)](https://ci.appveyor.com/project/klingerj/joe-engine)
+[![](https://travis-ci.com/klingerj/Joe-Engine.svg?branch=master)](https://travis-ci.com/klingerj/Joe-Engine)
 
 The goal of the Joe Engine is to be my C++ playground. The engine will contain various engine programming experiments and features related to rendering, systems, and performance.  
 
