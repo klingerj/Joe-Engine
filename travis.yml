@@ -1,0 +1,32 @@
+language: cpp
+os: osx
+compiler: clang
+osx_image: xcode11
+
+env:
+    - TARGET_CPU=x86 BUILD_CONFIGURATION=Debug
+    - TARGET_CPU=x86 BUILD_CONFIGURATION=Release
+    - TARGET_CPU=x64 BUILD_CONFIGURATION=Debug
+    - TARGET_CPU=x64 BUILD_CONFIGURATION=Release
+    - TARGET_CPU=amd64 BUILD_CONFIGURATION=Debug
+    - TARGET_CPU=amd64 BUILD_CONFIGURATION=Release
+
+addons:
+  apt:
+    packages:
+    - cmake
+    - clang-8.0
+
+install:
+  - mkdir .tmp
+  - curl -L https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-mac.zip -o .tmp/ninja-mac.zip
+  - unzip .tmp/ninja-mac.zip -d .tmp
+  - export CXX="clang++-8.0"
+
+before_script:
+  - export PATH=$PATH:$PWD/.tmp
+  - cmake --version
+
+script:
+  - cd Build && cmake .. -G Ninja -DTARGET_CPU=$TARGET_CPU -DCMAKE_BUILD_TYPE=$BUILD_CONFIGURATION
+  - ninja
