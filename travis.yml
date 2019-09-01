@@ -15,18 +15,17 @@ addons:
   apt:
     packages:
     - cmake
-    - clang-8.0
 
 install:
   - mkdir .tmp
   - curl -L https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-mac.zip -o .tmp/ninja-mac.zip
   - unzip .tmp/ninja-mac.zip -d .tmp
-  - export CXX="clang++-8.0"
+  - brew cask install apenngrace/vulkan/vulkan-sdk
 
 before_script:
   - export PATH=$PATH:$PWD/.tmp
   - cmake --version
 
 script:
-  - cd Build && cmake .. -G Ninja -DTARGET_CPU=$TARGET_CPU -DCMAKE_BUILD_TYPE=$BUILD_CONFIGURATION
+  - cd Build && cmake .. -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_CONFIGURATION
   - ninja

@@ -13,11 +13,17 @@ find_package(Vulkan REQUIRED)
 # Try extracting VulkanSDK path from ${Vulkan_INCLUDE_DIRS}
 if (NOT ${Vulkan_INCLUDE_DIRS} STREQUAL "")
     set(VULKAN_PATH ${Vulkan_INCLUDE_DIRS})
-    STRING(REGEX REPLACE "/Include" "" VULKAN_PATH ${VULKAN_PATH})
+    STRING(REGEX REPLACE "/Include" "" VULKAN_PATH VULKAN_PATH)
 endif()
 
+message(VULKAN_PATH)
+
 # Include necessary Vulkan headers and link
-include_directories(${VULKAN_PATH}/Include)
+if (WIN32)
+    include_directories(${VULKAN_PATH}/Include)
+else()
+    include_directories(${VULKAN_PATH})
+endif()
 target_link_libraries(JoeEngine ${Vulkan_LIBRARIES})
 
 # Fetch third party libraries
