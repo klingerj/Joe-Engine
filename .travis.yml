@@ -17,8 +17,6 @@ addons:
     - cmake
 
 install:
-  - chmod --help
-  - chmod +x /Source/Scripts/compileShaders.sh
   - mkdir .tmp
   - curl -L https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-mac.zip -o .tmp/ninja-mac.zip
   - unzip .tmp/ninja-mac.zip -d .tmp
