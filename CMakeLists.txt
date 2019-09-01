@@ -75,7 +75,7 @@ include("./ThirdParty/ImportDependencies.cmake")
 if (WIN32)
     set(MAKE_CMD "${CMAKE_CURRENT_SOURCE_DIR}/Source/Scripts/compileShaders.bat")
 else (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(MAKE_CMD "bash ${CMAKE_CURRENT_SOURCE_DIR}/Source/Scripts/compileShaders.sh")
+    set(MAKE_CMD "${CMAKE_CURRENT_SOURCE_DIR}/Source/Scripts/compileShaders.sh")
 endif()
 add_custom_command(TARGET JoeEngine PRE_BUILD COMMAND ${MAKE_CMD})
 
