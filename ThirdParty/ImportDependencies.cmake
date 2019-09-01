@@ -16,8 +16,6 @@ if (NOT ${Vulkan_INCLUDE_DIRS} STREQUAL "")
     STRING(REGEX REPLACE "/Include" "" VULKAN_PATH ${VULKAN_PATH})
 endif()
 
-message(${VULKAN_PATH})
-
 # Include necessary Vulkan headers and link
 if (WIN32)
     include_directories(${VULKAN_PATH}/Include)
