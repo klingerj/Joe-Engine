@@ -1,0 +1,31 @@
+language: cpp
+os: osx
+compiler: clang
+osx_image: xcode11
+
+env:
+    - TARGET_CPU=x86 BUILD_CONFIGURATION=Debug
+    - TARGET_CPU=x86 BUILD_CONFIGURATION=Release
+    - TARGET_CPU=x64 BUILD_CONFIGURATION=Debug
+    - TARGET_CPU=x64 BUILD_CONFIGURATION=Release
+    - TARGET_CPU=amd64 BUILD_CONFIGURATION=Debug
+    - TARGET_CPU=amd64 BUILD_CONFIGURATION=Release
+
+addons:
+  apt:
+    packages:
+    - cmake
+
+install:
+  - mkdir .tmp
+  - curl -L https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-mac.zip -o .tmp/ninja-mac.zip
+  - unzip .tmp/ninja-mac.zip -d .tmp
+  - brew cask install apenngrace/vulkan/vulkan-sdk
+
+before_script:
+  - export PATH=$PATH:$PWD/.tmp
+  - cmake --version
+
+script:
+  - cd Build && cmake .. -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_CONFIGURATION
+  - ninja

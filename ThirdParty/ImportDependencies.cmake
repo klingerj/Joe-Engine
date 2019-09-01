@@ -17,7 +17,11 @@ if (NOT ${Vulkan_INCLUDE_DIRS} STREQUAL "")
 endif()
 
 # Include necessary Vulkan headers and link
-include_directories(${VULKAN_PATH}/Include)
+if (WIN32)
+    include_directories(${VULKAN_PATH}/Include)
+else()
+    include_directories(${VULKAN_PATH})
+endif()
 target_link_libraries(JoeEngine ${Vulkan_LIBRARIES})
 
 # Fetch third party libraries
