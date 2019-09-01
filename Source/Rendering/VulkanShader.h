@@ -96,7 +96,7 @@ namespace JoeEngine {
         VkDeviceMemory m_uniformBuffersMemory_Dynamic_Model;
 
         // Creation functions
-        void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule, VkExtent2D extent, VkRenderPass renderPass);
+        void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule , VkExtent2D extent, VkRenderPass renderPass);
         void CreateDescriptorPool(VkDevice device);
         void CreateDescriptorSetLayout(VkDevice device);
         void CreateDescriptorSets(VkDevice device);
@@ -108,17 +108,15 @@ namespace JoeEngine {
             const std::string& vertShader, const std::string& fragShader) {
             // Read in shader code
             auto vertShaderCode = ReadFile(vertShader);
-            auto fragShaderCode = ReadFile(fragShader);
 
             // Create shader modules
             VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
-            VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
 
             CreateUniformBuffers(physicalDevice, device, numModelMatrices);
             CreateDescriptorSetLayout(device);
             CreateDescriptorPool(device);
             CreateDescriptorSets(device);
-            CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, extent, renderPass);
+            CreateGraphicsPipeline(device, vertShaderModule, extent, renderPass);
         }
 
         ~JEVulkanShadowPassShader() {}

@@ -1,6 +1,7 @@
 #include <map>
 #include <vector>
 
+#include "JoeEngineConfig.h"
 #include "VulkanRenderer.h"
 #include "../scene/SceneManager.h"
 #include "../EngineApplication.h"
@@ -176,11 +177,11 @@ namespace JoeEngine {
 
         VkApplicationInfo appInfo = {};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "Game Engine App";
-        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.pApplicationName = "Joe Engine App";
+        appInfo.applicationVersion = VK_MAKE_VERSION(JOE_ENGINE_VERSION_MAJOR, JOE_ENGINE_VERSION_MINOR, 0);
         appInfo.pEngineName = "Joe Engine";
-        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.apiVersion = VK_API_VERSION_1_0;
+        appInfo.engineVersion = VK_MAKE_VERSION(JOE_ENGINE_VERSION_MAJOR, JOE_ENGINE_VERSION_MINOR, 0);
+        appInfo.apiVersion = VK_API_VERSION_1_0; // TODO: change me?
 
         VkInstanceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;

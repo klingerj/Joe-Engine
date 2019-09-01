@@ -1,3 +1,5 @@
 // the configured options and settings for JoeEngine
-#define JoeEngine_VERSION_MAJOR @JoeEngine_VERSION_MAJOR@
-#define JoeEngine_VERSION_MINOR @JoeEngine_VERSION_MINOR@
+#define JOE_ENGINE_VERSION_MAJOR @JOE_ENGINE_VERSION_MAJOR@
+#define JOE_ENGINE_VERSION_MINOR @JOE_ENGINE_VERSION_MINOR@
+#cmakedefine JOE_ENGINE_PLATFORM_WINDOWS
+#cmakedefine JOE_ENGINE_PLATFORM_APPLE
