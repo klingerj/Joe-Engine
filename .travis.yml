@@ -28,6 +28,5 @@ before_script:
 
 script:
   - cd Build && cmake .. -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_CONFIGURATION
-  - ls ../Source/Scripts
-  - cat ../Source/Scripts/compileShaders.sh
+  - pwd
   - ninja
