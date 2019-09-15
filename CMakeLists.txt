@@ -8,6 +8,7 @@ if (WIN32)
     set(JOE_ENGINE_PLATFORM_WINDOWS ON)
     set(CMAKE_CXX_STANDARD 17)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "/W3")
 else (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(JOE_ENGINE_PLATFORM_APPLE ON)
     include(CheckCXXCompilerFlag)
@@ -33,8 +34,8 @@ include_directories("${PROJECT_BINARY_DIR}")
 # Source files
 set(SOURCE_LIST
     "Source/main.cpp"
-    "Source/EngineApplication.cpp"
-    "Source/EngineApplication.h"
+    "Source/EngineInstance.cpp"
+    "Source/EngineInstance.h"
     "Source/Io/IOHandler.cpp"
     "Source/Io/IOHandler.h"
     "Source/Physics/PhysicsManager.cpp"
@@ -51,11 +52,23 @@ set(SOURCE_LIST
     "Source/Rendering/VulkanSwapChain.h"
     "Source/Rendering/VulkanWindow.cpp"
     "Source/Rendering/VulkanWindow.h"
+    "Source/Components/Material/MaterialComponentManager.h"
+    "Source/Components/Material/MaterialComponentManager.cpp"
+    "Source/Components/Material/MaterialComponent.h"
+    "Source/Components/Material/MaterialComponent.cpp"
+    "Source/Components/Mesh/MeshComponent.h"
+    "Source/Components/Mesh/MeshComponent.cpp"
+    "Source/Components/Mesh/MeshComponentManager.h"
+    "Source/Components/Mesh/MeshComponentManager.cpp"
     "Source/Scene/MeshDataManager.cpp"
     "Source/Scene/MeshDataManager.h"
     "Source/Scene/SceneManager.cpp"
     "Source/Scene/SceneManager.h"
     "Source/Scene/Camera.h"
+    "Source/Scene/Entity.cpp"
+    "Source/Scene/Entity.h"
+    "Source/Scene/EntityManager.cpp"
+    "Source/Scene/EntityManager.h"
     "Source/Utils/Common.cpp"
     "Source/Utils/Common.h"
     "Source/Utils/MemAllocUtils.cpp"

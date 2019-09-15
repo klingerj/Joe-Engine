@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utils/Common.h"
+#include "../Utils/Common.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/norm.hpp"
 

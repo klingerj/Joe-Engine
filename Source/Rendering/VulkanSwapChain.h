@@ -7,7 +7,7 @@
 
 #include "VulkanWindow.h"
 #include "VulkanQueue.h"
-#include "../utils/Common.h"
+#include "../Utils/Common.h"
 
 namespace JoeEngine {
     struct SwapChainSupportDetails {

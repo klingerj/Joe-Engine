@@ -4,12 +4,12 @@
 #include "JoeEngineConfig.h"
 #include "VulkanRenderer.h"
 #include "../scene/SceneManager.h"
-#include "../EngineApplication.h"
+#include "../EngineInstance.h"
 
 namespace JoeEngine {
     static void JEFramebufferResizeCallback(GLFWwindow* window, int width, int height) {
-        auto renderer = reinterpret_cast<JEEngineApplication*>(glfwGetWindowUserPointer(window))->GetRenderSubsystem();
-        renderer->FramebufferResized();
+        auto& renderer = reinterpret_cast<JEEngineInstance*>(glfwGetWindowUserPointer(window))->GetRenderSubsystem();
+        renderer.FramebufferResized();
     }
 
     void JEVulkanRenderer::Initialize(JESceneManager* sceneManager) {
@@ -447,6 +447,102 @@ namespace JoeEngine {
 
         if (vkCreateSampler(m_device, &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {
             throw std::runtime_error("failed to create texture sampler!");
+        }
+    }
+
+    /// Renderer Functions
+
+    void JEVulkanRenderer::DrawShadowPass(/*std vector of JELights, and also all mesh components*/) {
+        // Reset the command buffer, as we have decided to re-record it
+        if (vkResetCommandBuffer(m_shadowPass.commandBuffer, VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
+            throw std::runtime_error("failed to reset shadow pass command buffer!");
+        }
+        // TODO: keep local list of ShadowPassStructs. Push_back to this list during this function for each shadow
+        // pass that we do, aka for each light in the vector.
+        // Or, do that in a different function so that the render passes and framebuffers are all already created before this function.
+
+        VkCommandBufferBeginInfo beginInfo = {};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+        beginInfo.pInheritanceInfo = nullptr;
+
+        if (vkBeginCommandBuffer(m_shadowPass.commandBuffer, &beginInfo) != VK_SUCCESS) {
+            throw std::runtime_error("failed to begin recording shadow pass command buffer!");
+        }
+
+        /*for each light source...*/
+
+        // Begin render pass
+        VkRenderPassBeginInfo renderPassInfo = {};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = m_shadowPass.renderPass;
+        renderPassInfo.framebuffer = m_shadowPass.framebuffer;
+        renderPassInfo.renderArea.offset = { 0, 0 };
+        renderPassInfo.renderArea.extent = { m_shadowPass.width, m_shadowPass.height };
+
+        VkClearValue clearValue = { 1.0f, 0 };
+        renderPassInfo.clearValueCount = 1;
+        renderPassInfo.pClearValues = &clearValue;
+
+        vkCmdBeginRenderPass(m_shadowPass.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        // TODO: go to the shader manager, bind the pipeline for the shadow pass shader. That happens exactly one time I assume
+        // Then bind the view proj matrix from the light
+        // Then draw all the geometry
+        //m_sceneManager->BindShadowPassResources(m_shadowPass.commandBuffer);
+
+        vkCmdEndRenderPass(m_shadowPass.commandBuffer);
+
+        if (vkEndCommandBuffer(m_shadowPass.commandBuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to record shadow pass command buffer!");
+        }
+    }
+
+    void JEVulkanRenderer::DrawMeshComponents(const std::vector<MeshComponent>&) {
+        const bool isDeferred = true;
+        if (isDeferred) {
+            // Construct deferred geometry and lighting render passes
+            // Reset the command buffer, as we have decided to re-record it
+            if (vkResetCommandBuffer(m_deferredPass.commandBuffer, VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
+                throw std::runtime_error("failed to reset deferred geometry pass command buffer!");
+            }
+
+            VkCommandBufferBeginInfo beginInfo = {};
+            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+            beginInfo.pInheritanceInfo = nullptr;
+
+            if (vkBeginCommandBuffer(m_deferredPass.commandBuffer, &beginInfo) != VK_SUCCESS) {
+                throw std::runtime_error("failed to begin recording deferred geometry pass command buffer!");
+            }
+
+            // Begin render pass
+
+            VkRenderPassBeginInfo renderPassInfo = {};
+            renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            renderPassInfo.renderPass = m_deferredPass.renderPass;
+            renderPassInfo.framebuffer = m_deferredPass.framebuffer;
+            renderPassInfo.renderArea.offset = { 0, 0 };
+            renderPassInfo.renderArea.extent = { m_deferredPass.width, m_deferredPass.height };
+
+            std::array<VkClearValue, 3> clearValues;
+            clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
+            clearValues[1].color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
+            clearValues[2].depthStencil = { 1.0f, 0 };
+            renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+            renderPassInfo.pClearValues = clearValues.data();
+
+            vkCmdBeginRenderPass(m_deferredPass.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+            // TODO: Bind deferred geometry pass shader pipeline
+            // Bind the view proj and stuff
+            m_sceneManager->BindDeferredPassGeometryResources(m_deferredPass.commandBuffer);
+
+            vkCmdEndRenderPass(m_deferredPass.commandBuffer);
+
+            if (vkEndCommandBuffer(m_deferredPass.commandBuffer) != VK_SUCCESS) {
+                throw std::runtime_error("failed to record deferred geometry pass command buffer!");
+            }
         }
     }
 

@@ -12,7 +12,7 @@
 #define GLM_FORCE_LEFT_HANDED
 
 #include "vulkan/vulkan.h"
-#include "../rendering/VulkanQueue.h"
+#include "../Rendering/VulkanQueue.h"
 #include "glm/glm.hpp"
 
 namespace JoeEngine {

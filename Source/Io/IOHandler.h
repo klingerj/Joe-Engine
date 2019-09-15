@@ -2,7 +2,7 @@
 
 #include <map>
 
-#include "../utils/Common.h"
+#include "../Utils/Common.h"
 #include "GLFW/glfw3.h"
 
 namespace JoeEngine {

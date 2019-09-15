@@ -24,8 +24,8 @@ namespace JoeEngine {
 
             return bindingDescription;
         }
-        static ::std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions() {
-            ::std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions = {};
+        static std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions() {
+            std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions = {};
 
             attributeDescriptions[0].binding = 0;
             attributeDescriptions[0].location = 0;
@@ -68,8 +68,8 @@ namespace JoeEngine {
         VkBuffer indexBufferArray[JE_MAX_MESHES];
         VkDeviceMemory indexBufferMemoryArray[JE_MAX_MESHES];
         glm::mat4 modelMatrices[JE_MAX_MESHES];
-        ::std::vector<JEMeshVertex> vertexLists[JE_MAX_MESHES];
-        ::std::vector<uint32_t> indexLists[JE_MAX_MESHES];
+        std::vector<JEMeshVertex> vertexLists[JE_MAX_MESHES];
+        std::vector<uint32_t> indexLists[JE_MAX_MESHES];
     } JEMeshData_Graphics;
 
     typedef struct je_oriented_bounding_box_t {
@@ -95,8 +95,8 @@ namespace JoeEngine {
         VkDeviceMemory vertexBufferMemory;
         VkBuffer indexBuffer;
         VkDeviceMemory indexBufferMemory;
-        ::std::vector<JEMeshVertex> vertexList;
-        ::std::vector<uint32_t> indexList;
+        std::vector<JEMeshVertex> vertexList;
+        std::vector<uint32_t> indexList;
     } JEMeshData_SSTriangle;
 
     // Class for managing meshes that have graphics and physics needs in a data-oriented fashion.
@@ -110,9 +110,9 @@ namespace JoeEngine {
         static JEMeshData_SSTriangle m_screenSpaceTriangle;
 
         // Mesh Creation
-        void CreateVertexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const ::std::vector<JEMeshVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory);
-        void CreateIndexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const ::std::vector<uint32_t>& indices, VkBuffer* indexBuffer, VkDeviceMemory* indexBufferMemory);
-        void LoadModelFromFile(const ::std::string& filepath);
+        void CreateVertexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const std::vector<JEMeshVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory);
+        void CreateIndexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const std::vector<uint32_t>& indices, VkBuffer* indexBuffer, VkDeviceMemory* indexBufferMemory);
+        void LoadModelFromFile(const std::string& filepath);
 
     public:
         JEMeshDataManager() : m_numMeshes(0) {
@@ -136,10 +136,10 @@ namespace JoeEngine {
             m_meshData_Physics.scales[index] = scale;
         }
 
-        void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const ::std::string& filepath, int freezeState);
+        void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const std::string& filepath, int freezeState);
 
         // TODO: This is not needed, replace with a function that creates a duplicate of an existing mesh. Later, this will need an offset buffer for instanced rendering.
-        void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const ::std::vector<JEMeshVertex>& vertices, const ::std::vector<uint32_t>& indices, int freezeState);
+        void CreateNewMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const std::vector<JEMeshVertex>& vertices, const std::vector<uint32_t>& indices, int freezeState);
         void CreateScreenSpaceTriangleMesh(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue);
         void DrawMesh(VkCommandBuffer commandBuffer, uint32_t index);
         void DrawScreenSpaceTriangle(VkCommandBuffer commandBuffer);

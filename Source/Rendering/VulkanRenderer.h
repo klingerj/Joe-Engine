@@ -6,8 +6,9 @@
 
 #include "VulkanWindow.h"
 #include "VulkanSwapChain.h"
-#include "../utils/Common.h"
-#include "../utils/VulkanValidationLayers.h"
+#include "../Utils/Common.h"
+#include "../Utils/VulkanValidationLayers.h"
+#include "../Components/Mesh/MeshComponent.h"
 
 namespace JoeEngine {
     class JESceneManager;
@@ -54,7 +55,7 @@ namespace JoeEngine {
         VkRenderPass renderPass;
         VkSampler sampler;
         uint32_t shaderIndex = -1; // ID indicating which built-in post shader to use. -1 for custom shader.
-        ::std::string filepath = ""; // Path to custom shader if not using a built-in.
+        std::string filepath = ""; // Path to custom shader if not using a built-in.
     } JEPostProcessingPass;
 
     // Class that manages all Vulkan resources and rendering
@@ -170,6 +171,10 @@ namespace JoeEngine {
 
         // Draw a frame
         void DrawFrame();
+
+        // Renderer Functions
+        void DrawShadowPass();
+        void DrawMeshComponents(const std::vector<MeshComponent>& meshComponents);
 
         // Getters
         const JEVulkanWindow& GetWindow() const {
