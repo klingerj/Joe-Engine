@@ -8,55 +8,15 @@
 #include "VulkanSwapChain.h"
 #include "../Utils/Common.h"
 #include "../Utils/VulkanValidationLayers.h"
+#include "VulkanShader.h"
+#include "VulkanRenderingTypes.h"
+#include "MeshBufferManager.h"
 #include "../Components/Mesh/MeshComponent.h"
 
 namespace JoeEngine {
     class JESceneManager;
+    class JEEngineInstance;
     class JEIOHandler;
-
-    // Rendering-related structs
-
-    // Generic Framebuffer attachment
-    typedef struct je_framebuffer_attachment_t {
-        VkImage image;
-        VkDeviceMemory deviceMemory;
-        VkImageView imageView;
-    } JEFramebufferAttachment;
-
-    // Render pass information for a shadow pass (depth-only)
-    typedef struct je_offscreen_shadow_pass_t {
-        uint32_t width = JE_DEFAULT_SHADOW_MAP_WIDTH, height = JE_DEFAULT_SHADOW_MAP_HEIGHT;
-        VkFramebuffer framebuffer;
-        JEFramebufferAttachment depth;
-        VkRenderPass renderPass;
-        VkSampler depthSampler;
-        VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
-        VkSemaphore semaphore = VK_NULL_HANDLE; // Semaphore used to synchronize between this and the next render pass
-    } JEOffscreenShadowPass;
-
-    // Render pass information for a deferred rendering pass (multiple g-buffers)
-    typedef struct je_offscreen_deferred_pass_t {
-        uint32_t width = JE_DEFAULT_SCREEN_WIDTH, height = JE_DEFAULT_SCREEN_HEIGHT;
-        VkFramebuffer framebuffer;
-        JEFramebufferAttachment color;
-        JEFramebufferAttachment normal;
-        JEFramebufferAttachment depth;
-        VkRenderPass renderPass;
-        VkSampler sampler;
-        VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
-        VkSemaphore semaphore = VK_NULL_HANDLE; // Semaphore used to synchronize between this and the next render pass
-    } JEOffscreenDeferredPass;
-
-    // Render pass information for a post processing pass (blit)
-    typedef struct je_post_processing_pass_t {
-        uint32_t width = JE_DEFAULT_SCREEN_WIDTH, height = JE_DEFAULT_SCREEN_HEIGHT;
-        VkFramebuffer framebuffer = VK_NULL_HANDLE;
-        JEFramebufferAttachment texture;
-        VkRenderPass renderPass;
-        VkSampler sampler;
-        uint32_t shaderIndex = -1; // ID indicating which built-in post shader to use. -1 for custom shader.
-        std::string filepath = ""; // Path to custom shader if not using a built-in.
-    } JEPostProcessingPass;
 
     // Class that manages all Vulkan resources and rendering
 
@@ -74,11 +34,17 @@ namespace JoeEngine {
 
         // Scene Manager
         JESceneManager* m_sceneManager;
+        JEEngineInstance* m_engineInstance;
+
+        // Other backend managers
+        // JEShaderManager m_shaderManager; // TODO: create me
+        JEMeshBufferManager m_meshBufferManager;
 
         // Vulkan Instance creation
         VkInstance m_instance;
 
         // Vulkan physical/logical devices
+        // TODO: wrap me in VulkanDevice class (and protect with mutex)
         VkPhysicalDevice m_physicalDevice;
         VkDevice m_device;
 
@@ -115,10 +81,25 @@ namespace JoeEngine {
         void CreateSemaphoresAndFences();
 
         // Window-dependent rendering resource recreation
-        void CleanupWindowDependentRenderingResources();
-        void RecreateWindowDependentRenderingResources();
+        void CleanupWindowDependentResources();
+        void RecreateWindowDependentResources();
 
         /// Rendering variables and functions
+
+        // Shaders
+        // TODO: Move this to a shader manager
+        std::vector<JEVulkanShadowPassShader> m_shadowPassShaders;
+        JEVulkanDeferredPassGeometryShader m_deferredPassGeometryShader;
+        JEVulkanDeferredPassLightingShader m_deferredPassLightingShader; // TODO: change me to a list?
+        //std::vector<JEVulkanMeshShader> m_meshShaders; // TODO: add this to VulkanShader.h and re-implement
+        std::vector<JEVulkanPostProcessShader> m_postProcessingShaders;
+        void CreateShaders();
+        void CleanupShaders();
+
+        // Textures
+        std::vector<JETexture> m_textures;
+        void CreateTextures();
+        void CleanupTextures();
 
         // Helpers for offscreen rendering
         void CreateFramebufferAttachment(JEFramebufferAttachment& depth, VkExtent2D extent, VkImageUsageFlagBits usageBits, VkFormat format);
@@ -142,9 +123,9 @@ namespace JoeEngine {
         JEFramebufferAttachment m_framebufferAttachment_deferredLighting;
         VkRenderPass m_renderPass_deferredLighting;
         VkFramebuffer m_framebuffer_deferredLighting;
+        void CreateDeferredPassLightingResources();
         void CreateDeferredPassLightingRenderPass();
         void CreateDeferredPassLightingFramebuffer();
-        void CreateDeferredPassLightingResources();
 
         // Post processing
         // The final post processing pass's framebuffer attachment is never created (use the swap chain framebuffers instead)
@@ -155,13 +136,16 @@ namespace JoeEngine {
 
         void CreateDeferredLightingAndPostProcessingCommandBuffer();
 
+        void DrawMesh(VkCommandBuffer commandBuffer, const MeshComponent& meshComponent);
+        void DrawScreenSpaceTriMesh(VkCommandBuffer commandBuffer);
+
     public:
         JEVulkanRenderer() : m_width(JE_DEFAULT_SCREEN_WIDTH), m_height(JE_DEFAULT_SCREEN_HEIGHT), m_MAX_FRAMES_IN_FLIGHT(JE_DEFAULT_MAX_FRAMES_IN_FLIGHT),
-            m_currentFrame(0), m_didFramebufferResize(false), m_sceneManager(nullptr) {}
+                             m_currentFrame(0), m_didFramebufferResize(false), m_sceneManager(nullptr), m_engineInstance(nullptr) {}
         ~JEVulkanRenderer() {}
 
         // Vulkan setup
-        void Initialize(JESceneManager* sceneManager);
+        void Initialize(JESceneManager* sceneManager, JEEngineInstance* engineInstance);
         void RegisterCallbacks(JEIOHandler* ioHandler);
 
         // Vulkan cleanup
@@ -169,12 +153,20 @@ namespace JoeEngine {
 
         void FramebufferResized() { m_didFramebufferResize = true; }
 
-        // Draw a frame
-        void DrawFrame();
+        // Submit work to GPU
+        void SubmitFrame();
+
+        // Mesh Buffer Functions
+        MeshComponent CreateMesh(const std::string& filepath);
 
         // Renderer Functions
-        void DrawShadowPass();
+        void UpdateShaderUniformBuffers(uint32_t imageIndex, const std::vector<glm::mat4>& transforms);
+        void DrawShadowPass(const std::vector<MeshComponent>& meshComponents);
         void DrawMeshComponents(const std::vector<MeshComponent>& meshComponents);
+
+        void WaitForIdleDevice() {
+            vkDeviceWaitIdle(m_device);
+        }
 
         // Getters
         const JEVulkanWindow& GetWindow() const {

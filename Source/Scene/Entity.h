@@ -10,10 +10,5 @@ namespace JoeEngine {
         ~Entity() {}
         
         const uint32_t m_id;
-
-        // Tentative API
-        void SetMaterialComponent();
-        void SetMeshComponent();
-        void SetUpdateComponent();
     };
 }

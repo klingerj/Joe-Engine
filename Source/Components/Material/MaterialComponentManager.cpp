@@ -1,39 +1,29 @@
 #include "MaterialComponentManager.h"
 
 namespace JoeEngine {
-    uint32_t JEMaterialComponentManager::RegisterShader(const std::string& vertPath, const std::string& fragPath)
-    {
-        //TODO move me to renderer
-        // look at SceneManager::CreateShaders()
-        return 0;
-    }
-
-    JEMaterialComponentManager::MaterialComponent JEMaterialComponentManager::CreateMaterialComponent(uint32_t id)
-    {
-        //TODO
-        return MaterialComponent();
-    }
-
-    JEMaterialComponentManager::MaterialComponent JEMaterialComponentManager::CreateMaterialComponent(JE_MATERIAL_SHADER_TYPE type)
-    {
-        switch (type) {
-        case FORWARD:
-            return MaterialComponent(0, FORWARD);
-            break;
-        case DEFERRED:
-            return MaterialComponent(0, DEFERRED);
-            break;
-        default:
-            return MaterialComponent(0, INVALID); //TODO: error or enforce the parameter input type somehow
+    void JEMaterialComponentManager::Update() {
+        for (MaterialComponent comp : m_materialComponents) {
+            // TODO: something
         }
     }
 
-    MaterialComponent GetComponent() const {
-        const bool isDeferred = true;
-        if (isDeferred) {
-            return m_def
-        } else {
+    void JEMaterialComponentManager::AddNewComponent() {
+        m_materialComponents.emplace_back(MaterialComponent());
+    }
 
+    MaterialComponent JEMaterialComponentManager::GetComponent(uint32_t index) const {
+        if (index > m_materialComponents.size() - 1) {
+            //TODO: throw?
         }
+
+        return m_materialComponents[index];
+    }
+
+    void JEMaterialComponentManager::SetComponent(uint32_t index, MaterialComponent newComp) {
+        if (index > m_materialComponents.size() - 1) {
+            //TODO: throw?
+        }
+
+        m_materialComponents[index] = newComp;
     }
 }
