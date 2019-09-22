@@ -66,15 +66,7 @@ namespace JoeEngine {
 
         // Getters
         glm::mat4 GetView() const {
-            glm::mat4 t = glm::mat4(1.0);
-            t[3] = glm::vec4(-m_eye.x, -m_eye.y, -m_eye.z, 1.0);
-
-            glm::mat4 o = glm::mat4(1.0);
-            o[0] = glm::vec4(m_right.x, m_up.x, m_look.x, 0.0);
-            o[1] = glm::vec4(m_right.y, m_up.y, m_look.y, 0.0);
-            o[2] = glm::vec4(m_right.z, m_up.z, m_look.z, 0.0);
-
-            return o * t;
+            return glm::lookAt(m_eye, m_ref, JE_WORLD_UP);
         }
         glm::mat4 GetProj() const {
             return glm::perspective(JE_FOVY, m_aspect, m_nearPlane, farPlane);

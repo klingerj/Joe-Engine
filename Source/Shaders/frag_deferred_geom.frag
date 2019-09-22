@@ -13,5 +13,5 @@ layout(location = 0) out vec4 gbuffers[2];
 void main() {
     vec3 albedoColor = texture(albedo, fragUV).xyz;
     gbuffers[0] = vec4(albedoColor * fragColor, 1.0);
-    gbuffers[1] = vec4(fragNor, 1.0);
+    gbuffers[1] = vec4(fragNor * 0.5 + 0.5, 1.0);
 }

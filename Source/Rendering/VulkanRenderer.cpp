@@ -48,11 +48,11 @@ namespace JoeEngine {
         // Create deferred lighting pass framebuffer attachments
 
         // Add the post processing passes
-        JEPostProcessingPass p;
+        /*JEPostProcessingPass p;
         p.shaderIndex = 0;
         m_postProcessingPasses.push_back(p);
         p.shaderIndex = 1;
-        m_postProcessingPasses.push_back(p);
+        m_postProcessingPasses.push_back(p);*/
 
         // Create the post processing pass(es)
         CreatePostProcessingPassResources();
@@ -513,14 +513,16 @@ namespace JoeEngine {
     }
 
     void JEVulkanRenderer::UpdateShaderUniformBuffers(uint32_t imageIndex, const std::vector<glm::mat4>& transforms) {
+        // TODO: change the .size() to just take the std vector as a parameter
         for (auto& shadowPassShader : m_shadowPassShaders) {
-            shadowPassShader.UpdateUniformBuffers(m_device, m_sceneManager->m_shadowCamera, transforms.data(), 10);
+            shadowPassShader.UpdateUniformBuffers(m_device, m_sceneManager->m_shadowCamera, transforms.data(), transforms.size());
         }
 
-        m_deferredPassGeometryShader.UpdateUniformBuffers(m_device, m_sceneManager->m_camera, transforms.data(), 10);
+        m_deferredPassGeometryShader.UpdateUniformBuffers(m_device, m_sceneManager->m_camera, transforms.data(), transforms.size());
         m_deferredPassLightingShader.UpdateUniformBuffers(m_device, imageIndex, m_sceneManager->m_camera, m_sceneManager->m_shadowCamera);
+
         for (auto& postProcessingShader : m_postProcessingShaders) {
-            postProcessingShader.UpdateUniformBuffers(m_device, imageIndex, m_sceneManager->m_camera, m_sceneManager->m_shadowCamera, transforms.data(), 10);
+            postProcessingShader.UpdateUniformBuffers(m_device, imageIndex, m_sceneManager->m_camera, m_sceneManager->m_shadowCamera, transforms.data(), transforms.size());
         }
     }
 
@@ -638,8 +640,6 @@ namespace JoeEngine {
 
             vkCmdBeginRenderPass(m_deferredPass.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-            // TODO: Bind deferred geometry pass shader pipeline
-            // Bind the view proj and descriptor set stuff
             vkCmdBindPipeline(m_deferredPass.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_deferredPassGeometryShader.GetPipeline());
             for (uint32_t j = 0; j < meshComponents.size(); ++j) {
                 uint32_t dynamicOffset = j * static_cast<uint32_t>(m_deferredPassGeometryShader.GetDynamicAlignment());
@@ -1355,13 +1355,13 @@ namespace JoeEngine {
 
         // Post Processing
         m_postProcessingPasses.clear();
-        JEPostProcessingPass p;
+        /*JEPostProcessingPass p;
         p.width = newWidth;
         p.height = newHeight;
         p.shaderIndex = 0;
         m_postProcessingPasses.push_back(p);
         p.shaderIndex = 1;
-        m_postProcessingPasses.push_back(p);
+        m_postProcessingPasses.push_back(p);*/
 
         // Deferred Pass - Lighting
         CreateDeferredPassLightingRenderPass();
@@ -1386,8 +1386,6 @@ namespace JoeEngine {
             m_meshBufferManager.Cleanup();
             CleanupTextures();
             CleanupShaders();
-            //m_sceneManager->CleanupMeshesAndTextures(m_device);
-            //m_sceneManager->CleanupShaders(m_device);
             m_sceneManager->LoadScene(0, { m_width, m_height }, { m_shadowPass.width, m_shadowPass.height });
             CreateShadowCommandBuffer();
             CreateDeferredPassGeometryCommandBuffer();

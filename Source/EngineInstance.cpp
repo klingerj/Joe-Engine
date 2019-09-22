@@ -154,7 +154,7 @@ namespace JoeEngine {
         dynamic_cast<JEMeshComponentManager*>(m_componentManagers[MESH_COMP].get())->SetComponent(entity.m_id, meshComp);
     }
 
-    TransformComponent& JEEngineInstance::GetTransformComponent(const Entity& entity) {
+    TransformComponent* JEEngineInstance::GetTransformComponent(const Entity& entity) {
         return dynamic_cast<JETransformComponentManager*>(m_componentManagers[TRANSFORM_COMP].get())->GetComponent(entity.m_id);
     }
 

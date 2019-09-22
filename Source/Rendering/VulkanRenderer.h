@@ -139,6 +139,8 @@ namespace JoeEngine {
         void DrawMesh(VkCommandBuffer commandBuffer, const MeshComponent& meshComponent);
         void DrawScreenSpaceTriMesh(VkCommandBuffer commandBuffer);
 
+        void UpdateShaderUniformBuffers(uint32_t imageIndex, const std::vector<glm::mat4>& transforms);
+
     public:
         JEVulkanRenderer() : m_width(JE_DEFAULT_SCREEN_WIDTH), m_height(JE_DEFAULT_SCREEN_HEIGHT), m_MAX_FRAMES_IN_FLIGHT(JE_DEFAULT_MAX_FRAMES_IN_FLIGHT),
                              m_currentFrame(0), m_didFramebufferResize(false), m_sceneManager(nullptr), m_engineInstance(nullptr) {}
@@ -160,7 +162,6 @@ namespace JoeEngine {
         MeshComponent CreateMesh(const std::string& filepath);
 
         // Renderer Functions
-        void UpdateShaderUniformBuffers(uint32_t imageIndex, const std::vector<glm::mat4>& transforms);
         void DrawShadowPass(const std::vector<MeshComponent>& meshComponents);
         void DrawMeshComponents(const std::vector<MeshComponent>& meshComponents);
 

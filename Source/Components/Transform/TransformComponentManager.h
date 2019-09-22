@@ -22,7 +22,7 @@ namespace JoeEngine {
 
         void Update() override;
         void AddNewComponent() override;
-        TransformComponent& GetComponent(uint32_t index);
+        TransformComponent* GetComponent(uint32_t index);
         const std::vector<TransformComponent>& GetComponentList() const;
     };
 }

@@ -12,41 +12,51 @@ namespace JoeEngine {
         m_currentScene = sceneId;
         if (sceneId == 0) {
             std::vector<Entity> entities;
+            MeshComponent meshComp = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "wahoo.obj");
             for (int i = 0; i < 10; ++i) {
                 entities.emplace_back(m_engineInstance->SpawnEntity());
-                MeshComponent meshComp = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "cube.obj");
                 m_engineInstance->SetMeshComponent(entities[i], meshComp);
             }
 
-            TransformComponent& trans = m_engineInstance->GetTransformComponent(entities[0]);
-            trans.SetTranslation(glm::vec3(0.0f, 0.0f, 0.0f));
+            TransformComponent* trans = m_engineInstance->GetTransformComponent(entities[0]);
+            trans->SetTranslation(glm::vec3(0.0f, 0.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
 
             trans = m_engineInstance->GetTransformComponent(entities[1]);
-            trans.SetTranslation(glm::vec3(-0.5f, 3.0f, 0.0f));
+            trans->SetTranslation(glm::vec3(-0.5f, 3.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
 
             trans = m_engineInstance->GetTransformComponent(entities[2]);
-            trans.SetTranslation(glm::vec3(1.f, -1.0f, 0.0f));
+            trans->SetTranslation(glm::vec3(1.f, -1.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
 
             trans = m_engineInstance->GetTransformComponent(entities[3]);
-            trans.SetTranslation(glm::vec3(2.0f, -2.0f, 0.0f));
+            trans->SetTranslation(glm::vec3(2.0f, -2.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
 
             trans = m_engineInstance->GetTransformComponent(entities[4]);
-            trans.SetTranslation(glm::vec3(3.0f, -2.0f, 0.0f));
+            trans->SetTranslation(glm::vec3(3.0f, -2.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
 
             trans = m_engineInstance->GetTransformComponent(entities[5]);
-            trans.SetTranslation(glm::vec3(4.0f, -1.0f, 0.0f));
+            trans->SetTranslation(glm::vec3(4.0f, -1.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
 
             trans = m_engineInstance->GetTransformComponent(entities[6]);
-            trans.SetTranslation(glm::vec3(5.0f, 0.0f, 0.0f));
+            trans->SetTranslation(glm::vec3(5.0f, 0.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
 
             trans = m_engineInstance->GetTransformComponent(entities[7]);
-            trans.SetTranslation(glm::vec3(6.0f, 1.0f, 0.0f));
+            trans->SetTranslation(glm::vec3(6.0f, 1.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
 
             trans = m_engineInstance->GetTransformComponent(entities[8]);
-            trans.SetTranslation(glm::vec3(7.0f, 2.0f, 0.0f));
+            trans->SetTranslation(glm::vec3(7.0f, 2.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
 
             trans = m_engineInstance->GetTransformComponent(entities[9]);
-            trans.SetTranslation(glm::vec3(6.5f, 10.0f, 0.0f));
+            trans->SetTranslation(glm::vec3(6.5f, 10.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
 
             // Meshes
             /*m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);

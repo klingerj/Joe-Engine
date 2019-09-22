@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <iostream>
 
 #include "Texture.h"
 
@@ -20,6 +21,7 @@ namespace JoeEngine {
         VkDeviceSize imageSize = texWidth * texHeight * 4;
 
         if (!pixels) {
+            std::cout << "path: " << filepath.c_str() << std::endl;
             throw std::runtime_error("failed to load texture image!");
         }
 

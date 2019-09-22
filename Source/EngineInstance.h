@@ -63,7 +63,7 @@ namespace JoeEngine {
         Entity SpawnEntity();
         MeshComponent CreateMeshComponent(const std::string& filepath);
         void SetMeshComponent(const Entity& entity, const MeshComponent& meshComp);
-        TransformComponent& GetTransformComponent(const Entity& entity);
+        TransformComponent* GetTransformComponent(const Entity& entity);
         const std::vector<glm::mat4> GetTransformMatrices() const;
     };
 }

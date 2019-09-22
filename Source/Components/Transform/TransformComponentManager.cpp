@@ -11,11 +11,11 @@ namespace JoeEngine {
         m_transformComponents.emplace_back(TransformComponent());
     }
 
-    TransformComponent& JETransformComponentManager::GetComponent(uint32_t index) {
+    TransformComponent* JETransformComponentManager::GetComponent(uint32_t index) {
         if (index > m_transformComponents.size() - 1) {
             //TODO: throw exception or something
         }
-        return m_transformComponents[index];
+        return &m_transformComponents[index];
     }
 
     const std::vector<TransformComponent>& JETransformComponentManager::GetComponentList() const {
