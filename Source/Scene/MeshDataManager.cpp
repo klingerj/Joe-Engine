@@ -1,4 +1,4 @@
-#include "MeshDataManager.h"
+/*#include "MeshDataManager.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
@@ -207,3 +207,4 @@ namespace JoeEngine {
         vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_screenSpaceTriangle.indexList.size()), 1, 0, 0, 0);
     }
 }
+*/

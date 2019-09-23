@@ -1,6 +1,7 @@
+#include <array>
+
 #include "VulkanShader.h"
 #include "../Utils/MemAllocUtils.h"
-#include "../scene/MeshDataManager.h"
 
 namespace JoeEngine {
     std::vector<char> ReadFile(const std::string& filename) {
@@ -576,7 +577,7 @@ namespace JoeEngine {
 
         size_t bufferSize_Dynamic_Model = numModelMatrices * m_uboDynamicAlignment;
 
-        m_ubo_Dynamic_ModelMat.model = (glm::mat4*)MemAllocUtils::alignedAlloc(m_uboDynamicAlignment, bufferSize_Dynamic_Model);//  _aligned_malloc(bufferSize_Dynamic_Model, m_uboDynamicAlignment);
+        m_ubo_Dynamic_ModelMat.model = (glm::mat4*)MemAllocUtils::alignedAlloc(m_uboDynamicAlignment, bufferSize_Dynamic_Model);
 
         CreateBuffer(physicalDevice, device, bufferSize_viewProj, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_uniformBuffers_ViewProj, m_uniformBuffersMemory_ViewProj);
         CreateBuffer(physicalDevice, device, bufferSize_Dynamic_Model, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, m_uniformBuffers_Dynamic_Model, m_uniformBuffersMemory_Dynamic_Model);
@@ -938,7 +939,7 @@ namespace JoeEngine {
 
         size_t bufferSize_Dynamic_Model = numModelMatrices * m_uboDynamicAlignment;
 
-        m_ubo_Dynamic_ModelMat.model = (glm::mat4*)MemAllocUtils::alignedAlloc(m_uboDynamicAlignment, bufferSize_Dynamic_Model); //_aligned_malloc(bufferSize_Dynamic_Model, m_uboDynamicAlignment);
+        m_ubo_Dynamic_ModelMat.model = (glm::mat4*)MemAllocUtils::alignedAlloc(m_uboDynamicAlignment, bufferSize_Dynamic_Model);
 
         CreateBuffer(physicalDevice, device, bufferSize_viewProj, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_uniformBuffers_ViewProj, m_uniformBuffersMemory_ViewProj);
         CreateBuffer(physicalDevice, device, bufferSize_Dynamic_Model, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, m_uniformBuffers_Dynamic_Model, m_uniformBuffersMemory_Dynamic_Model);

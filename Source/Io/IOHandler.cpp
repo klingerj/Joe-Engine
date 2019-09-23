@@ -1,19 +1,19 @@
 #include "IOHandler.h"
-#include "../rendering/VulkanWindow.h"
-#include "../EngineApplication.h"
+#include "../Rendering/VulkanWindow.h"
+#include "../EngineInstance.h"
 
 namespace JoeEngine {
     static void JEKey_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-        auto io = reinterpret_cast<JEEngineApplication*>(glfwGetWindowUserPointer(window))->GetIOSubsystem();
+        auto& io = reinterpret_cast<JEEngineInstance*>(glfwGetWindowUserPointer(window))->GetIOSubsystem();
 
         if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-            io->ExecuteCallbacksForKey(key);
+            io.ExecuteCallbacksForKey(key);
         }
     }
 
     static void JEMouse_callback(GLFWwindow* window, int button, int action, int mods) {
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-            // stuff
+            // TODO stuff
         }
     }
 

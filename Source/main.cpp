@@ -1,9 +1,9 @@
 #include <iostream>
-#include "EngineApplication.h"
+#include "EngineInstance.h"
 
 int RunApp() {
     try {
-        JoeEngine::JEEngineApplication app = JoeEngine::JEEngineApplication();
+        JoeEngine::JEEngineInstance app = JoeEngine::JEEngineInstance();
         app.Run();
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;

@@ -1,17 +1,65 @@
 #include <chrono>
 
 #include "SceneManager.h"
+#include "../EngineInstance.h"
 
 namespace JoeEngine {
-    void JESceneManager::Initialize(const std::shared_ptr<JEMeshDataManager>& m) {
-        m_meshDataManager = m;
+    void JESceneManager::Initialize(JEEngineInstance* engineInstance) {
+        m_engineInstance = engineInstance;
     }
 
-    void JESceneManager::LoadScene(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkRenderPass renderPass_deferredLighting, VkImageView deferredLightingImageView, const JEVulkanQueue& graphicsQueue, const JEVulkanSwapChain& vulkanSwapChain, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, std::vector<JEPostProcessingPass> postProcessingPasses, uint32_t sceneId) {
+    void JESceneManager::LoadScene(uint32_t sceneId, VkExtent2D windowExtent, VkExtent2D shadowPassExtent) {
         m_currentScene = sceneId;
         if (sceneId == 0) {
+            std::vector<Entity> entities;
+            MeshComponent meshComp = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "wahoo.obj");
+            for (int i = 0; i < 10; ++i) {
+                entities.emplace_back(m_engineInstance->SpawnEntity());
+                m_engineInstance->SetMeshComponent(entities[i], meshComp);
+            }
+
+            TransformComponent* trans = m_engineInstance->GetTransformComponent(entities[0]);
+            trans->SetTranslation(glm::vec3(0.0f, 0.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+
+            trans = m_engineInstance->GetTransformComponent(entities[1]);
+            trans->SetTranslation(glm::vec3(-0.5f, 3.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+
+            trans = m_engineInstance->GetTransformComponent(entities[2]);
+            trans->SetTranslation(glm::vec3(1.f, -1.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+
+            trans = m_engineInstance->GetTransformComponent(entities[3]);
+            trans->SetTranslation(glm::vec3(2.0f, -2.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+
+            trans = m_engineInstance->GetTransformComponent(entities[4]);
+            trans->SetTranslation(glm::vec3(3.0f, -2.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+
+            trans = m_engineInstance->GetTransformComponent(entities[5]);
+            trans->SetTranslation(glm::vec3(4.0f, -1.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+
+            trans = m_engineInstance->GetTransformComponent(entities[6]);
+            trans->SetTranslation(glm::vec3(5.0f, 0.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+
+            trans = m_engineInstance->GetTransformComponent(entities[7]);
+            trans->SetTranslation(glm::vec3(6.0f, 1.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+
+            trans = m_engineInstance->GetTransformComponent(entities[8]);
+            trans->SetTranslation(glm::vec3(7.0f, 2.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+
+            trans = m_engineInstance->GetTransformComponent(entities[9]);
+            trans->SetTranslation(glm::vec3(6.5f, 10.0f, 0.0f));
+            trans->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+
             // Meshes
-            m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+            /*m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
             m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_NONE);
             m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
             m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
@@ -33,21 +81,17 @@ namespace JoeEngine {
             m_meshDataManager->SetMeshPosition(glm::vec3(6.5f, 10.0f, 0.0f), 9);
 
             // Screen space triangle setup
-            m_meshDataManager->CreateScreenSpaceTriangleMesh(physicalDevice, device, commandPool, graphicsQueue);
-
-            // Textures
-            JETexture t = JETexture(device, physicalDevice, graphicsQueue, commandPool, JE_TEXTURES_DIR + "ducreux.jpg");
-            m_textures.push_back(t);
+            m_meshDataManager->CreateScreenSpaceTriangleMesh(physicalDevice, device, commandPool, graphicsQueue);*/
 
             // Camera
-            m_camera = JECamera(glm::vec3(0.0f, 4.0f, 12.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE);
-            m_shadowCamera = JECamera(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPass.width / (float)shadowPass.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
+            m_camera = JECamera(glm::vec3(0.0f, 4.0f, 12.0f), glm::vec3(0.0f, 0.0f, 0.0f), windowExtent.width / (float)windowExtent.height, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE);
+            m_shadowCamera = JECamera(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPassExtent.width / (float)shadowPassExtent.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
 
             // Shaders
-            CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass_deferredLighting, deferredLightingImageView, shadowPass, deferredPass, postProcessingPasses);
+            //CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass_deferredLighting, deferredLightingImageView, shadowPass, deferredPass, postProcessingPasses);
         } else if (sceneId == 1) {
             // Meshes
-            m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+            /*m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
             m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_NONE);
             m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
             m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_NONE);
@@ -57,42 +101,42 @@ namespace JoeEngine {
             m_meshDataManager->SetMeshPosition(glm::vec3(0.75f, 3.0f, 0.0f), 3);
 
             // Screen space triangle setup
-            m_meshDataManager->CreateScreenSpaceTriangleMesh(physicalDevice, device, commandPool, graphicsQueue);
+            m_meshDataManager->CreateScreenSpaceTriangleMesh(physicalDevice, device, commandPool, graphicsQueue);*/
 
             // Textures
-            JETexture t = JETexture(device, physicalDevice, graphicsQueue, commandPool, JE_TEXTURES_DIR + "ducreux.jpg");
-            m_textures.push_back(t);
+            //JETexture t = JETexture(device, physicalDevice, graphicsQueue, commandPool, JE_TEXTURES_DIR + "ducreux.jpg");
+            //m_textures.push_back(t);
 
             // Camera
-            m_camera = JECamera(glm::vec3(0.0f, 4.0f, 12.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE);
-            m_shadowCamera = JECamera(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPass.width / (float)shadowPass.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
+            m_camera = JECamera(glm::vec3(0.0f, 4.0f, 12.0f), glm::vec3(0.0f, 0.0f, 0.0f), windowExtent.width / (float)windowExtent.height, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE);
+            m_shadowCamera = JECamera(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPassExtent.width / (float)shadowPassExtent.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
 
             // Shaders
-            CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass_deferredLighting, deferredLightingImageView, shadowPass, deferredPass, postProcessingPasses);
+            //CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass_deferredLighting, deferredLightingImageView, shadowPass, deferredPass, postProcessingPasses);
         } else if (sceneId == 2) {
-            m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "plane.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
+            /*m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "plane.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
             m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "wahoo.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
             m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "sphere.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
             m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "alienModel_Small.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
 
             // Screen space triangle setup
-            m_meshDataManager->CreateScreenSpaceTriangleMesh(physicalDevice, device, commandPool, graphicsQueue);
+            m_meshDataManager->CreateScreenSpaceTriangleMesh(physicalDevice, device, commandPool, graphicsQueue);*/
 
             // Textures
-            JETexture t = JETexture(device, physicalDevice, graphicsQueue, commandPool, JE_TEXTURES_DIR + "ducreux.jpg");
-            m_textures.push_back(t);
+            //JETexture t = JETexture(device, physicalDevice, graphicsQueue, commandPool, JE_TEXTURES_DIR + "ducreux.jpg");
+            //m_textures.push_back(t);
 
             // Camera
-            m_camera = JECamera(glm::vec3(0.0f, 4.0f, 12.0f), glm::vec3(0.0f, 0.0f, 0.0f), vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE);
-            m_shadowCamera = JECamera(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPass.width / (float)shadowPass.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
+            m_camera = JECamera(glm::vec3(0.0f, 4.0f, 12.0f), glm::vec3(0.0f, 0.0f, 0.0f), windowExtent.width / (float)windowExtent.height, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE);
+            m_shadowCamera = JECamera(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPassExtent.width / (float)shadowPassExtent.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
 
             // Shaders
-            CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass_deferredLighting, deferredLightingImageView, shadowPass, deferredPass, postProcessingPasses);
+            //CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass_deferredLighting, deferredLightingImageView, shadowPass, deferredPass, postProcessingPasses);
         }
     }
 
-    void JESceneManager::CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass_deferredLighting, VkImageView deferredLightingImageView, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, std::vector<JEPostProcessingPass> postProcessingPasses) {
-        m_shadowPassShaders.emplace_back(JEVulkanShadowPassShader(physicalDevice, device, shadowPass.renderPass, { static_cast<uint32_t>(shadowPass.width), static_cast<uint32_t>(shadowPass.height) }, m_meshDataManager->GetNumMeshes(),
+    //void JESceneManager::CreateShaders(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass_deferredLighting, VkImageView deferredLightingImageView, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, std::vector<JEPostProcessingPass> postProcessingPasses) {
+        /*m_shadowPassShaders.emplace_back(JEVulkanShadowPassShader(physicalDevice, device, shadowPass.renderPass, { static_cast<uint32_t>(shadowPass.width), static_cast<uint32_t>(shadowPass.height) }, m_meshDataManager->GetNumMeshes(),
             JE_SHADER_DIR + "vert_shadow.spv", JE_SHADER_DIR + "frag_shadow.spv"));
         m_deferredPassGeometryShader = JEVulkanDeferredPassGeometryShader(physicalDevice, device, vulkanSwapChain, deferredPass.renderPass, m_meshDataManager->GetNumMeshes(), m_textures[0],
             JE_SHADER_DIR + "vert_deferred_geom.spv", JE_SHADER_DIR + "frag_deferred_geom.spv");
@@ -109,12 +153,12 @@ namespace JoeEngine {
                 m_postProcessingShaders.emplace_back(JEVulkanPostProcessShader(physicalDevice, device, vulkanSwapChain, postProcessingPasses[p], postProcessingPasses[p - 1].texture.imageView,
                     JE_SHADER_DIR + "vert_passthrough.spv", JE_SHADER_DIR + JEBuiltInPostProcessingShaderPaths[currentPass.shaderIndex]));
             }
-        }
-    }
+        }*/
+    //}
 
-    void JESceneManager::RecreateResources(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanSwapChain& vulkanSwapChain, VkRenderPass renderPass_deferredLighting, VkImageView deferredLightingImageView, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, std::vector<JEPostProcessingPass> postProcessingPasses) {
-        CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass_deferredLighting, deferredLightingImageView, shadowPass, deferredPass, postProcessingPasses);
-        m_camera.SetAspect(vulkanSwapChain.GetExtent().width / (float)vulkanSwapChain.GetExtent().height);
+    void JESceneManager::RecreateResources(VkExtent2D windowExtent) {
+        //CreateShaders(physicalDevice, device, vulkanSwapChain, renderPass_deferredLighting, deferredLightingImageView, shadowPass, deferredPass, postProcessingPasses);
+        m_camera.SetAspect(windowExtent.width / (float)windowExtent.height);
     }
 
     void JESceneManager::RegisterCallbacks(JEIOHandler* ioHandler) {
@@ -141,16 +185,16 @@ namespace JoeEngine {
         ioHandler->AddCallback(JE_KEY_RIGHT, cameraYawLeft);
     }
 
-    void JESceneManager::CleanupMeshesAndTextures(VkDevice device) {
-        m_meshDataManager->Cleanup(device);
+    /*void JESceneManager::CleanupMeshesAndTextures(VkDevice device) {
+        //m_meshDataManager->Cleanup(device);
         for (JETexture t : m_textures) {
             t.Cleanup(device);
         }
         m_textures.clear();
-    }
+    }*/
 
-    void JESceneManager::CleanupShaders(VkDevice device) {
-        for (auto& shadowPassShader : m_shadowPassShaders) {
+    //void JESceneManager::CleanupShaders(VkDevice device) {
+        /*for (auto& shadowPassShader : m_shadowPassShaders) {
             shadowPassShader.Cleanup(device);
         }
         m_deferredPassGeometryShader.Cleanup(device);
@@ -159,10 +203,10 @@ namespace JoeEngine {
             postProcessingShader.Cleanup(device);
         }
         m_shadowPassShaders.clear();
-        m_postProcessingShaders.clear();
-    }
+        m_postProcessingShaders.clear();*/
+    //}
 
-    void JESceneManager::UpdateModelMatrices() {
+    /*void JESceneManager::UpdateModelMatrices() {
         static auto startTime = std::chrono::high_resolution_clock::now();
         auto currentTime = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
@@ -175,26 +219,26 @@ namespace JoeEngine {
             glm::mat4 mat1 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
             mat1 = glm::rotate(mat1, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
             mat1 = glm::scale(mat1, glm::vec3(8.0f, 8.0f, 8.0f));
-            m_meshDataManager->SetModelMatrix(mat1, 0);
+            //m_meshDataManager->SetModelMatrix(mat1, 0);
 
             glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, -0.75f, 0.0f));
             mat2 = glm::rotate(mat2, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
             mat2 = glm::scale(mat2, glm::vec3(0.25f, 0.25f, 0.25f));
-            m_meshDataManager->SetModelMatrix(mat2, 1);
+            //m_meshDataManager->SetModelMatrix(mat2, 1);
 
             glm::mat4 mat3 = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, -0.75f, 0.05f));
             mat3 = glm::rotate(mat3, time * -1.5708f, glm::vec3(0.0f, 1.0f, 0.0f));
             mat3 = glm::scale(mat3, glm::vec3(0.15f, 0.15f, 0.15f));
-            m_meshDataManager->SetModelMatrix(mat3, 2);
+            //m_meshDataManager->SetModelMatrix(mat3, 2);
 
             glm::mat4 mat4 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, std::sinf(time) * 0.05f - 0.75f, 0.75f));
             mat4 = glm::rotate(mat4, time * -1.5708f, glm::vec3(0.0f, 1.0f, 0.0f));
             mat4 = glm::scale(mat4, glm::vec3(0.15f, 0.15f, 0.15f));
-            m_meshDataManager->SetModelMatrix(mat4, 3);
+            //m_meshDataManager->SetModelMatrix(mat4, 3);
         }
-    }
+    }*/
 
-    void JESceneManager::UpdateShaderUniformBuffers(VkDevice device, uint32_t imageIndex) {
+    /*void JESceneManager::UpdateShaderUniformBuffers(VkDevice device, uint32_t imageIndex) {
         for (auto& shadowPassShader : m_shadowPassShaders) {
             shadowPassShader.UpdateUniformBuffers(device, m_shadowCamera, m_meshDataManager->GetModelMatrices(), m_meshDataManager->GetNumMeshes());
         }
@@ -203,36 +247,35 @@ namespace JoeEngine {
         for (auto& postProcessingShader : m_postProcessingShaders) {
             postProcessingShader.UpdateUniformBuffers(device, imageIndex, m_camera, m_shadowCamera, m_meshDataManager->GetModelMatrices(), m_meshDataManager->GetNumMeshes());
         }
-    }
+    }*/
 
-    void JESceneManager::BindShadowPassResources(VkCommandBuffer commandBuffer) {
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPassShaders[0].GetPipeline());
-        for (uint32_t j = 0; j < m_meshDataManager->GetNumMeshes(); ++j) {
+    //void JESceneManager::BindShadowPassResources(VkCommandBuffer commandBuffer) {
+        //vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPassShaders[0].GetPipeline());
+        /*for (uint32_t j = 0; j < m_meshDataManager->GetNumMeshes(); ++j) {
             uint32_t dynamicOffset = j * static_cast<uint32_t>(m_shadowPassShaders[0].GetDynamicAlignment());
             m_shadowPassShaders[0].BindDescriptorSets(commandBuffer, dynamicOffset);
             m_meshDataManager->DrawMesh(commandBuffer, j);
-        }
-    }
+        }*/
+    //}
 
-    void JESceneManager::BindDeferredPassGeometryResources(VkCommandBuffer commandBuffer) {
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_deferredPassGeometryShader.GetPipeline());
-        for (uint32_t j = 0; j < m_meshDataManager->GetNumMeshes(); ++j) {
+    //void JESceneManager::BindDeferredPassGeometryResources(VkCommandBuffer commandBuffer) {
+        //vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_deferredPassGeometryShader.GetPipeline());
+        /*for (uint32_t j = 0; j < m_meshDataManager->GetNumMeshes(); ++j) {
             uint32_t dynamicOffset = j * static_cast<uint32_t>(m_deferredPassGeometryShader.GetDynamicAlignment());
             m_deferredPassGeometryShader.BindDescriptorSets(commandBuffer, dynamicOffset);
             m_meshDataManager->DrawMesh(commandBuffer, j);
-        }
-    }
+        }*/
+    //}
 
-    void JESceneManager::BindDeferredPassLightingResources(VkCommandBuffer commandBuffer, size_t index) {
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_deferredPassLightingShader.GetPipeline());
-        m_deferredPassLightingShader.BindDescriptorSets(commandBuffer, index);
-        m_meshDataManager->DrawScreenSpaceTriangle(commandBuffer);
-    }
+    //void JESceneManager::BindDeferredPassLightingResources(VkCommandBuffer commandBuffer, size_t index) {
+        //vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_deferredPassLightingShader.GetPipeline());
+        //m_deferredPassLightingShader.BindDescriptorSets(commandBuffer, index);
+        //m_meshDataManager->DrawScreenSpaceTriangle(commandBuffer);
+    //}
 
-    void JESceneManager::BindPostProcessingPassResources(VkCommandBuffer commandBuffer, size_t index, size_t shaderIndex) {
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_postProcessingShaders[shaderIndex].GetPipeline());
-        m_postProcessingShaders[shaderIndex].BindDescriptorSets(commandBuffer, index);
-        m_meshDataManager->DrawScreenSpaceTriangle(commandBuffer);
-    }
+    //void JESceneManager::BindPostProcessingPassResources(VkCommandBuffer commandBuffer, size_t index, size_t shaderIndex) {
+        //vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_postProcessingShaders[shaderIndex].GetPipeline());
+        //m_postProcessingShaders[shaderIndex].BindDescriptorSets(commandBuffer, index);
+        //m_meshDataManager->DrawScreenSpaceTriangle(commandBuffer);
+    //}
 }
-

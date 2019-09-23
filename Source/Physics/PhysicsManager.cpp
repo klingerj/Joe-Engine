@@ -1,7 +1,7 @@
 #include "PhysicsManager.h"
 #include "glm/gtc/epsilon.hpp"
 #include "glm/gtx/norm.hpp"
-
+/*
 namespace JoeEngine {
     void JEPhysicsManager::Initialize(const std::shared_ptr<JEMeshDataManager>& m) {
         m_startTime = std::chrono::high_resolution_clock::now();
@@ -441,7 +441,7 @@ namespace JoeEngine {
             const float proj = glm::dot(point, glm::vec3(collisionInfo.minimumTranslation));
 
             // If point is on the back side of the plane and is "more positive" than the previous stored min
-            if (std::fabsf(proj - collisionInfo.minimumTranslation.w) < 0.065f/*0.000000953674316f*/) {
+            if (std::fabsf(proj - collisionInfo.minimumTranslation.w) < 0.065f) {
                 contactPoint += obbPointsTransformed_A[j] - obbA.center;
                 ++numContactPoints;
             }
@@ -467,3 +467,4 @@ namespace JoeEngine {
         return collisionInfo;
     }
 }
+*/

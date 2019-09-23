@@ -4,10 +4,12 @@
 #include <vector>
 
 #include "vulkan/vulkan.h"
+#include "glm/glm.hpp"
+
 #include "VulkanSwapChain.h"
-#include "VulkanRenderer.h"
+#include "VulkanRenderingTypes.h"
 #include "Texture.h"
-#include "../scene/Camera.h"
+#include "../Scene/Camera.h"
 
 namespace JoeEngine {
     struct JEUBO_ViewProj {

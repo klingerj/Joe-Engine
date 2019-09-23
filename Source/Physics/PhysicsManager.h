@@ -2,8 +2,9 @@
 
 #include <chrono>
 
-#include "../scene/MeshDataManager.h"
+//#include "../Scene/MeshDataManager.h"
 
+/*
 namespace JoeEngine {
     // Collision information
     // TODO: expand this to store info for edge-edge collisions. Right now we are just checking vertex-face.
@@ -38,3 +39,4 @@ namespace JoeEngine {
         void Update();
     };
 }
+*/

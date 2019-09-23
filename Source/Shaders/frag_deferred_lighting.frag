@@ -24,7 +24,7 @@ void main() {
     // Read from G-buffers
     vec3 albedoColor = texture(albedo, fragUV).xyz;
     vec3 gBuffer_Color = texture(gBufferColor, fragUV).xyz;
-    vec3 gBuffer_Normal = texture(gBufferNormal, fragUV).xyz;
+    vec3 gBuffer_Normal = texture(gBufferNormal, fragUV).xyz * 2 - 1;
 
     // Get world space position from fragment position and depth
     vec3 ndcPos = vec3(fragPos, texture(gBufferDepth, fragUV).x);
