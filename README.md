@@ -9,6 +9,7 @@ The goal of the Joe Engine is to be my C++ playground. The engine will contain v
 Brief [demo video](https://vimeo.com/326088400) here.
 
 ### Current features
+* Data-oriented Entity-Component System (WIP)
 * Deferred Renderer
 * Post Processing
 * Shadow Mapping
