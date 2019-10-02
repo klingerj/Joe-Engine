@@ -23,7 +23,7 @@ namespace JoeEngine {
 
     constexpr int JE_DEFAULT_SHADOW_MAP_WIDTH = 2000;
     constexpr int JE_DEFAULT_SHADOW_MAP_HEIGHT = 2000;
-    constexpr float JE_DEFAULT_SHADOW_MAP_DEPTH_BIAS_SLOPE = 1.5f;
+    constexpr float JE_DEFAULT_SHADOW_MAP_DEPTH_BIAS_SLOPE = 1.0f;
     constexpr float JE_DEFAULT_SHADOW_MAP_DEPTH_BIAS_CONSTANT = 0.0f;
 
     // Camera attributes
@@ -31,8 +31,8 @@ namespace JoeEngine {
     constexpr float JE_SCENE_VIEW_NEAR_PLANE = 0.1f;
     constexpr float JE_SCENE_VIEW_FAR_PLANE = 100.0f;
     constexpr float JE_SHADOW_VIEW_NEAR_PLANE = 0.1f;
-    constexpr float JE_SHADOW_VIEW_FAR_PLANE = 50.0f;
-    const float JE_FOVY = glm::radians(45.0f);
+    constexpr float JE_SHADOW_VIEW_FAR_PLANE = 100.0f;
+    const float JE_FOVY = glm::radians(22.5f);
 
     // Vulkan Functions
     VkCommandBuffer BeginSingleTimeCommands(VkDevice device, VkCommandPool commandPool);

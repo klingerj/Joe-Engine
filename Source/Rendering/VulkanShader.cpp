@@ -279,7 +279,7 @@ namespace JoeEngine {
         // Nothing to do here
     }
 
-    void JEVulkanPostProcessShader::UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const JECamera& camera, const JECamera& shadowCamera, const glm::mat4* modelMatrices, uint32_t numMeshes) {
+    void JEVulkanPostProcessShader::UpdateUniformBuffers(VkDevice device, uint32_t currentImage) {
         // Nothing to do here
     }
 
@@ -292,12 +292,6 @@ namespace JoeEngine {
     void JEVulkanShadowPassShader::Cleanup(VkDevice device) {
         vkDestroyPipelineLayout(device, m_pipelineLayout, nullptr);
         vkDestroyPipeline(device, m_graphicsPipeline, nullptr);
-        vkDestroyDescriptorPool(device, m_descriptorPool, nullptr);
-        vkDestroyDescriptorSetLayout(device, m_descriptorSetLayout, nullptr);
-        vkDestroyBuffer(device, m_uniformBuffers_ViewProj, nullptr);
-        vkFreeMemory(device, m_uniformBuffersMemory_ViewProj, nullptr);
-        vkDestroyBuffer(device, m_uniformBuffers_Dynamic_Model, nullptr);
-        vkFreeMemory(device, m_uniformBuffersMemory_Dynamic_Model, nullptr);
     }
 
     // Warning: long function
@@ -439,10 +433,17 @@ namespace JoeEngine {
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout;
-        pipelineLayoutInfo.pushConstantRangeCount = 0;
-        pipelineLayoutInfo.pPushConstantRanges = nullptr;
+        pipelineLayoutInfo.setLayoutCount = 0;
+        pipelineLayoutInfo.pSetLayouts = nullptr;
+        
+        // Set up push constant ranges
+        VkPushConstantRange pushConstantRange = {};
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size = sizeof(JE_PushConst_ViewProj) + sizeof(JE_PushConst_ModelMat);
+
+        pipelineLayoutInfo.pushConstantRangeCount = 1;
+        pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
         if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS) {
             throw std::runtime_error("failed to create pipeline layout!");
@@ -477,146 +478,29 @@ namespace JoeEngine {
     }
 
     void JEVulkanShadowPassShader::CreateDescriptorPool(VkDevice device) {
-        std::array<VkDescriptorPoolSize, 2> poolSizes = {};
-        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = 1;
-        poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        poolSizes[1].descriptorCount = 1;
-
-        VkDescriptorPoolCreateInfo poolInfo = {};
-        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-        poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = 1;
-
-        if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create descriptor pool!");
-        }
     }
 
     void JEVulkanShadowPassShader::CreateDescriptorSetLayout(VkDevice device) {
-        VkDescriptorSetLayoutBinding uboLayoutBinding = {};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
-
-        VkDescriptorSetLayoutBinding uboDynamicLayoutBinding = {};
-        uboDynamicLayoutBinding.binding = 1;
-        uboDynamicLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        uboDynamicLayoutBinding.descriptorCount = 1;
-        uboDynamicLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        uboDynamicLayoutBinding.pImmutableSamplers = nullptr;
-
-
-        std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, uboDynamicLayoutBinding };
-        VkDescriptorSetLayoutCreateInfo layoutInfo = {};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-
-        if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create descriptor set layout!");
-        }
     }
 
     void JEVulkanShadowPassShader::CreateDescriptorSets(VkDevice device) {
-        VkDescriptorSetAllocateInfo allocInfo = {};
-        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool = m_descriptorPool;
-        allocInfo.descriptorSetCount = 1;
-        allocInfo.pSetLayouts = &m_descriptorSetLayout;
-
-        if (vkAllocateDescriptorSets(device, &allocInfo, &m_descriptorSet) != VK_SUCCESS) {
-            throw std::runtime_error("failed to allocate descriptor sets!");
-        }
-
-        VkDescriptorBufferInfo bufferInfo_vp = {};
-        bufferInfo_vp.buffer = m_uniformBuffers_ViewProj;
-        bufferInfo_vp.offset = 0;
-        bufferInfo_vp.range = sizeof(JEUBO_ViewProj);
-
-        VkDescriptorBufferInfo bufferInfo_dynModel = {};
-        bufferInfo_dynModel.buffer = m_uniformBuffers_Dynamic_Model;
-        bufferInfo_dynModel.offset = 0;
-        bufferInfo_dynModel.range = sizeof(JEUBODynamic_ModelMat);
-
-        std::array<VkWriteDescriptorSet, 2> descriptorWrites = {};
-
-        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[0].dstSet = m_descriptorSet;
-        descriptorWrites[0].dstBinding = 0;
-        descriptorWrites[0].dstArrayElement = 0;
-        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrites[0].descriptorCount = 1;
-        descriptorWrites[0].pBufferInfo = &bufferInfo_vp;
-
-        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[1].dstSet = m_descriptorSet;
-        descriptorWrites[1].dstBinding = 1;
-        descriptorWrites[1].dstArrayElement = 0;
-        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        descriptorWrites[1].descriptorCount = 1;
-        descriptorWrites[1].pBufferInfo = &bufferInfo_dynModel;
-
-        vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
-    void JEVulkanShadowPassShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numModelMatrices) {
-        VkDeviceSize bufferSize_viewProj = sizeof(JEUBO_ViewProj);
-
-        // Calculate required alignment based on minimum device offset alignment
-        VkPhysicalDeviceProperties deviceProperties;
-        vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
-        size_t minUboAlignment = deviceProperties.limits.minUniformBufferOffsetAlignment;
-        m_uboDynamicAlignment = sizeof(glm::mat4);
-        if (minUboAlignment > 0) {
-            m_uboDynamicAlignment = (m_uboDynamicAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);
-        }
-
-        size_t bufferSize_Dynamic_Model = numModelMatrices * m_uboDynamicAlignment;
-
-        m_ubo_Dynamic_ModelMat.model = (glm::mat4*)MemAllocUtils::alignedAlloc(m_uboDynamicAlignment, bufferSize_Dynamic_Model);
-
-        CreateBuffer(physicalDevice, device, bufferSize_viewProj, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_uniformBuffers_ViewProj, m_uniformBuffersMemory_ViewProj);
-        CreateBuffer(physicalDevice, device, bufferSize_Dynamic_Model, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, m_uniformBuffers_Dynamic_Model, m_uniformBuffersMemory_Dynamic_Model);
+    void JEVulkanShadowPassShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device) {
     }
 
-    void JEVulkanShadowPassShader::UpdateUniformBuffers(VkDevice device, const JECamera& shadowCamera, const glm::mat4* modelMatrices, uint32_t numMeshes) {
-        JEUBO_ViewProj ubo_vp = {};
-        glm::mat4 view = shadowCamera.GetView();
-        const float coord = 7.5f;
-        glm::mat4 proj = glm::ortho(-coord, coord, -coord, coord, shadowCamera.GetNearPlane(), shadowCamera.GetFarPlane());
-        proj[1][1] *= -1.0f;
-        ubo_vp.viewProj = proj * view;
-
-        for (uint32_t i = 0; i < numMeshes; ++i) {
-            // Aligned offset
-            glm::mat4* modelMat = (glm::mat4*)(((uint64_t)m_ubo_Dynamic_ModelMat.model + (i * m_uboDynamicAlignment)));
-            *modelMat = modelMatrices[i];
-        }
-
-        void* data;
-        vkMapMemory(device, m_uniformBuffersMemory_ViewProj, 0, sizeof(ubo_vp), 0, &data);
-        memcpy(data, &ubo_vp, sizeof(ubo_vp));
-        vkUnmapMemory(device, m_uniformBuffersMemory_ViewProj);
-
-        size_t dynamicMemorySize = numMeshes * m_uboDynamicAlignment;
-        vkMapMemory(device, m_uniformBuffersMemory_Dynamic_Model, 0, dynamicMemorySize, 0, &data);
-        memcpy(data, m_ubo_Dynamic_ModelMat.model, dynamicMemorySize);
-
-        VkMappedMemoryRange mappedMemoryRange = {};
-        mappedMemoryRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-        mappedMemoryRange.memory = m_uniformBuffersMemory_Dynamic_Model;
-        mappedMemoryRange.size = dynamicMemorySize;
-        mappedMemoryRange.offset = 0;
-        vkFlushMappedMemoryRanges(device, 1, &mappedMemoryRange);
-        vkUnmapMemory(device, m_uniformBuffersMemory_Dynamic_Model); // TODO: check if i only have to map the memory once
+    void JEVulkanShadowPassShader::UpdateUniformBuffers(VkDevice device) {
     }
 
-    void JEVulkanShadowPassShader::BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t dynamicOffset) {
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSet, 1, &dynamicOffset);
+    void JEVulkanShadowPassShader::BindDescriptorSets(VkCommandBuffer commandBuffer) {
+    }
+
+    void JEVulkanShadowPassShader::BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) {
+        vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(JE_PushConst_ViewProj), &viewProj[0][0]);
+    }
+
+    void JEVulkanShadowPassShader::BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat) {
+        vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof(JE_PushConst_ViewProj), sizeof(JE_PushConst_ModelMat), &modelMat[0][0]);
     }
 
     // Deferred Pass Shader - Geometry pass (G-buffers)
@@ -626,10 +510,6 @@ namespace JoeEngine {
         vkDestroyPipeline(device, m_graphicsPipeline, nullptr);
         vkDestroyDescriptorPool(device, m_descriptorPool, nullptr);
         vkDestroyDescriptorSetLayout(device, m_descriptorSetLayout, nullptr);
-        vkDestroyBuffer(device, m_uniformBuffers_ViewProj, nullptr);
-        vkFreeMemory(device, m_uniformBuffersMemory_ViewProj, nullptr);
-        vkDestroyBuffer(device, m_uniformBuffers_Dynamic_Model, nullptr);
-        vkFreeMemory(device, m_uniformBuffersMemory_Dynamic_Model, nullptr);
     }
 
     // Warning: long function
@@ -781,8 +661,15 @@ namespace JoeEngine {
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = 1;
         pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout;
-        pipelineLayoutInfo.pushConstantRangeCount = 0;
-        pipelineLayoutInfo.pPushConstantRanges = nullptr;
+
+        // Set up push constant ranges
+        VkPushConstantRange pushConstantRange = {};
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size = sizeof(JE_PushConst_ViewProj) + sizeof(JE_PushConst_ModelMat);
+
+        pipelineLayoutInfo.pushConstantRangeCount = 1;
+        pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
         if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS) {
             throw std::runtime_error("failed to create pipeline layout!");
@@ -818,13 +705,9 @@ namespace JoeEngine {
     }
 
     void JEVulkanDeferredPassGeometryShader::CreateDescriptorPool(VkDevice device) {
-        std::array<VkDescriptorPoolSize, 3> poolSizes = {};
-        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        std::array<VkDescriptorPoolSize, 1> poolSizes = {};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         poolSizes[0].descriptorCount = 1;
-        poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        poolSizes[1].descriptorCount = 1;
-        poolSizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[2].descriptorCount = 1;
 
         VkDescriptorPoolCreateInfo poolInfo = {};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -838,28 +721,14 @@ namespace JoeEngine {
     }
 
     void JEVulkanDeferredPassGeometryShader::CreateDescriptorSetLayout(VkDevice device) {
-        VkDescriptorSetLayoutBinding uboLayoutBinding_vp = {};
-        uboLayoutBinding_vp.binding = 0;
-        uboLayoutBinding_vp.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding_vp.descriptorCount = 1;
-        uboLayoutBinding_vp.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        uboLayoutBinding_vp.pImmutableSamplers = nullptr;
-
-        VkDescriptorSetLayoutBinding uboDynamicLayoutBinding_model = {};
-        uboDynamicLayoutBinding_model.binding = 1;
-        uboDynamicLayoutBinding_model.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        uboDynamicLayoutBinding_model.descriptorCount = 1;
-        uboDynamicLayoutBinding_model.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        uboDynamicLayoutBinding_model.pImmutableSamplers = nullptr;
-
         VkDescriptorSetLayoutBinding samplerLayoutBinding_texture = {};
-        samplerLayoutBinding_texture.binding = 2;
+        samplerLayoutBinding_texture.binding = 0;
         samplerLayoutBinding_texture.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         samplerLayoutBinding_texture.descriptorCount = 1;
         samplerLayoutBinding_texture.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
         samplerLayoutBinding_texture.pImmutableSamplers = nullptr;
 
-        std::array<VkDescriptorSetLayoutBinding, 3> bindings = { uboLayoutBinding_vp, uboDynamicLayoutBinding_model, samplerLayoutBinding_texture };
+        std::array<VkDescriptorSetLayoutBinding, 1> bindings = { samplerLayoutBinding_texture };
         VkDescriptorSetLayoutCreateInfo layoutInfo = {};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
@@ -881,103 +750,40 @@ namespace JoeEngine {
             throw std::runtime_error("failed to allocate descriptor sets!");
         }
 
-        VkDescriptorBufferInfo bufferInfo_vp = {};
-        bufferInfo_vp.buffer = m_uniformBuffers_ViewProj;
-        bufferInfo_vp.offset = 0;
-        bufferInfo_vp.range = sizeof(JEUBO_ViewProj);
-
-        VkDescriptorBufferInfo bufferInfo_dynModel = {};
-        bufferInfo_dynModel.buffer = m_uniformBuffers_Dynamic_Model;
-        bufferInfo_dynModel.offset = 0;
-        bufferInfo_dynModel.range = sizeof(JEUBODynamic_ModelMat);
-
         VkDescriptorImageInfo imageInfo = {};
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         imageInfo.imageView = texture.GetImageView();
         imageInfo.sampler = texture.GetSampler();
 
-        std::array<VkWriteDescriptorSet, 3> descriptorWrites = {};
+        std::array<VkWriteDescriptorSet, 1> descriptorWrites = {};
 
         descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrites[0].dstSet = m_descriptorSet;
         descriptorWrites[0].dstBinding = 0;
         descriptorWrites[0].dstArrayElement = 0;
-        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         descriptorWrites[0].descriptorCount = 1;
-        descriptorWrites[0].pBufferInfo = &bufferInfo_vp;
-
-        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[1].dstSet = m_descriptorSet;
-        descriptorWrites[1].dstBinding = 1;
-        descriptorWrites[1].dstArrayElement = 0;
-        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        descriptorWrites[1].descriptorCount = 1;
-        descriptorWrites[1].pBufferInfo = &bufferInfo_dynModel;
-
-        descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[2].dstSet = m_descriptorSet;
-        descriptorWrites[2].dstBinding = 2;
-        descriptorWrites[2].dstArrayElement = 0;
-        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        descriptorWrites[2].descriptorCount = 1;
-        descriptorWrites[2].pImageInfo = &imageInfo;
+        descriptorWrites[0].pImageInfo = &imageInfo;
 
         vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
-    void JEVulkanDeferredPassGeometryShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numModelMatrices) {
-        VkDeviceSize bufferSize_viewProj = sizeof(JEUBO_ViewProj);
-
-        // Calculate required alignment based on minimum device offset alignment
-        VkPhysicalDeviceProperties deviceProperties;
-        vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
-        size_t minUboAlignment = deviceProperties.limits.minUniformBufferOffsetAlignment;
-        m_uboDynamicAlignment = sizeof(glm::mat4);
-        if (minUboAlignment > 0) {
-            m_uboDynamicAlignment = (m_uboDynamicAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);
-        }
-
-        size_t bufferSize_Dynamic_Model = numModelMatrices * m_uboDynamicAlignment;
-
-        m_ubo_Dynamic_ModelMat.model = (glm::mat4*)MemAllocUtils::alignedAlloc(m_uboDynamicAlignment, bufferSize_Dynamic_Model);
-
-        CreateBuffer(physicalDevice, device, bufferSize_viewProj, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_uniformBuffers_ViewProj, m_uniformBuffersMemory_ViewProj);
-        CreateBuffer(physicalDevice, device, bufferSize_Dynamic_Model, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, m_uniformBuffers_Dynamic_Model, m_uniformBuffersMemory_Dynamic_Model);
+    void JEVulkanDeferredPassGeometryShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device) {
     }
 
-    void JEVulkanDeferredPassGeometryShader::UpdateUniformBuffers(VkDevice device, const JECamera& camera, const glm::mat4* modelMatrices, uint32_t numMeshes) {
-        JEUBO_ViewProj ubo_vp = {};
-        glm::mat4 view = camera.GetView();
-        glm::mat4 proj = camera.GetProj();
-        proj[1][1] *= -1.0f;
-        ubo_vp.viewProj = proj * view;
-
-        for (uint32_t i = 0; i < numMeshes; ++i) {
-            // Aligned offset
-            glm::mat4* modelMat = (glm::mat4*)(((uint64_t)m_ubo_Dynamic_ModelMat.model + (i * m_uboDynamicAlignment)));
-            *modelMat = modelMatrices[i];
-        }
-
-        void* data;
-        vkMapMemory(device, m_uniformBuffersMemory_ViewProj, 0, sizeof(ubo_vp), 0, &data);
-        memcpy(data, &ubo_vp, sizeof(ubo_vp));
-        vkUnmapMemory(device, m_uniformBuffersMemory_ViewProj);
-
-        size_t dynamicMemorySize = numMeshes * m_uboDynamicAlignment;
-        vkMapMemory(device, m_uniformBuffersMemory_Dynamic_Model, 0, dynamicMemorySize, 0, &data);
-        memcpy(data, m_ubo_Dynamic_ModelMat.model, dynamicMemorySize);
-
-        VkMappedMemoryRange mappedMemoryRange = {};
-        mappedMemoryRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-        mappedMemoryRange.memory = m_uniformBuffersMemory_Dynamic_Model;
-        mappedMemoryRange.size = dynamicMemorySize;
-        mappedMemoryRange.offset = 0;
-        vkFlushMappedMemoryRanges(device, 1, &mappedMemoryRange);
-        vkUnmapMemory(device, m_uniformBuffersMemory_Dynamic_Model); // TODO: check if i only have to map the memory once
+    void JEVulkanDeferredPassGeometryShader::UpdateUniformBuffers(VkDevice device) {
     }
 
-    void JEVulkanDeferredPassGeometryShader::BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t dynamicOffset) {
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSet, 1, &dynamicOffset);
+    void JEVulkanDeferredPassGeometryShader::BindDescriptorSets(VkCommandBuffer commandBuffer) {
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSet, 0, nullptr);
+    }
+
+    void JEVulkanDeferredPassGeometryShader::BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) {
+        vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(JE_PushConst_ViewProj), &viewProj[0][0]);
+    }
+
+    void JEVulkanDeferredPassGeometryShader::BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat) {
+        vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof(JE_PushConst_ViewProj), sizeof(JE_PushConst_ModelMat), &modelMat[0][0]);
     }
 
     // Deferred Lighting Pass - read from g-buffers
@@ -1286,7 +1092,7 @@ namespace JoeEngine {
             VkDescriptorBufferInfo bufferInfo_vp_shadow = {};
             bufferInfo_vp_shadow.buffer = m_uniformBuffers_ViewProj_Shadow[i];
             bufferInfo_vp_shadow.offset = 0;
-            bufferInfo_vp_shadow.range = sizeof(JEUBO_ViewProj);
+            bufferInfo_vp_shadow.range = sizeof(JE_PushConst_ViewProj);
 
             VkDescriptorImageInfo imageInfo = {};
             imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -1376,7 +1182,7 @@ namespace JoeEngine {
     }
 
     void JEVulkanDeferredPassLightingShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages) {
-        VkDeviceSize bufferSize_viewProj = sizeof(JEUBO_ViewProj);
+        VkDeviceSize bufferSize_viewProj = sizeof(JE_PushConst_ViewProj);
         VkDeviceSize bufferSize_viewProj_inv = sizeof(JEUBO_ViewProj_Inv);
         m_uniformBuffers_ViewProj.resize(numSwapChainImages);
         m_uniformBuffersMemory_ViewProj.resize(numSwapChainImages);
@@ -1397,12 +1203,8 @@ namespace JoeEngine {
         ubo_vp_inv.invProj = glm::inverse(proj);
         ubo_vp_inv.invView = glm::inverse(view);
 
-        JEUBO_ViewProj ubo_vp_shadow = {};
-        view = shadowCamera.GetView();
-        const float coord = 7.5f;
-        proj = glm::ortho(-coord, coord, -coord, coord, shadowCamera.GetNearPlane(), shadowCamera.GetFarPlane());
-        proj[1][1] *= -1.0f;
-        ubo_vp_shadow.viewProj = proj * view;
+        JE_PushConst_ViewProj ubo_vp_shadow = {};
+        ubo_vp_shadow.viewProj = shadowCamera.GetOrthoViewProj();
 
         void* data;
         vkMapMemory(device, m_uniformBuffersMemory_ViewProj[currentImage], 0, sizeof(ubo_vp_inv), 0, &data);

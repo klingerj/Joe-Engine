@@ -24,6 +24,7 @@ namespace JoeEngine {
 
         while (!window.ShouldClose()) {
             // FPSCounter::StartFrame();
+            m_frameStartTime = glfwGetTime();
 
             m_ioHandler.PollInput(); // Receive input, call registered callback functions
 
@@ -31,7 +32,10 @@ namespace JoeEngine {
             for (size_t i = 0; i < m_componentManagers.size(); ++i) {
                 m_componentManagers[i]->Update();
             }
-
+            m_frameEndTime = glfwGetTime();
+            if (m_enableFrameCounter) {
+                std::cout << "Frame Time: " << (m_frameEndTime - m_frameStartTime) * 1000.0f << " ms" << std::endl;
+            }
             // Submit shadow pass to GPU
             // TODO Don't cull before doing this? Also only send opaque geometry i think, not sure how to do transluscent shadows
             /*for (JELight l : m_sceneManager.Lights()) {
@@ -44,8 +48,11 @@ namespace JoeEngine {
             }*/
 
             const std::vector<MeshComponent>& meshComponents = dynamic_cast<JEMeshComponentManager*>(m_componentManagers[MESH_COMP].get())->GetComponentList();
+            const std::vector<TransformComponent>& transformComponents = dynamic_cast<JETransformComponentManager*>(m_componentManagers[TRANSFORM_COMP].get())->GetComponentList();
 
-            m_vulkanRenderer.DrawShadowPass(meshComponents);
+            // TODO: eventually get list of lights and pass those instead
+
+            m_vulkanRenderer.DrawShadowPass(meshComponents, transformComponents, m_sceneManager.m_shadowCamera);
             //m_renderer.Submit();
 
             // Perform frustum culling
@@ -80,7 +87,7 @@ namespace JoeEngine {
                     m_vulkanRenderer.DrawMesh(mc);
                 }*/
                 
-                m_vulkanRenderer.DrawMeshComponents(meshComponents);
+                m_vulkanRenderer.DrawMeshComponents(meshComponents, transformComponents, m_sceneManager.m_camera);
 
                 // TODO: This when culling is done
                 /*for (uint32_t idx : m_meshComponentManager.RenderableMeshComponentIndices()) {
@@ -97,6 +104,7 @@ namespace JoeEngine {
             //}
             
             m_vulkanRenderer.SubmitFrame();
+
 
             // FPSCounter::EndFrame();
         }

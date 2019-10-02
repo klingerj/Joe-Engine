@@ -32,8 +32,6 @@ namespace JoeEngine {
         };
 
         std::vector<std::unique_ptr<JEComponentManager>> m_componentManagers;
-        //JEMeshComponentManager m_meshComponentManager;
-        //JEMaterialComponentManager m_materialComponentManager;
 
         double m_frameStartTime, m_frameEndTime; // timing for performance analysis
         bool m_enableFrameCounter;
@@ -43,7 +41,7 @@ namespace JoeEngine {
         void StopEngine();
 
     public:
-        JEEngineInstance() : m_enableFrameCounter(false), m_frameStartTime(0.0f), m_frameEndTime(0.0f) {
+        JEEngineInstance() : m_enableFrameCounter(true), m_frameStartTime(0.0f), m_frameEndTime(0.0f) {
             InitializeEngine();
         }
         ~JEEngineInstance() {}

@@ -1,13 +1,10 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-layout(binding = 0) uniform UBO_ViewProj {
+layout (push_constant) uniform PushConstant {
     mat4 viewProj;
-} ubo_viewProj;
-
-layout (binding = 1) uniform UBODynamic_ModelMat {
-	mat4 model;
-} uboDynamicModelMatInstance;
+    mat4 model;
+} pushConstants;
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inColor;
@@ -18,5 +15,5 @@ out gl_PerVertex {
 };
 
 void main() {
-    gl_Position = ubo_viewProj.viewProj * uboDynamicModelMatInstance.model * vec4(inPosition, 1.0);
+    gl_Position = pushConstants.viewProj * pushConstants.model * vec4(inPosition, 1.0);
 }
