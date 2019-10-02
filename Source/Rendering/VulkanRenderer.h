@@ -12,6 +12,7 @@
 #include "VulkanRenderingTypes.h"
 #include "MeshBufferManager.h"
 #include "../Components/Mesh/MeshComponent.h"
+#include "../Components/Transform/TransformComponent.h"
 
 namespace JoeEngine {
     class JESceneManager;
@@ -139,7 +140,7 @@ namespace JoeEngine {
         void DrawMesh(VkCommandBuffer commandBuffer, const MeshComponent& meshComponent);
         void DrawScreenSpaceTriMesh(VkCommandBuffer commandBuffer);
 
-        void UpdateShaderUniformBuffers(uint32_t imageIndex, const std::vector<glm::mat4>& transforms);
+        void UpdateShaderUniformBuffers(uint32_t imageIndex);
 
     public:
         JEVulkanRenderer() : m_width(JE_DEFAULT_SCREEN_WIDTH), m_height(JE_DEFAULT_SCREEN_HEIGHT), m_MAX_FRAMES_IN_FLIGHT(JE_DEFAULT_MAX_FRAMES_IN_FLIGHT),
@@ -162,8 +163,8 @@ namespace JoeEngine {
         MeshComponent CreateMesh(const std::string& filepath);
 
         // Renderer Functions
-        void DrawShadowPass(const std::vector<MeshComponent>& meshComponents);
-        void DrawMeshComponents(const std::vector<MeshComponent>& meshComponents);
+        void DrawShadowPass(const std::vector<MeshComponent>& meshComponents, const std::vector<TransformComponent>& transformComponents, const JECamera& camera);
+        void DrawMeshComponents(const std::vector<MeshComponent>& meshComponents, const std::vector<TransformComponent>& transformComponents, const JECamera& camera);
 
         void WaitForIdleDevice() {
             vkDeviceWaitIdle(m_device);

@@ -2,8 +2,9 @@
 
 namespace JoeEngine {
     void JETransformComponentManager::Update() {
-        for (TransformComponent t : m_transformComponents) {
-            // TODO: something
+        for (TransformComponent& t : m_transformComponents) {
+            // TODO: something?
+            t.SetRotation(t.GetRotation() * glm::angleAxis(0.01f, glm::vec3(0, 1, 0)));
         }
     }
 

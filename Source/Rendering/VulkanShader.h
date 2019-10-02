@@ -12,7 +12,7 @@
 #include "../Scene/Camera.h"
 
 namespace JoeEngine {
-    struct JEUBO_ViewProj {
+    struct JE_PushConst_ViewProj {
         glm::mat4 viewProj;
     };
 
@@ -21,8 +21,8 @@ namespace JoeEngine {
         glm::mat4 invView;
     };
 
-    struct JEUBODynamic_ModelMat {
-        glm::mat4* model = nullptr;
+    struct JE_PushConst_ModelMat {
+        glm::mat4 model;
     };
 
     std::vector<char> ReadFile(const std::string& filename);
@@ -49,7 +49,7 @@ namespace JoeEngine {
     public:
         JEVulkanPostProcessShader() {}
         JEVulkanPostProcessShader(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanSwapChain& swapChain, const JEPostProcessingPass& postProcessingPass,
-            VkImageView postImageView, const std::string& vertShader, const std::string& fragShader) {
+                                  VkImageView postImageView, const std::string& vertShader, const std::string& fragShader) {
             // Read in shader code
             auto vertShaderCode = ReadFile(vertShader);
             auto fragShaderCode = ReadFile(fragShader);
@@ -70,7 +70,7 @@ namespace JoeEngine {
 
         void Cleanup(VkDevice device);
 
-        void UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const JECamera& camera, const JECamera& shadowCamera, const glm::mat4* modelMatrices, uint32_t numMeshes);
+        void UpdateUniformBuffers(VkDevice device, uint32_t currentImage);
         void BindDescriptorSets(VkCommandBuffer commandBuffer, size_t descriptorSetIndex);
 
         // Getters
@@ -90,31 +90,30 @@ namespace JoeEngine {
         VkDescriptorSet m_descriptorSet;
 
         // Buffers
-        VkBuffer m_uniformBuffers_ViewProj;
+        /*VkBuffer m_uniformBuffers_ViewProj;
         VkDeviceMemory m_uniformBuffersMemory_ViewProj;
-        size_t m_uboDynamicAlignment;
-        JEUBODynamic_ModelMat m_ubo_Dynamic_ModelMat;
-        VkBuffer m_uniformBuffers_Dynamic_Model;
-        VkDeviceMemory m_uniformBuffersMemory_Dynamic_Model;
+        JE_PushConst_ModelMat m_ubo_ModelMat;
+        VkBuffer m_uniformBuffers_Model;
+        VkDeviceMemory m_uniformBuffersMemory_Model;*/
 
         // Creation functions
         void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule , VkExtent2D extent, VkRenderPass renderPass);
         void CreateDescriptorPool(VkDevice device);
         void CreateDescriptorSetLayout(VkDevice device);
         void CreateDescriptorSets(VkDevice device);
-        void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numModelMatrices);
+        void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device);
 
     public:
-        JEVulkanShadowPassShader() : m_uboDynamicAlignment(0), m_ubo_Dynamic_ModelMat() {}
-        JEVulkanShadowPassShader(VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, VkExtent2D extent, size_t numModelMatrices,
-            const std::string& vertShader, const std::string& fragShader) {
+        JEVulkanShadowPassShader() {}
+        JEVulkanShadowPassShader(VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, VkExtent2D extent,
+                                 const std::string& vertShader, const std::string& fragShader) {
             // Read in shader code
             auto vertShaderCode = ReadFile(vertShader);
 
             // Create shader modules
             VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
 
-            CreateUniformBuffers(physicalDevice, device, numModelMatrices);
+            CreateUniformBuffers(physicalDevice, device);
             CreateDescriptorSetLayout(device);
             CreateDescriptorPool(device);
             CreateDescriptorSets(device);
@@ -125,15 +124,15 @@ namespace JoeEngine {
 
         void Cleanup(VkDevice device);
 
-        void UpdateUniformBuffers(VkDevice device, const JECamera& camera, const glm::mat4* modelMatrices, uint32_t numMeshes);
-        void BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t dynamicOffset);
+        void UpdateUniformBuffers(VkDevice device);
+        void BindDescriptorSets(VkCommandBuffer commandBuffer);
+
+        void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj);
+        void BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat);
 
         // Getters
         VkPipeline GetPipeline() const {
             return m_graphicsPipeline;
-        }
-        size_t GetDynamicAlignment() const {
-            return m_uboDynamicAlignment;
         }
     };
 
@@ -147,26 +146,18 @@ namespace JoeEngine {
         VkDescriptorSetLayout m_descriptorSetLayout;
         VkDescriptorSet m_descriptorSet;
 
-        // Buffers
-        VkBuffer m_uniformBuffers_ViewProj;
-        VkDeviceMemory m_uniformBuffersMemory_ViewProj;
-        size_t m_uboDynamicAlignment;
-        JEUBODynamic_ModelMat m_ubo_Dynamic_ModelMat;
-        VkBuffer m_uniformBuffers_Dynamic_Model;
-        VkDeviceMemory m_uniformBuffersMemory_Dynamic_Model;
-
         // Creation functions
         void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
             const JEVulkanSwapChain& swapChain, VkRenderPass renderPass);
         void CreateDescriptorPool(VkDevice device);
         void CreateDescriptorSetLayout(VkDevice device);
         void CreateDescriptorSets(VkDevice device, const JETexture& texture);
-        void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numModelMatrices);
+        void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device);
 
     public:
-        JEVulkanDeferredPassGeometryShader() : m_uboDynamicAlignment(0), m_ubo_Dynamic_ModelMat() {}
+        JEVulkanDeferredPassGeometryShader() {}
         JEVulkanDeferredPassGeometryShader(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanSwapChain& swapChain, VkRenderPass renderPass,
-            size_t numModelMatrices, const JETexture& texture, const std::string& vertShader, const std::string& fragShader) {
+                                           const JETexture& texture, const std::string& vertShader, const std::string& fragShader) {
             // Read in shader code
             auto vertShaderCode = ReadFile(vertShader);
             auto fragShaderCode = ReadFile(fragShader);
@@ -176,7 +167,7 @@ namespace JoeEngine {
             VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
 
             size_t numSwapChainImages = swapChain.GetImageViews().size();
-            CreateUniformBuffers(physicalDevice, device, numModelMatrices);
+            CreateUniformBuffers(physicalDevice, device);
             CreateDescriptorSetLayout(device);
             CreateDescriptorPool(device);
             CreateDescriptorSets(device, texture);
@@ -187,15 +178,15 @@ namespace JoeEngine {
 
         void Cleanup(VkDevice device);
 
-        void UpdateUniformBuffers(VkDevice device, const JECamera& camera, const glm::mat4* modelMatrices, uint32_t numMeshes);
-        void BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t dynamicOffset);
+        void UpdateUniformBuffers(VkDevice device);
+        void BindDescriptorSets(VkCommandBuffer commandBuffer);
+
+        void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj);
+        void BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat);
 
         // Getters
         VkPipeline GetPipeline() const {
             return m_graphicsPipeline;
-        }
-        size_t GetDynamicAlignment() const {
-            return m_uboDynamicAlignment;
         }
     };
 

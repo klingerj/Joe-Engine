@@ -27,19 +27,25 @@ void main() {
     vec3 gBuffer_Normal = texture(gBufferNormal, fragUV).xyz * 2 - 1;
 
     // Get world space position from fragment position and depth
-    vec3 ndcPos = vec3(fragPos, texture(gBufferDepth, fragUV).x);
+    float depth = texture(gBufferDepth, fragUV).r;
+    vec3 ndcPos = vec3(fragPos, depth);
     vec4 viewPos = ubo_viewProj_inv.invProj * vec4(ndcPos, 1.0);
     viewPos /= viewPos.w;
     vec3 worldPos = (ubo_viewProj_inv.invView * viewPos).xyz;
+    //outColor = vec4(worldPos, 1); return;
 
     // Shadow mapping
-    worldPos += normalize(vec3(5.0) - worldPos) * 0.005;
+    worldPos += normalize(vec3(20.0) - worldPos) * 0.01;
     vec4 pointShadow = ubo_viewProj_Shadow.viewProj * vec4(worldPos, 1.0);
-    pointShadow /= pointShadow.w;
+    //pointShadow /= pointShadow.w;
     pointShadow.xy = pointShadow.xy * 0.5 + 0.5;
+    //outColor = vec4(vec3(pointShadow.z), 1.0); return;
+    
     float shadowColor = texture(shadowMap, pointShadow.xy).r;
     float shadow = step(pointShadow.z, shadowColor);
     shadow = max(shadow, 0.15);
-    float lambert = clamp(dot(normalize(vec3(5.0)), gBuffer_Normal), 0.0, 1.0);
+    float lambert = clamp(dot(normalize(vec3(20.0)), gBuffer_Normal), 0.0, 1.0);
     outColor = vec4(gBuffer_Color * shadow * lambert, 1.0);
+    //outColor = vec4(vec3(shadowColor), 1.0);
+    //outColor = vec4(vec3(pointShadow), 1.0);
 }

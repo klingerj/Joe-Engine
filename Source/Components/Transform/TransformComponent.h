@@ -18,7 +18,6 @@ namespace JoeEngine {
         ~TransformComponent() {}
 
         void RecomputeTransform() {
-            glm::mat4 mat = glm::toMat4(m_rotation);
             m_cachedTransform = glm::translate(glm::mat4(1.0f), m_translation) * glm::toMat4(m_rotation) * glm::scale(glm::mat4(1.0f), m_scale);
         }
 

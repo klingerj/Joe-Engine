@@ -13,11 +13,12 @@ namespace JoeEngine {
         glm::vec3 m_right;
         glm::vec3 m_up;
         float m_aspect;
-        float m_nearPlane, farPlane;
+        float m_nearPlane, m_farPlane;
+        // TODO: cache a view-proj matrix
 
     public:
         JECamera() : JECamera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE) {}
-        JECamera(glm::vec3 e, glm::vec3 r, float a, float n, float f) : m_eye(e), m_ref(r), m_aspect(a), m_nearPlane(n), farPlane(f) {
+        JECamera(glm::vec3 e, glm::vec3 r, float a, float n, float f) : m_eye(e), m_ref(r), m_aspect(a), m_nearPlane(n), m_farPlane(f) {
             ComputeAttributes();
         }
         ~JECamera() {}
@@ -66,16 +67,35 @@ namespace JoeEngine {
 
         // Getters
         glm::mat4 GetView() const {
-            return glm::lookAt(m_eye, m_ref, JE_WORLD_UP);
+            glm::mat4 t = glm::mat4(1.0);
+            t[3] = glm::vec4(-m_eye.x, -m_eye.y, -m_eye.z, 1.0);
+
+            glm::mat4 o = glm::mat4(1.0);
+            o[0] = glm::vec4(m_right.x, m_up.x, m_look.x, 0.0);
+            o[1] = glm::vec4(m_right.y, m_up.y, m_look.y, 0.0);
+            o[2] = glm::vec4(m_right.z, m_up.z, m_look.z, 0.0);
+
+            return o * t;
         }
         glm::mat4 GetProj() const {
-            return glm::perspective(JE_FOVY, m_aspect, m_nearPlane, farPlane);
+            return glm::perspective(JE_FOVY, m_aspect, m_nearPlane, m_farPlane);
+        }
+        glm::mat4 GetViewProj() const {
+            glm::mat4 proj = GetProj();
+            proj[1][1] *= -1.0f;
+            return proj * GetView();
+        }
+        glm::mat4 GetOrthoViewProj() const {
+            const float coord = 15.0f;
+            glm::mat4 proj = glm::ortho(-coord, coord, -coord, coord, m_nearPlane, m_farPlane);
+            proj[1][1] *= -1.0f;
+            return proj * GetView();
         }
         float GetNearPlane() const {
             return m_nearPlane;
         }
         float GetFarPlane() const {
-            return farPlane;
+            return m_farPlane;
         }
     };
 }

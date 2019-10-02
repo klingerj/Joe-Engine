@@ -156,6 +156,12 @@ namespace JoeEngine {
         // Maximum possible size of textures affects graphics quality
         score += deviceProperties.limits.maxImageDimension2D;
 
+        // Require a certain push constant size
+        // TODO: don't hard code
+        if (deviceProperties.limits.maxPushConstantsSize < 128) {
+            return 0;
+        }
+
         // Application can't function without geometry shaders
         // TODO long term: change device requirements as engine develops
         /*if (!deviceFeatures.geometryShader) {
@@ -441,9 +447,9 @@ namespace JoeEngine {
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         samplerInfo.magFilter = VK_FILTER_LINEAR;
         samplerInfo.minFilter = VK_FILTER_LINEAR;
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 
         samplerInfo.anisotropyEnable = VK_TRUE;
         samplerInfo.maxAnisotropy = 1.0f;
@@ -479,9 +485,9 @@ namespace JoeEngine {
 
     void JEVulkanRenderer::CreateShaders() {
         // TODO: make sure the number of model matrices passed in here is correct (and also updated every time an entity is created/destroyed)
-        m_shadowPassShaders.emplace_back(JEVulkanShadowPassShader(m_physicalDevice, m_device, m_shadowPass.renderPass, { static_cast<uint32_t>(m_shadowPass.width), static_cast<uint32_t>(m_shadowPass.height) }, 10,
+        m_shadowPassShaders.emplace_back(JEVulkanShadowPassShader(m_physicalDevice, m_device, m_shadowPass.renderPass, { static_cast<uint32_t>(m_shadowPass.width), static_cast<uint32_t>(m_shadowPass.height) },
             JE_SHADER_DIR + "vert_shadow.spv", JE_SHADER_DIR + "frag_shadow.spv"));
-        m_deferredPassGeometryShader = JEVulkanDeferredPassGeometryShader(m_physicalDevice, m_device, m_vulkanSwapChain, m_deferredPass.renderPass, 10, m_textures[0],
+        m_deferredPassGeometryShader = JEVulkanDeferredPassGeometryShader(m_physicalDevice, m_device, m_vulkanSwapChain, m_deferredPass.renderPass, m_textures[0],
             JE_SHADER_DIR + "vert_deferred_geom.spv", JE_SHADER_DIR + "frag_deferred_geom.spv");
         m_deferredPassLightingShader = JEVulkanDeferredPassLightingShader(m_physicalDevice, m_device, m_vulkanSwapChain, m_shadowPass, m_deferredPass, m_renderPass_deferredLighting, m_textures[0],
             JE_SHADER_DIR + "vert_deferred_lighting.spv", JE_SHADER_DIR + "frag_deferred_lighting.spv");
@@ -512,17 +518,16 @@ namespace JoeEngine {
         m_postProcessingShaders.clear();
     }
 
-    void JEVulkanRenderer::UpdateShaderUniformBuffers(uint32_t imageIndex, const std::vector<glm::mat4>& transforms) {
-        // TODO: change the .size() to just take the std vector as a parameter
-        for (auto& shadowPassShader : m_shadowPassShaders) {
-            shadowPassShader.UpdateUniformBuffers(m_device, m_sceneManager->m_shadowCamera, transforms.data(), transforms.size());
-        }
+    void JEVulkanRenderer::UpdateShaderUniformBuffers(uint32_t imageIndex) {
+        /*for (auto& shadowPassShader : m_shadowPassShaders) {
+            shadowPassShader.UpdateUniformBuffers(m_device, m_sceneManager->m_shadowCamera);
+        }*/
 
-        m_deferredPassGeometryShader.UpdateUniformBuffers(m_device, m_sceneManager->m_camera, transforms.data(), transforms.size());
+        //m_deferredPassGeometryShader.UpdateUniformBuffers(m_device, m_sceneManager->m_camera);
         m_deferredPassLightingShader.UpdateUniformBuffers(m_device, imageIndex, m_sceneManager->m_camera, m_sceneManager->m_shadowCamera);
 
         for (auto& postProcessingShader : m_postProcessingShaders) {
-            postProcessingShader.UpdateUniformBuffers(m_device, imageIndex, m_sceneManager->m_camera, m_sceneManager->m_shadowCamera, transforms.data(), transforms.size());
+            postProcessingShader.UpdateUniformBuffers(m_device, imageIndex);
         }
     }
 
@@ -550,7 +555,9 @@ namespace JoeEngine {
         vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_meshBufferManager.GetIndexListAt(idxHandle).size()), 1, 0, 0, 0);
     }
 
-    void JEVulkanRenderer::DrawShadowPass(/*std vector of JELights, and also all mesh components*/const std::vector<MeshComponent>& meshComponents) {
+    void JEVulkanRenderer::DrawShadowPass(/*std vector of JELights*/const std::vector<MeshComponent>& meshComponents,
+                                                                    const std::vector<TransformComponent>& transformComponents, 
+                                                                    const JECamera& camera) {
         // Reset the command buffer, as we have decided to re-record it
         if (vkResetCommandBuffer(m_shadowPass.commandBuffer, VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
             throw std::runtime_error("failed to reset shadow pass command buffer!");
@@ -584,16 +591,13 @@ namespace JoeEngine {
 
         vkCmdBeginRenderPass(m_shadowPass.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        // TODO: go to the shader manager, bind the pipeline for the shadow pass shader. That happens exactly one time I assume
-        // Then bind the view proj matrix from the light
-        // Then draw all the geometry
-        //m_sceneManager->BindShadowPassResources(m_shadowPass.commandBuffer);
-
         vkCmdBindPipeline(m_shadowPass.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPassShaders[0].GetPipeline());
-        for (uint32_t j = 0; j < meshComponents.size(); ++j) {
-            uint32_t dynamicOffset = j * static_cast<uint32_t>(m_shadowPassShaders[0].GetDynamicAlignment());
-            m_shadowPassShaders[0].BindDescriptorSets(m_shadowPass.commandBuffer, dynamicOffset);
-            DrawMesh(m_shadowPass.commandBuffer, meshComponents[j]);
+
+        m_shadowPassShaders[0].BindPushConstants_ViewProj(m_shadowPass.commandBuffer, camera.GetOrthoViewProj());
+
+        for (uint32_t i = 0; i < meshComponents.size(); ++i) {
+            m_shadowPassShaders[0].BindPushConstants_ModelMatrix(m_shadowPass.commandBuffer, transformComponents[i].GetTransform());
+            DrawMesh(m_shadowPass.commandBuffer, meshComponents[i]);
         }
 
         vkCmdEndRenderPass(m_shadowPass.commandBuffer);
@@ -603,7 +607,9 @@ namespace JoeEngine {
         }
     }
 
-    void JEVulkanRenderer::DrawMeshComponents(const std::vector<MeshComponent>& meshComponents) {
+    void JEVulkanRenderer::DrawMeshComponents(const std::vector<MeshComponent>& meshComponents,
+                                              const std::vector<TransformComponent>& transformComponents,
+                                              const JECamera& camera) {
         const bool isDeferred = true;
         if (isDeferred) {
             /// Construct deferred geometry render pass
@@ -641,10 +647,13 @@ namespace JoeEngine {
             vkCmdBeginRenderPass(m_deferredPass.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
             vkCmdBindPipeline(m_deferredPass.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_deferredPassGeometryShader.GetPipeline());
-            for (uint32_t j = 0; j < meshComponents.size(); ++j) {
-                uint32_t dynamicOffset = j * static_cast<uint32_t>(m_deferredPassGeometryShader.GetDynamicAlignment());
-                m_deferredPassGeometryShader.BindDescriptorSets(m_deferredPass.commandBuffer, dynamicOffset);
-                DrawMesh(m_deferredPass.commandBuffer, meshComponents[j]);
+            m_deferredPassGeometryShader.BindPushConstants_ViewProj(m_deferredPass.commandBuffer, camera.GetViewProj());
+            m_deferredPassGeometryShader.BindDescriptorSets(m_deferredPass.commandBuffer);
+
+            for (uint32_t i = 0; i < meshComponents.size(); ++i) {
+                m_deferredPassGeometryShader.BindPushConstants_ModelMatrix(m_deferredPass.commandBuffer, transformComponents[i].GetTransform());
+                //m_deferredPassGeometryShader.BindDescriptorSets(m_deferredPass.commandBuffer);
+                DrawMesh(m_deferredPass.commandBuffer, meshComponents[i]);
             }
 
             vkCmdEndRenderPass(m_deferredPass.commandBuffer);
@@ -1204,7 +1213,7 @@ namespace JoeEngine {
             throw std::runtime_error("failed to acquire swap chain image!");
         }
 
-        UpdateShaderUniformBuffers(imageIndex, m_engineInstance->GetTransformMatrices());
+        UpdateShaderUniformBuffers(imageIndex);
 
         // Submit shadow pass command buffer
 
