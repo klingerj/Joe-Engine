@@ -5,7 +5,6 @@
 
 /* For reference:
 http://bitsquid.blogspot.com/2011/09/managing-decoupling-part-4-id-lookup.html
-https://stackoverflow.com/questions/8164567/how-to-make-my-custom-type-to-work-with-range-based-for-loops
 */
 
 namespace JoeEngine {
@@ -33,18 +32,6 @@ namespace JoeEngine {
         PackedArray() : m_numElements(0) {}
         ~PackedArray() {}
 
-        /*template <typename T>
-        class PackedArrayIterator {
-        private:
-            T* dataPtr;
-
-        public:
-            PackedArrayIterator(T* p) : dataPtr(p) {}
-            PackedArrayIterator operator++() { ++dataPtr; return *this; }
-            bool operator!=(const PackedArrayIterator& other) const { return dataPtr != other.dataPtr; }
-            const T& operator*() const { return *ptr; }
-        };*/
-
         typename std::vector<T>::iterator begin() noexcept {
             return m_data.begin();
         }
@@ -53,7 +40,6 @@ namespace JoeEngine {
             return m_data.end();
         }
 
-        template <typename T>
         void AddElement(uint32_t index, T element) {
             if (index + 1 > m_indirectionMap.size()) {
                 m_indirectionMap.resize(index + 1);
@@ -118,7 +104,5 @@ namespace JoeEngine {
 
             return m_data[m_indirectionMap[i].m_index];
         }
-
-
     };
 }
