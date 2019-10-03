@@ -2,10 +2,9 @@
 
 namespace JoeEngine {
     void JEMeshComponentManager::Update() {
-        for (MeshComponent m : m_meshComponents) {
-            //m.Draw();
-            // TODO: something?
-        }
+        /*for (MeshComponent m : m_meshComponents) {
+            // TODO
+        }*/
     }
 
     void JEMeshComponentManager::AddNewComponent() {

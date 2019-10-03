@@ -2,9 +2,9 @@
 
 namespace JoeEngine {
     void JEMaterialComponentManager::Update() {
-        for (MaterialComponent comp : m_materialComponents) {
-            // TODO: something
-        }
+        /*for (MaterialComponent comp : m_materialComponents) {
+            // TODO
+        }*/
     }
 
     void JEMaterialComponentManager::AddNewComponent() {

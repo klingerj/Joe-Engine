@@ -12,6 +12,23 @@ int RunApp() {
     return EXIT_SUCCESS;
 }
 
+#include "Containers/PackedArray.h"
+struct testStruct {
+    int val;
+    bool thing;
+};
+
 int main() {
+
+    // packed array testing
+    JoeEngine::JEPackedArray<struct testStruct> array;
+
+    struct testStruct test1;
+    test1.val = -3;
+    test1.thing = true;
+
+    array.AddElement(0, test1);
+    array.RemoveElement(0);
+
     return RunApp();
 }
