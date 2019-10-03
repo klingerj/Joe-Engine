@@ -10,7 +10,7 @@ namespace JoeEngine {
     class JEMaterialComponentManager : public JEComponentManager {
     private:
         std::vector<MaterialComponent> m_materialComponents;
-        JEPackedArray<MaterialComponent> m_materialComponents_packed;
+        PackedArray<MaterialComponent> m_materialComponents_packed;
 
     public:
         JEMaterialComponentManager() {}
