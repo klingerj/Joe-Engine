@@ -4,11 +4,13 @@
 
 #include "../ComponentManager.h"
 #include "MaterialComponent.h"
+#include "../../Containers/PackedArray.h"
 
 namespace JoeEngine {
     class JEMaterialComponentManager : public JEComponentManager {
     private:
         std::vector<MaterialComponent> m_materialComponents;
+        PackedArray<MaterialComponent> m_materialComponents_packed;
 
     public:
         JEMaterialComponentManager() {}

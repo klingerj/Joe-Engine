@@ -6,7 +6,6 @@ namespace JoeEngine {
         int m_vertexBufferHandle;
         int m_indexBufferHandle;
     public:
-        friend class JEMeshComponentManager;
 
         MeshComponent() : MeshComponent(-1) {}
         MeshComponent(int h) : m_vertexBufferHandle(h), m_indexBufferHandle(h) {}

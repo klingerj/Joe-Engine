@@ -83,6 +83,8 @@ set(SOURCE_LIST
     "Source/Utils/ThreadPool.h"
     "Source/Utils/VulkanValidationLayers.cpp"
     "Source/Utils/VulkanValidationLayers.h"
+    "Source/Containers/PackedArray.cpp"
+    "Source/Containers/PackedArray.h"
 )
 
 add_executable(JoeEngine ${SOURCE_LIST})
