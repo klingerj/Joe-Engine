@@ -546,6 +546,11 @@ namespace JoeEngine {
     }
 
     void JEVulkanRenderer::DrawMesh(VkCommandBuffer commandBuffer, const MeshComponent& meshComponent) {
+        if (meshComponent.GetVertexHandle() == -1 || meshComponent.GetIndexHandle() == -1) {
+            // TODO: replace with placeholder mesh
+            return;
+        }
+
         VkBuffer vertexBuffers[] = { m_meshBufferManager.GetVertexBufferAt(meshComponent.GetVertexHandle()) };
         VkDeviceSize offsets[] = { 0 };
         const int idxHandle = meshComponent.GetIndexHandle();

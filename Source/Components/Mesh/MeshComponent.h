@@ -5,8 +5,8 @@ namespace JoeEngine {
     private:
         int m_vertexBufferHandle;
         int m_indexBufferHandle;
-    public:
 
+    public:
         MeshComponent() : MeshComponent(-1) {}
         MeshComponent(int h) : m_vertexBufferHandle(h), m_indexBufferHandle(h) {}
         MeshComponent(int v, int i) : m_vertexBufferHandle(v), m_indexBufferHandle(i) {}

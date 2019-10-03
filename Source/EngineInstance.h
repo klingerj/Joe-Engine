@@ -59,6 +59,8 @@ namespace JoeEngine {
 
         // User API
         Entity SpawnEntity();
+        void DestroyEntity(Entity entity);
+
         MeshComponent CreateMeshComponent(const std::string& filepath);
         void SetMeshComponent(const Entity& entity, const MeshComponent& meshComp);
         TransformComponent* GetTransformComponent(const Entity& entity);

@@ -1,8 +1,7 @@
 #pragma once
 
-#include <vector>
-
 #include "Entity.h"
+#include "../Containers/PackedArray.h"
 
 namespace JoeEngine {
     class JEEntityManager {
@@ -11,15 +10,13 @@ namespace JoeEngine {
 
         // TODO: replace with packed array
         // list of entities, tightly packed
-        std::vector<Entity> m_entities;
+        PackedArray<Entity> m_entities;
 
         // if the list of entities changes, this bool will be true until marked clean
         bool m_entitiesDirty;
 
     public:
-        JEEntityManager() : m_idCounter(0), m_entities(), m_entitiesDirty(false) {
-            m_entities.reserve(128);
-        }
+        JEEntityManager() : m_idCounter(0), m_entities(), m_entitiesDirty(false) {}
         ~JEEntityManager() {}
 
         JEEntityManager(const JEEntityManager& mgr) = delete;
@@ -31,7 +28,7 @@ namespace JoeEngine {
         void DestroyEntity(Entity e);
 
         uint32_t NumEntities() {
-            return m_entities.size(); // TODO: this will not be right once entity destruction is implemented
+            return m_entities.Size();
         }
 
         const bool& EntitiesDirty() const {

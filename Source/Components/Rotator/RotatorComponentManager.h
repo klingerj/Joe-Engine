@@ -1,17 +1,17 @@
 #pragma once
 
 #include "../ComponentManager.h"
-#include "TransformComponent.h"
+#include "RotatorComponent.h"
 #include "../../Containers/PackedArray.h"
 
 namespace JoeEngine {
-    class JETransformComponentManager : public JEComponentManager {
+    class JERotatorComponentManager : public JEComponentManager {
     private:
-        PackedArray<TransformComponent> m_transformComponents;
+        PackedArray<RotatorComponent> m_rotatorComponents;
 
     public:
-        JETransformComponentManager() {}
-        virtual ~JETransformComponentManager() {}
+        JERotatorComponentManager() {}
+        virtual ~JERotatorComponentManager() {}
 
         /*JETransformComponentManager(const JETransformComponentManager& mgr) = delete;
         JETransformComponentManager(JETransformComponentManager&& mgr) = delete;
@@ -21,8 +21,5 @@ namespace JoeEngine {
         void Update() override;
         void AddNewComponent(uint32_t id) override;
         void RemoveComponent(uint32_t id) override;
-
-        TransformComponent* GetComponent(uint32_t index);
-        const std::vector<TransformComponent>& GetComponentList() const;
     };
 }

@@ -140,18 +140,25 @@ namespace JoeEngine {
         m_vulkanRenderer.Cleanup();
     }
 
+    // User API
+
     Entity JEEngineInstance::SpawnEntity() {
         Entity entity = m_entityManager.SpawnEntity();
 
         // Add new default-constructed components for the new entity
         for (size_t i = 0; i < m_componentManagers.size(); ++i) {
-            m_componentManagers[i]->AddNewComponent();
+            m_componentManagers[i]->AddNewComponent(entity.GetId());
         }
 
         return entity;
     }
 
-    // User API
+    void JEEngineInstance::DestroyEntity(Entity entity) {
+        for (size_t i = 0; i < m_componentManagers.size(); ++i) {
+            m_componentManagers[i]->RemoveComponent(entity.GetId());
+        }
+        m_entityManager.DestroyEntity(entity);
+    }
 
     MeshComponent JEEngineInstance::CreateMeshComponent(const std::string& filepath) {
         MeshComponent meshComp = m_vulkanRenderer.CreateMesh(filepath);
@@ -159,11 +166,11 @@ namespace JoeEngine {
     }
 
     void JEEngineInstance::SetMeshComponent(const Entity& entity, const MeshComponent& meshComp) {
-        dynamic_cast<JEMeshComponentManager*>(m_componentManagers[MESH_COMP].get())->SetComponent(entity.m_id, meshComp);
+        dynamic_cast<JEMeshComponentManager*>(m_componentManagers[MESH_COMP].get())->SetComponent(entity.GetId(), meshComp);
     }
 
     TransformComponent* JEEngineInstance::GetTransformComponent(const Entity& entity) {
-        return dynamic_cast<JETransformComponentManager*>(m_componentManagers[TRANSFORM_COMP].get())->GetComponent(entity.m_id);
+        return dynamic_cast<JETransformComponentManager*>(m_componentManagers[TRANSFORM_COMP].get())->GetComponent(entity.GetId());
     }
 
     const std::vector<glm::mat4> JEEngineInstance::GetTransformMatrices() const {

@@ -13,17 +13,17 @@ namespace JoeEngine {
         if (sceneId == 0) {
             std::vector<Entity> entities;
             MeshComponent meshComp_wahoo = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "wahoo.obj");
-            for (uint32_t i = 0; i < 10000; ++i) {
+            for (uint32_t i = 0; i < 1000; ++i) {
                 Entity newEntity = m_engineInstance->SpawnEntity();
                 entities.push_back(newEntity);
-                m_engineInstance->SetMeshComponent(newEntity.m_id, meshComp_wahoo);
+                m_engineInstance->SetMeshComponent(newEntity.GetId(), meshComp_wahoo);
             }
             
             Entity newEntity = m_engineInstance->SpawnEntity();
             entities.push_back(newEntity);
             MeshComponent meshComp_plane = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "plane.obj");
-            m_engineInstance->SetMeshComponent(entities[newEntity.m_id], meshComp_plane);
-            TransformComponent* trans = m_engineInstance->GetTransformComponent(entities[newEntity.m_id]);
+            m_engineInstance->SetMeshComponent(entities[newEntity.GetId()], meshComp_plane);
+            TransformComponent* trans = m_engineInstance->GetTransformComponent(entities[newEntity.GetId()]);
             trans->SetTranslation(glm::vec3(0.0f, -3.0f, 0.0f));
             trans->SetRotation(glm::angleAxis(-90.0f, glm::vec3(1, 0, 0)));
             trans->SetScale(glm::vec3(50.0f, 50.0f, 1.0f));
