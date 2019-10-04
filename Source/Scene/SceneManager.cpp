@@ -2,6 +2,7 @@
 
 #include "SceneManager.h"
 #include "../EngineInstance.h"
+#include "../Components/Rotator/RotatorComponentManager.h"
 
 namespace JoeEngine {
     void JESceneManager::Initialize(JEEngineInstance* engineInstance) {
@@ -13,64 +14,69 @@ namespace JoeEngine {
         if (sceneId == 0) {
             std::vector<Entity> entities;
             MeshComponent meshComp_wahoo = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "wahoo.obj");
-            for (uint32_t i = 0; i < 1000; ++i) {
+            for (uint32_t i = 0; i < 20000; ++i) {
                 Entity newEntity = m_engineInstance->SpawnEntity();
                 entities.push_back(newEntity);
-                m_engineInstance->SetMeshComponent(newEntity.GetId(), meshComp_wahoo);
+                m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_wahoo);
+                m_engineInstance->AddComponent<RotatorComponent>(newEntity);
+                RotatorComponent* rot = m_engineInstance->GetComponent<RotatorComponent, RotatorComponentManager>(newEntity);
+                m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(newEntity)->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
             }
             
             Entity newEntity = m_engineInstance->SpawnEntity();
             entities.push_back(newEntity);
             MeshComponent meshComp_plane = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "plane.obj");
-            m_engineInstance->SetMeshComponent(entities[newEntity.GetId()], meshComp_plane);
-            TransformComponent* trans = m_engineInstance->GetTransformComponent(entities[newEntity.GetId()]);
+            m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_plane);
+            TransformComponent* trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(newEntity);
             trans->SetTranslation(glm::vec3(0.0f, -3.0f, 0.0f));
             trans->SetRotation(glm::angleAxis(-90.0f, glm::vec3(1, 0, 0)));
             trans->SetScale(glm::vec3(50.0f, 50.0f, 1.0f));
+            m_engineInstance->AddComponent<RotatorComponent>(newEntity);
+            RotatorComponent* rot = m_engineInstance->GetComponent<RotatorComponent, RotatorComponentManager>(newEntity);
 
-            trans = m_engineInstance->GetTransformComponent(entities[0]);
+            trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(entities[0]);
             trans->SetTranslation(glm::vec3(0.0f, 0.0f, 0.0f));
             trans->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
 
-            trans = m_engineInstance->GetTransformComponent(entities[1]);
+            trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(entities[1]);
             trans->SetTranslation(glm::vec3(-0.5f, 3.0f, 0.0f));
             trans->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
 
-            trans = m_engineInstance->GetTransformComponent(entities[2]);
+            trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(entities[2]);
             trans->SetTranslation(glm::vec3(1.f, -1.0f, 0.0f));
             trans->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
 
-            trans = m_engineInstance->GetTransformComponent(entities[3]);
+            trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(entities[3]);
             trans->SetTranslation(glm::vec3(2.0f, -2.0f, 0.0f));
             trans->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
 
-            trans = m_engineInstance->GetTransformComponent(entities[4]);
+            trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(entities[4]);
             trans->SetTranslation(glm::vec3(3.0f, -2.0f, 0.0f));
             trans->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
 
-            trans = m_engineInstance->GetTransformComponent(entities[5]);
+            trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(entities[5]);
             trans->SetTranslation(glm::vec3(4.0f, -1.0f, 0.0f));
             trans->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
 
-            trans = m_engineInstance->GetTransformComponent(entities[6]);
+            trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(entities[6]);
             trans->SetTranslation(glm::vec3(5.0f, 0.0f, 0.0f));
             trans->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
 
-            trans = m_engineInstance->GetTransformComponent(entities[7]);
+            trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(entities[7]);
             trans->SetTranslation(glm::vec3(6.0f, 1.0f, 0.0f));
             trans->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
 
-            trans = m_engineInstance->GetTransformComponent(entities[8]);
+            trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(entities[8]);
             trans->SetTranslation(glm::vec3(7.0f, 2.0f, 0.0f));
             trans->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
 
-            trans = m_engineInstance->GetTransformComponent(entities[9]);
+            trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(entities[9]);
             trans->SetTranslation(glm::vec3(6.5f, 10.0f, 0.0f));
             trans->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
 
             // Camera
             m_camera = JECamera(glm::vec3(0.0f, 4.0f, 12.0f), glm::vec3(0.0f, 0.0f, 0.0f), windowExtent.width / (float)windowExtent.height, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE);
-            m_shadowCamera = JECamera(glm::vec3(35.0f, 35.0f, 35.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPassExtent.width / (float)shadowPassExtent.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
+            m_shadowCamera = JECamera(glm::vec3(50.0f, 50.0f, 50.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPassExtent.width / (float)shadowPassExtent.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
         } else if (sceneId == 1) {
             // Meshes
             /*m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);

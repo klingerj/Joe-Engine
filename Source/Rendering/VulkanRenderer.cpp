@@ -16,6 +16,7 @@ namespace JoeEngine {
     void JEVulkanRenderer::Initialize(JESceneManager* sceneManager, JEEngineInstance* engineInstance) {
 
         m_engineInstance = engineInstance;
+        m_sceneManager = sceneManager;
 
         // Window (GLFW)
         m_vulkanWindow.Initialize(m_width, m_height, "VulkanWindow", m_instance);
@@ -69,10 +70,6 @@ namespace JoeEngine {
 
         CreateTextures();
         CreateShaders();
-
-        // Load Scene
-        this->m_sceneManager = sceneManager;
-        this->m_sceneManager->LoadScene(0, { m_width, m_height }, { m_shadowPass.width, m_shadowPass.height });
 
         // Command buffers
         CreateShadowCommandBuffer();
@@ -1395,7 +1392,7 @@ namespace JoeEngine {
     }
 
     void JEVulkanRenderer::RegisterCallbacks(JEIOHandler* ioHandler) {
-        JECallbackFunction loadScene0 = [&] {
+        /*JECallbackFunction loadScene0 = [&] {
             vkDeviceWaitIdle(m_device);
             m_meshBufferManager.Cleanup();
             CleanupTextures();
@@ -1427,6 +1424,6 @@ namespace JoeEngine {
         };
         ioHandler->AddCallback(JE_KEY_0, loadScene0);
         ioHandler->AddCallback(JE_KEY_1, loadScene1);
-        ioHandler->AddCallback(JE_KEY_2, loadScene2);
+        ioHandler->AddCallback(JE_KEY_2, loadScene2);*/
     }
 }

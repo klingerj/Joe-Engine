@@ -8,11 +8,10 @@ namespace JoeEngine {
     private:
         uint32_t m_idCounter;
 
-        // TODO: replace with packed array
-        // list of entities, tightly packed
+        // List of entities
         PackedArray<Entity> m_entities;
 
-        // if the list of entities changes, this bool will be true until marked clean
+        // If the list of entities changes, this bool will be true until marked clean
         bool m_entitiesDirty;
 
     public:

@@ -1,7 +1,7 @@
 #include "MaterialComponentManager.h"
 
 namespace JoeEngine {
-    void JEMaterialComponentManager::Update() {
+    void JEMaterialComponentManager::Update(JEEngineInstance* engineInstance) {
         /*for (MaterialComponent comp : m_materialComponents) {
             // TODO
         }*/
@@ -15,11 +15,12 @@ namespace JoeEngine {
         m_materialComponents.RemoveElement(id);
     }
 
-    MaterialComponent JEMaterialComponentManager::GetComponent(uint32_t index) const {
-        return m_materialComponents[index];
+    MaterialComponent* JEMaterialComponentManager::GetComponent(uint32_t id) const {
+        // This should be an ok const cast. The [-operator on std::vector only returns const refs.
+        return const_cast<MaterialComponent*>(&m_materialComponents[id]);
     }
 
-    void JEMaterialComponentManager::SetComponent(uint32_t index, MaterialComponent newComp) {
-        m_materialComponents[index] = newComp;
+    void JEMaterialComponentManager::SetComponent(uint32_t id, MaterialComponent newComp) {
+        m_materialComponents[id] = newComp;
     }
 }

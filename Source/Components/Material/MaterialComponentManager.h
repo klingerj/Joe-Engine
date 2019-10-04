@@ -11,7 +11,7 @@ namespace JoeEngine {
 
     public:
         JEMaterialComponentManager() {}
-        virtual ~JEMaterialComponentManager() {}
+        ~JEMaterialComponentManager() {}
 
         // Can't be copied/moved/assigned
         /*JEMaterialComponentManager(const JEMaterialComponentManager& mgr) = delete;
@@ -19,11 +19,11 @@ namespace JoeEngine {
         JEMaterialComponentManager& operator=(const JEMaterialComponentManager& mgr) = delete;
         JEMaterialComponentManager& operator=(JEMaterialComponentManager&& mgr) = delete;*/
         
-        void Update() override;
+        void Update(JEEngineInstance* engineInstance) override;
         void AddNewComponent(uint32_t id) override;
         void RemoveComponent(uint32_t id) override;
 
-        MaterialComponent GetComponent(uint32_t index) const;
-        void SetComponent(uint32_t index, MaterialComponent newComp);
+        MaterialComponent* GetComponent(uint32_t id) const;
+        void SetComponent(uint32_t id, MaterialComponent newComp);
     };
 }

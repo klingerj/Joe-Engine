@@ -1,15 +1,11 @@
 #pragma once
 
-class TransformComponent;
+#include "../../EngineInstance.h"
 
-namespace JoeEngine {
-    class RotatorComponent {
-    public:
-        RotatorComponent() : transform(nullptr) {}
-        ~RotatorComponent() {}
-        
-        TransformComponent* transform;
-        
-        void Update();
-    };
-}
+class RotatorComponent {
+public:
+    RotatorComponent() {}
+    ~RotatorComponent() {}
+    
+    void Update(JoeEngine::JEEngineInstance* engineInstance, uint32_t id);
+};

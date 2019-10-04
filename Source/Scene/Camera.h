@@ -86,7 +86,7 @@ namespace JoeEngine {
             return proj * GetView();
         }
         glm::mat4 GetOrthoViewProj() const {
-            const float coord = 15.0f;
+            const float coord = 40.0f;
             glm::mat4 proj = glm::ortho(-coord, coord, -coord, coord, m_nearPlane, m_farPlane);
             proj[1][1] *= -1.0f;
             return proj * GetView();

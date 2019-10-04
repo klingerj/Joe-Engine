@@ -4,22 +4,21 @@
 #include "RotatorComponent.h"
 #include "../../Containers/PackedArray.h"
 
-namespace JoeEngine {
-    class JERotatorComponentManager : public JEComponentManager {
-    private:
-        PackedArray<RotatorComponent> m_rotatorComponents;
+class RotatorComponentManager : public JoeEngine::JEComponentManager {
+private:
+    JoeEngine::PackedArray<RotatorComponent> m_rotatorComponents;
 
-    public:
-        JERotatorComponentManager() {}
-        virtual ~JERotatorComponentManager() {}
+public:
+    RotatorComponentManager() {}
+    ~RotatorComponentManager() {}
 
-        /*JETransformComponentManager(const JETransformComponentManager& mgr) = delete;
-        JETransformComponentManager(JETransformComponentManager&& mgr) = delete;
-        JETransformComponentManager& operator=(const JETransformComponentManager& mgr) = delete;
-        JETransformComponentManager& operator=(JETransformComponentManager&& mgr) = delete;*/
+    /*JETransformComponentManager(const JETransformComponentManager& mgr) = delete;
+    JETransformComponentManager(JETransformComponentManager&& mgr) = delete;
+    JETransformComponentManager& operator=(const JETransformComponentManager& mgr) = delete;
+    JETransformComponentManager& operator=(JETransformComponentManager&& mgr) = delete;*/
 
-        void Update() override;
-        void AddNewComponent(uint32_t id) override;
-        void RemoveComponent(uint32_t id) override;
-    };
-}
+    void Update(JoeEngine::JEEngineInstance* engineInstance) override;
+    void AddNewComponent(uint32_t id) override;
+    void RemoveComponent(uint32_t id) override;
+    RotatorComponent* GetComponent(uint32_t index) const;
+};

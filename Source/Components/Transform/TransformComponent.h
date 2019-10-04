@@ -56,5 +56,9 @@ namespace JoeEngine {
             m_scale = s;
             RecomputeTransform();
         }
+
+        void SetTransform(const glm::mat4& t) {
+            m_cachedTransform = t;
+        }
     };
 }

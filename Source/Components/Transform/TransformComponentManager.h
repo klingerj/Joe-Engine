@@ -11,18 +11,18 @@ namespace JoeEngine {
 
     public:
         JETransformComponentManager() {}
-        virtual ~JETransformComponentManager() {}
+        ~JETransformComponentManager() {}
 
         /*JETransformComponentManager(const JETransformComponentManager& mgr) = delete;
         JETransformComponentManager(JETransformComponentManager&& mgr) = delete;
         JETransformComponentManager& operator=(const JETransformComponentManager& mgr) = delete;
         JETransformComponentManager& operator=(JETransformComponentManager&& mgr) = delete;*/
 
-        void Update() override;
+        void Update(JEEngineInstance* engineInstance) override;
         void AddNewComponent(uint32_t id) override;
         void RemoveComponent(uint32_t id) override;
 
-        TransformComponent* GetComponent(uint32_t index);
+        TransformComponent* GetComponent(uint32_t id) const;
         const std::vector<TransformComponent>& GetComponentList() const;
     };
 }

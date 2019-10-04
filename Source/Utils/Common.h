@@ -29,9 +29,9 @@ namespace JoeEngine {
     // Camera attributes
     const glm::vec3 JE_WORLD_UP = glm::vec3(0.0f, 1.0f, 0.0f);
     constexpr float JE_SCENE_VIEW_NEAR_PLANE = 0.1f;
-    constexpr float JE_SCENE_VIEW_FAR_PLANE = 100.0f;
+    constexpr float JE_SCENE_VIEW_FAR_PLANE = 200.0f;
     constexpr float JE_SHADOW_VIEW_NEAR_PLANE = 0.1f;
-    constexpr float JE_SHADOW_VIEW_FAR_PLANE = 100.0f;
+    constexpr float JE_SHADOW_VIEW_FAR_PLANE = 200.0f;
     const float JE_FOVY = glm::radians(22.5f);
 
     // Vulkan Functions

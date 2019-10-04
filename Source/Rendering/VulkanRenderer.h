@@ -33,9 +33,9 @@ namespace JoeEngine {
         uint32_t m_width;
         uint32_t m_height;
 
-        // Scene Manager
-        JESceneManager* m_sceneManager;
+        // References to other systems
         JEEngineInstance* m_engineInstance;
+        JESceneManager* m_sceneManager;
 
         // Other backend managers
         // JEShaderManager m_shaderManager; // TODO: create me
@@ -144,7 +144,7 @@ namespace JoeEngine {
 
     public:
         JEVulkanRenderer() : m_width(JE_DEFAULT_SCREEN_WIDTH), m_height(JE_DEFAULT_SCREEN_HEIGHT), m_MAX_FRAMES_IN_FLIGHT(JE_DEFAULT_MAX_FRAMES_IN_FLIGHT),
-                             m_currentFrame(0), m_didFramebufferResize(false), m_sceneManager(nullptr), m_engineInstance(nullptr) {}
+                             m_currentFrame(0), m_didFramebufferResize(false), m_engineInstance(nullptr), m_sceneManager(nullptr) {}
         ~JEVulkanRenderer() {}
 
         // Vulkan setup
