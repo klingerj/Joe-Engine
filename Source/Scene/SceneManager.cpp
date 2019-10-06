@@ -14,7 +14,7 @@ namespace JoeEngine {
         if (sceneId == 0) {
             std::vector<Entity> entities;
             MeshComponent meshComp_wahoo = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "wahoo.obj");
-            for (uint32_t i = 0; i < 20000; ++i) {
+            for (uint32_t i = 0; i < 2000; ++i) {
                 Entity newEntity = m_engineInstance->SpawnEntity();
                 entities.push_back(newEntity);
                 m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_wahoo);
@@ -28,11 +28,11 @@ namespace JoeEngine {
             MeshComponent meshComp_plane = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "plane.obj");
             m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_plane);
             TransformComponent* trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(newEntity);
-            trans->SetTranslation(glm::vec3(0.0f, -3.0f, 0.0f));
+            trans->SetTranslation(glm::vec3(0.0f, 0.0f, 0.0f));
             trans->SetRotation(glm::angleAxis(-90.0f, glm::vec3(1, 0, 0)));
-            trans->SetScale(glm::vec3(50.0f, 50.0f, 1.0f));
+            trans->SetScale(glm::vec3(40.0f, 40.0f, 40.0f));
             m_engineInstance->AddComponent<RotatorComponent>(newEntity);
-            RotatorComponent* rot = m_engineInstance->GetComponent<RotatorComponent, RotatorComponentManager>(newEntity);
+            //RotatorComponent* rot = m_engineInstance->GetComponent<RotatorComponent, RotatorComponentManager>(newEntity);
 
             trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(entities[0]);
             trans->SetTranslation(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -71,12 +71,12 @@ namespace JoeEngine {
             trans->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
 
             trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(entities[9]);
-            trans->SetTranslation(glm::vec3(6.5f, 10.0f, 0.0f));
-            trans->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
+            trans->SetTranslation(glm::vec3(6.5f, 2.0f, 14.0f));
+            trans->SetScale(glm::vec3(3.05f, 3.05f, 3.05f));
 
             // Camera
             m_camera = JECamera(glm::vec3(0.0f, 4.0f, 12.0f), glm::vec3(0.0f, 0.0f, 0.0f), windowExtent.width / (float)windowExtent.height, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE);
-            m_shadowCamera = JECamera(glm::vec3(50.0f, 50.0f, 50.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPassExtent.width / (float)shadowPassExtent.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
+            m_shadowCamera = JECamera(glm::vec3(10.0f, 20.0f, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPassExtent.width / (float)shadowPassExtent.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
         } else if (sceneId == 1) {
             // Meshes
             /*m_meshDataManager->CreateNewMesh(physicalDevice, device, commandPool, graphicsQueue, JE_MODELS_OBJ_DIR + "cube.obj", JE_PHYSICS_FREEZE_POSITION | JE_PHYSICS_FREEZE_ROTATION);
