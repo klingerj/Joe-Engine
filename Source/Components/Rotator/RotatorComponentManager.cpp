@@ -1,10 +1,8 @@
 #include "RotatorComponentManager.h"
 
 void RotatorComponentManager::Update(JoeEngine::JEEngineInstance* engineInstance) {
-    uint32_t i = 0;
     for (RotatorComponent& r : m_rotatorComponents) {
-        r.Update(engineInstance, i);
-        ++i;
+        r.Update(engineInstance);
     }
 }
 

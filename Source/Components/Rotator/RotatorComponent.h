@@ -4,8 +4,10 @@
 
 class RotatorComponent {
 public:
-    RotatorComponent() {}
+    RotatorComponent() : m_entityId(-1) {}
     ~RotatorComponent() {}
     
-    void Update(JoeEngine::JEEngineInstance* engineInstance, uint32_t id);
+    int m_entityId;
+
+    void Update(JoeEngine::JEEngineInstance* engineInstance);
 };

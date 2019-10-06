@@ -18,9 +18,13 @@ namespace JoeEngine {
                 Entity newEntity = m_engineInstance->SpawnEntity();
                 entities.push_back(newEntity);
                 m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_wahoo);
-                m_engineInstance->AddComponent<RotatorComponent>(newEntity);
-                RotatorComponent* rot = m_engineInstance->GetComponent<RotatorComponent, RotatorComponentManager>(newEntity);
                 m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(newEntity)->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+
+                if (i % 2 == 0) {
+                    m_engineInstance->AddComponent<RotatorComponent>(newEntity);
+                    RotatorComponent* rot = m_engineInstance->GetComponent<RotatorComponent, RotatorComponentManager>(newEntity);
+                    rot->m_entityId = newEntity.GetId();
+                }
             }
             
             Entity newEntity = m_engineInstance->SpawnEntity();
@@ -32,7 +36,8 @@ namespace JoeEngine {
             trans->SetRotation(glm::angleAxis(-90.0f, glm::vec3(1, 0, 0)));
             trans->SetScale(glm::vec3(40.0f, 40.0f, 40.0f));
             m_engineInstance->AddComponent<RotatorComponent>(newEntity);
-            //RotatorComponent* rot = m_engineInstance->GetComponent<RotatorComponent, RotatorComponentManager>(newEntity);
+            RotatorComponent* rot = m_engineInstance->GetComponent<RotatorComponent, RotatorComponentManager>(newEntity);
+            rot->m_entityId = newEntity.GetId();
 
             trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(entities[0]);
             trans->SetTranslation(glm::vec3(0.0f, 0.0f, 0.0f));
