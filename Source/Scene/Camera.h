@@ -1,5 +1,5 @@
 #pragma once
-
+#include <iostream>
 #include "../Utils/Common.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/norm.hpp"
@@ -78,7 +78,7 @@ namespace JoeEngine {
             return o * t;
         }
         glm::mat4 GetProj() const {
-            return glm::perspective(JE_FOVY, m_aspect, m_nearPlane, m_farPlane);
+            return glm::perspectiveLH_ZO(JE_FOVY, m_aspect, m_nearPlane, m_farPlane);
         }
         glm::mat4 GetViewProj() const {
             glm::mat4 proj = GetProj();
@@ -86,8 +86,8 @@ namespace JoeEngine {
             return proj * GetView();
         }
         glm::mat4 GetOrthoViewProj() const {
-            const float coord = 15.0f;
-            glm::mat4 proj = glm::ortho(-coord, coord, -coord, coord, m_nearPlane, m_farPlane);
+            const float coord = 40.0f;
+            glm::mat4 proj = glm::orthoLH_ZO(-coord, coord, -coord, coord, m_nearPlane, m_farPlane);
             proj[1][1] *= -1.0f;
             return proj * GetView();
         }

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
+#include <typeindex>
 
 #include "Io/IOHandler.h"
 #include "Scene/SceneManager.h"
@@ -24,14 +26,10 @@ namespace JoeEngine {
         // Entity-Component System Managers
         JEEntityManager m_entityManager;
 
-        enum JE_COMP_MGR_IDX : uint8_t {
-            MESH_COMP = 0,
-            MATERIAL_COMP = 1,
-            TRANSFORM_COMP = 2
-            // TODO: more
-        };
-
         std::vector<std::unique_ptr<JEComponentManager>> m_componentManagers;
+
+        // TODO: replace me?
+        std::unordered_map<std::type_index, uint32_t> m_componentTypeToIndex;
 
         double m_frameStartTime, m_frameEndTime; // timing for performance analysis
         bool m_enableFrameCounter;
@@ -39,6 +37,17 @@ namespace JoeEngine {
         // Startup/shutdown
         void InitializeEngine();
         void StopEngine();
+
+        template <typename T, typename U>
+        const std::vector<T>& GetComponentList() const {
+            return static_cast<U*>(m_componentManagers[m_componentTypeToIndex.at(typeid(T))].get())->GetComponentList();
+        }
+
+        /*template <typename T, typename U>
+        const std::unique_ptr<U> GetComponentManager() const {
+            return static_cast<std::unique_ptr<U>>(m_componentManagers[m_componentTypeToIndex.at(typeid(T))]);
+            //return m_componentManagers[m_componentTypeToIndex.find(typeid(T))]];
+        }*/
 
     public:
         JEEngineInstance() : m_enableFrameCounter(true), m_frameStartTime(0.0f), m_frameEndTime(0.0f) {
@@ -59,9 +68,33 @@ namespace JoeEngine {
 
         // User API
         Entity SpawnEntity();
+        void DestroyEntity(Entity entity);
+
+        // Load a scene
+        void LoadScene(uint32_t id);
+
+        template <typename T, typename U>
+        void RegisterComponentManager(U* componentMgr) {
+            m_componentManagers.emplace_back(std::unique_ptr<U>(componentMgr));
+            m_componentTypeToIndex[typeid(T)] = m_componentManagers.size() - 1;
+        }
+
+        // TODO: replace me with something more general? or not, as this is a built-in component type
         MeshComponent CreateMeshComponent(const std::string& filepath);
-        void SetMeshComponent(const Entity& entity, const MeshComponent& meshComp);
-        TransformComponent* GetTransformComponent(const Entity& entity);
-        const std::vector<glm::mat4> GetTransformMatrices() const;
+
+        template<typename T>
+        void AddComponent(const Entity& entity) {
+            m_componentManagers[m_componentTypeToIndex.at(typeid(T))].get()->AddNewComponent(entity.GetId());
+        }
+
+        template <typename T, typename U>
+        T* GetComponent(const Entity& entity) const {
+            return static_cast<U*>(m_componentManagers[m_componentTypeToIndex.at(typeid(T))].get())->GetComponent(entity.GetId());
+        }
+
+        template <typename U, typename T>
+        void SetComponent(const Entity& entity, const T& comp) {
+            static_cast<U*>(m_componentManagers[m_componentTypeToIndex.at(typeid(T))].get())->SetComponent(entity.GetId(), comp);
+        }
     };
 }

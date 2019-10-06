@@ -23,15 +23,15 @@ namespace JoeEngine {
 
     constexpr int JE_DEFAULT_SHADOW_MAP_WIDTH = 2000;
     constexpr int JE_DEFAULT_SHADOW_MAP_HEIGHT = 2000;
-    constexpr float JE_DEFAULT_SHADOW_MAP_DEPTH_BIAS_SLOPE = 1.0f;
+    constexpr float JE_DEFAULT_SHADOW_MAP_DEPTH_BIAS_SLOPE = 1.5f;
     constexpr float JE_DEFAULT_SHADOW_MAP_DEPTH_BIAS_CONSTANT = 0.0f;
 
     // Camera attributes
     const glm::vec3 JE_WORLD_UP = glm::vec3(0.0f, 1.0f, 0.0f);
     constexpr float JE_SCENE_VIEW_NEAR_PLANE = 0.1f;
-    constexpr float JE_SCENE_VIEW_FAR_PLANE = 100.0f;
+    constexpr float JE_SCENE_VIEW_FAR_PLANE = 200.0f;
     constexpr float JE_SHADOW_VIEW_NEAR_PLANE = 0.1f;
-    constexpr float JE_SHADOW_VIEW_FAR_PLANE = 100.0f;
+    constexpr float JE_SHADOW_VIEW_FAR_PLANE = 200.0f;
     const float JE_FOVY = glm::radians(22.5f);
 
     // Vulkan Functions

@@ -1,32 +1,30 @@
 #include "MeshComponentManager.h"
 
 namespace JoeEngine {
-    void JEMeshComponentManager::Update() {
+    void JEMeshComponentManager::Update(JEEngineInstance* engineInstance) {
         /*for (MeshComponent m : m_meshComponents) {
             // TODO
         }*/
     }
 
-    void JEMeshComponentManager::AddNewComponent() {
-        m_meshComponents.emplace_back(MeshComponent());
+    void JEMeshComponentManager::AddNewComponent(uint32_t id) {
+        m_meshComponents.AddElement(id, MeshComponent());
     }
 
-    MeshComponent JEMeshComponentManager::GetComponent(uint32_t index) const {
-        if (index > m_meshComponents.size() - 1) {
-            //TODO: throw exception or something
-        }
-        return m_meshComponents[index];
+    void JEMeshComponentManager::RemoveComponent(uint32_t id) {
+        m_meshComponents.RemoveElement(id);
     }
 
-    void JEMeshComponentManager::SetComponent(uint32_t index, MeshComponent meshComp) {
-        if (index > m_meshComponents.size() - 1) {
-            //TODO: throw exception or something
-        }
+    MeshComponent* JEMeshComponentManager::GetComponent(uint32_t id) const {
+        // This should be an ok const cast. The [-operator on std::vector only returns const refs.
+        return const_cast<MeshComponent*>(&m_meshComponents[id]);
+    }
 
-        m_meshComponents[index] = meshComp;
+    void JEMeshComponentManager::SetComponent(uint32_t id, MeshComponent meshComp) {
+        m_meshComponents[id] = meshComp;
     }
 
     const std::vector<MeshComponent>& JEMeshComponentManager::GetComponentList() const {
-        return m_meshComponents;
+        return m_meshComponents.GetData();
     }
 }

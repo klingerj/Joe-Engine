@@ -7,21 +7,6 @@ namespace JoeEngine {
     void JEEngineInstance::Run() {
         const JEVulkanWindow& window = m_vulkanRenderer.GetWindow();
 
-        /*while (!window.ShouldClose()) {
-            m_frameStartTime = glfwGetTime();
-            m_ioHandler.PollInput();
-            m_vulkanRenderer.SubmitFrame();
-            m_physicsManager.Update();
-            m_frameEndTime = glfwGetTime();
-            if (m_enableFrameCounter) {
-                std::cout << "Frame Time: " << (m_frameEndTime - m_frameStartTime) * 1000.0f << " ms" << std::endl;
-            }
-        }*/
-
-
-
-        // TODO: ideal inner engine render loop for uniform binding - bind materials in good order
-
         while (!window.ShouldClose()) {
             // FPSCounter::StartFrame();
             m_frameStartTime = glfwGetTime();
@@ -30,12 +15,15 @@ namespace JoeEngine {
 
             // Update components
             for (size_t i = 0; i < m_componentManagers.size(); ++i) {
-                m_componentManagers[i]->Update();
+                m_frameStartTime = glfwGetTime();
+                m_componentManagers[i]->Update(this);
+                m_frameEndTime = glfwGetTime();
+                if (m_enableFrameCounter) {
+                    std::cout << "Frame Time: " << (m_frameEndTime - m_frameStartTime) * 1000.0f << " ms_" << i << std::endl;
+                }
             }
-            m_frameEndTime = glfwGetTime();
-            if (m_enableFrameCounter) {
-                std::cout << "Frame Time: " << (m_frameEndTime - m_frameStartTime) * 1000.0f << " ms" << std::endl;
-            }
+            
+
             // Submit shadow pass to GPU
             // TODO Don't cull before doing this? Also only send opaque geometry i think, not sure how to do transluscent shadows
             /*for (JELight l : m_sceneManager.Lights()) {
@@ -47,8 +35,8 @@ namespace JoeEngine {
                 m_renderer.ShadowPassEnd();
             }*/
 
-            const std::vector<MeshComponent>& meshComponents = dynamic_cast<JEMeshComponentManager*>(m_componentManagers[MESH_COMP].get())->GetComponentList();
-            const std::vector<TransformComponent>& transformComponents = dynamic_cast<JETransformComponentManager*>(m_componentManagers[TRANSFORM_COMP].get())->GetComponentList();
+            const std::vector<MeshComponent>&      meshComponents =      GetComponentList<MeshComponent, JEMeshComponentManager>();
+            const std::vector<TransformComponent>& transformComponents = GetComponentList<TransformComponent, JETransformComponentManager>();
 
             // TODO: eventually get list of lights and pass those instead
 
@@ -105,25 +93,20 @@ namespace JoeEngine {
             
             m_vulkanRenderer.SubmitFrame();
 
-
             // FPSCounter::EndFrame();
         }
 
 
         m_vulkanRenderer.WaitForIdleDevice();
-
-
-
-        //vkDeviceWaitIdle(m_vulkanRenderer.GetDevice());
         StopEngine();
     }
 
     void JEEngineInstance::InitializeEngine() {
         // Init list of component managers
         // TODO: custom allocator instead of 'operator new'
-        m_componentManagers.emplace_back(std::unique_ptr<JEMeshComponentManager>(new JEMeshComponentManager()));
-        m_componentManagers.emplace_back(std::unique_ptr<JEMaterialComponentManager>(new JEMaterialComponentManager()));
-        m_componentManagers.emplace_back(std::unique_ptr<JETransformComponentManager>(new JETransformComponentManager()));
+        RegisterComponentManager<MeshComponent>(new JEMeshComponentManager());
+        RegisterComponentManager<MaterialComponent>(new JEMaterialComponentManager());
+        RegisterComponentManager<TransformComponent>(new JETransformComponentManager());
 
         //m_physicsManager.Initialize(meshDataManager);
         m_sceneManager.Initialize(this);
@@ -140,42 +123,35 @@ namespace JoeEngine {
         m_vulkanRenderer.Cleanup();
     }
 
+    // User API
+
     Entity JEEngineInstance::SpawnEntity() {
         Entity entity = m_entityManager.SpawnEntity();
 
         // Add new default-constructed components for the new entity
-        for (size_t i = 0; i < m_componentManagers.size(); ++i) {
-            m_componentManagers[i]->AddNewComponent();
+        // Any new entity only gets a mesh, material, and transform, hence the 3
+        // TODO: get rid of the hard-coded value
+        for (size_t i = 0; i < 3 /*m_componentManagers.size()*/; ++i) {
+            m_componentManagers[i]->AddNewComponent(entity.GetId());
         }
 
         return entity;
     }
 
-    // User API
+    void JEEngineInstance::DestroyEntity(Entity entity) {
+        for (size_t i = 0; i < m_componentManagers.size(); ++i) {
+            m_componentManagers[i]->RemoveComponent(entity.GetId());
+        }
+        m_entityManager.DestroyEntity(entity);
+    }
+
+    void JEEngineInstance::LoadScene(uint32_t id) {
+        m_sceneManager.LoadScene(id, { JE_DEFAULT_SCREEN_WIDTH, JE_DEFAULT_SCREEN_HEIGHT },
+                                     { JE_DEFAULT_SHADOW_MAP_WIDTH, JE_DEFAULT_SHADOW_MAP_HEIGHT });
+    }
 
     MeshComponent JEEngineInstance::CreateMeshComponent(const std::string& filepath) {
         MeshComponent meshComp = m_vulkanRenderer.CreateMesh(filepath);
         return meshComp;
-    }
-
-    void JEEngineInstance::SetMeshComponent(const Entity& entity, const MeshComponent& meshComp) {
-        dynamic_cast<JEMeshComponentManager*>(m_componentManagers[MESH_COMP].get())->SetComponent(entity.m_id, meshComp);
-    }
-
-    TransformComponent* JEEngineInstance::GetTransformComponent(const Entity& entity) {
-        return dynamic_cast<JETransformComponentManager*>(m_componentManagers[TRANSFORM_COMP].get())->GetComponent(entity.m_id);
-    }
-
-    const std::vector<glm::mat4> JEEngineInstance::GetTransformMatrices() const {
-        std::vector<glm::mat4> matrices;
-
-        const std::vector<TransformComponent> transformComps = dynamic_cast<JETransformComponentManager*>(m_componentManagers[TRANSFORM_COMP].get())->GetComponentList();
-        matrices.reserve(transformComps.size());
-
-        for (TransformComponent t : transformComps) {
-            matrices.emplace_back(t.GetTransform());
-        }
-
-        return matrices;
     }
 }

@@ -1,24 +1,26 @@
 #include "TransformComponentManager.h"
 
 namespace JoeEngine {
-    void JETransformComponentManager::Update() {
+    void JETransformComponentManager::Update(JEEngineInstance* engineInstance) {
         /*for (TransformComponent& t : m_transformComponents) {
             // TODO
         }*/
     }
 
-    void JETransformComponentManager::AddNewComponent() {
-        m_transformComponents.emplace_back(TransformComponent());
+    void JETransformComponentManager::AddNewComponent(uint32_t id) {
+        m_transformComponents.AddElement(id, TransformComponent());
     }
 
-    TransformComponent* JETransformComponentManager::GetComponent(uint32_t index) {
-        if (index > m_transformComponents.size() - 1) {
-            //TODO: throw exception or something
-        }
-        return &m_transformComponents[index];
+    void JETransformComponentManager::RemoveComponent(uint32_t id) {
+        m_transformComponents.RemoveElement(id);
+    }
+
+    TransformComponent* JETransformComponentManager::GetComponent(uint32_t id) const {
+        // This should be an ok const cast. The [-operator on std::vector only returns const refs.
+        return const_cast<TransformComponent*>(&m_transformComponents[id]);
     }
 
     const std::vector<TransformComponent>& JETransformComponentManager::GetComponentList() const {
-        return m_transformComponents;
+        return m_transformComponents.GetData();
     }
 }

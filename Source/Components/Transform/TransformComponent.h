@@ -12,7 +12,6 @@ namespace JoeEngine {
         glm::mat4 m_cachedTransform;
 
     public:
-
         TransformComponent() : m_translation(0, 0, 0), m_rotation(glm::angleAxis(0.0f, glm::vec3(0, 1, 0))), m_scale(1, 1, 1), m_cachedTransform(1.0f) {}
         ~TransformComponent() {}
 
@@ -56,6 +55,10 @@ namespace JoeEngine {
         void SetScale(const glm::vec3& s) {
             m_scale = s;
             RecomputeTransform();
+        }
+
+        void SetTransform(const glm::mat4& t) {
+            m_cachedTransform = t;
         }
     };
 }

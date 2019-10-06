@@ -37,7 +37,15 @@ namespace JoeEngine {
         }
 
         typename std::vector<T>::iterator end() noexcept {
-            return m_data.end();
+            return m_data.begin() + m_numElements;
+        }
+
+        size_t Size() const {
+            return m_data.size();
+        }
+
+        const std::vector<T>& GetData() const {
+            return m_data;
         }
 
         void AddElement(uint32_t index, T element) {
