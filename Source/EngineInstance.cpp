@@ -1,5 +1,6 @@
 #include <exception>
 #include <memory>
+#include <string>
 
 #include "Utils/ScopedTimer.h"
 #include "EngineInstance.h"
@@ -10,7 +11,8 @@ namespace JoeEngine {
 
         while (!window.ShouldClose()) {
             {
-                ScopedTimer<float> timer("Total Frame Time", "Frame start\n");
+                //ScopedTimer<float> timer("Total Frame Time", "Frame start\n");
+                const float startTime = glfwGetTime();
 
                 {
                     //ScopedTimer<float> timer("Poll and Handle Input");
@@ -100,6 +102,14 @@ namespace JoeEngine {
                     //ScopedTimer<float> timer("GPU workload submission");
                     m_vulkanRenderer.SubmitFrame();
                 }
+
+                // TODO: clean this up?
+                const float endTime = glfwGetTime();
+                const float elapsedTime = endTime - startTime;
+                const float fps = 1.0f / elapsedTime;
+                glfwSetWindowTitle(m_vulkanRenderer.GetGLFWWindow(), ("The Joe Engine - Demo - " +
+                                                                      std::to_string(elapsedTime * 1000.0f) + " ms / frame, " +
+                                                                      std::to_string(fps) + " fps").c_str());
             }
         }
 
