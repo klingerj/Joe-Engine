@@ -10,7 +10,7 @@ namespace JoeEngine {
         PackedArray<MeshComponent> m_meshComponents;
     public:
         JEMeshComponentManager() {}
-        ~JEMeshComponentManager() {}
+        virtual ~JEMeshComponentManager() {}
 
         /*JEMeshComponentManager(const JEMeshComponentManager& mgr) = delete;
         JEMeshComponentManager(JEMeshComponentManager&& mgr) = delete;
