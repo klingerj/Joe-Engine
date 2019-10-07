@@ -83,6 +83,8 @@ set(SOURCE_LIST
     "Source/Utils/Common.h"
     "Source/Utils/MemAllocUtils.cpp"
     "Source/Utils/MemAllocUtils.h"
+    "Source/Utils/ScopedTimer.cpp"
+    "Source/Utils/ScopedTimer.h"
     "Source/Utils/ThreadPool.cpp"
     "Source/Utils/ThreadPool.h"
     "Source/Utils/VulkanValidationLayers.cpp"

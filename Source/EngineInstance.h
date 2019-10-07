@@ -30,9 +30,6 @@ namespace JoeEngine {
 
         // TODO: replace me?
         std::unordered_map<std::type_index, uint32_t> m_componentTypeToIndex;
-
-        double m_frameStartTime, m_frameEndTime; // timing for performance analysis
-        bool m_enableFrameCounter;
         
         // Startup/shutdown
         void InitializeEngine();
@@ -50,7 +47,7 @@ namespace JoeEngine {
         }*/
 
     public:
-        JEEngineInstance() : m_enableFrameCounter(true), m_frameStartTime(0.0f), m_frameEndTime(0.0f) {
+        JEEngineInstance() {
             InitializeEngine();
         }
         ~JEEngineInstance() {}
