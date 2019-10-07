@@ -23,6 +23,6 @@ namespace JoeEngine {
         void RemoveComponent(uint32_t id) override;
 
         TransformComponent* GetComponent(uint32_t id) const;
-        const std::vector<TransformComponent>& GetComponentList() const;
+        const PackedArray<TransformComponent>& GetComponentList() const;
     };
 }

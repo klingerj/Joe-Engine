@@ -24,7 +24,7 @@ namespace JoeEngine {
         m_meshComponents[id] = meshComp;
     }
 
-    const std::vector<MeshComponent>& JEMeshComponentManager::GetComponentList() const {
-        return m_meshComponents.GetData();
+    const PackedArray<MeshComponent>& JEMeshComponentManager::GetComponentList() const {
+        return m_meshComponents;
     }
 }

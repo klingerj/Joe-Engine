@@ -41,10 +41,10 @@ namespace JoeEngine {
         // Creation functions
         void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
             const JEVulkanSwapChain& swapChain, VkRenderPass renderPass);
-        void CreateDescriptorPool(VkDevice device, size_t numSwapChainImages);
+        void CreateDescriptorPool(VkDevice device, uint32_t numSwapChainImages);
         void CreateDescriptorSetLayout(VkDevice device);
-        void CreateDescriptorSets(VkDevice device, const JEPostProcessingPass& postProcessingPass, VkImageView postImageView, size_t numSwapChainImages);
-        void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages);
+        void CreateDescriptorSets(VkDevice device, const JEPostProcessingPass& postProcessingPass, VkImageView postImageView, uint32_t numSwapChainImages);
+        void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages);
 
     public:
         JEVulkanPostProcessShader() {}
@@ -58,7 +58,7 @@ namespace JoeEngine {
             VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
             VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
 
-            size_t numSwapChainImages = swapChain.GetImageViews().size();
+            uint32_t numSwapChainImages = swapChain.GetImageViews().size();
             CreateUniformBuffers(physicalDevice, device, numSwapChainImages);
             CreateDescriptorSetLayout(device);
             CreateDescriptorPool(device, numSwapChainImages);
@@ -71,7 +71,7 @@ namespace JoeEngine {
         void Cleanup(VkDevice device);
 
         void UpdateUniformBuffers(VkDevice device, uint32_t currentImage);
-        void BindDescriptorSets(VkCommandBuffer commandBuffer, size_t descriptorSetIndex);
+        void BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t descriptorSetIndex);
 
         // Getters
         VkPipeline GetPipeline() const {
@@ -166,7 +166,7 @@ namespace JoeEngine {
             VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
             VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
 
-            size_t numSwapChainImages = swapChain.GetImageViews().size();
+            uint32_t numSwapChainImages = swapChain.GetImageViews().size();
             CreateUniformBuffers(physicalDevice, device);
             CreateDescriptorSetLayout(device);
             CreateDescriptorPool(device);
@@ -209,10 +209,10 @@ namespace JoeEngine {
         // Creation functions
         void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
             const JEVulkanSwapChain& swapChain, VkRenderPass renderPass);
-        void CreateDescriptorPool(VkDevice device, size_t numSwapChainImages);
+        void CreateDescriptorPool(VkDevice device, uint32_t numSwapChainImages);
         void CreateDescriptorSetLayout(VkDevice device);
-        void CreateDescriptorSets(VkDevice device, const JETexture& texture, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, size_t numSwapChainImages);
-        void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages);
+        void CreateDescriptorSets(VkDevice device, const JETexture& texture, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, uint32_t numSwapChainImages);
+        void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages);
 
     public:
         JEVulkanDeferredPassLightingShader() {}
@@ -226,7 +226,7 @@ namespace JoeEngine {
             VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
             VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
 
-            size_t numSwapChainImages = swapChain.GetImageViews().size();
+            uint32_t numSwapChainImages = swapChain.GetImageViews().size();
             CreateUniformBuffers(physicalDevice, device, numSwapChainImages);
             CreateDescriptorSetLayout(device);
             CreateDescriptorPool(device, numSwapChainImages);
@@ -239,7 +239,7 @@ namespace JoeEngine {
         void Cleanup(VkDevice device);
 
         void UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const JECamera& camera, const JECamera& shadowCamera);
-        void BindDescriptorSets(VkCommandBuffer commandBuffer, size_t descriptorSetIndex);
+        void BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t descriptorSetIndex);
 
         // Getters
         VkPipeline GetPipeline() const {

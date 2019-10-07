@@ -20,13 +20,16 @@ namespace JoeEngine {
                 }
 
                 // Update components
-                for (size_t i = 0; i < m_componentManagers.size(); ++i) {
+                for (uint32_t i = 0; i < m_componentManagers.size(); ++i) {
                     {
                         //ScopedTimer<float> timer("Component Manager " + std::to_string(i));
                         m_componentManagers[i]->Update(this);
                     }
                 }
                 
+                // Destroy any entities marked for deletion
+                DestroyEntities();
+
                 // Submit shadow pass to GPU
                 // TODO Don't cull before doing this? Also only send opaque geometry i think, not sure how to do transluscent shadows
                 /*for (JELight l : m_sceneManager.Lights()) {
@@ -38,8 +41,8 @@ namespace JoeEngine {
                     m_renderer.ShadowPassEnd();
                 }*/
 
-                const std::vector<MeshComponent>&      meshComponents =      GetComponentList<MeshComponent, JEMeshComponentManager>();
-                const std::vector<TransformComponent>& transformComponents = GetComponentList<TransformComponent, JETransformComponentManager>();
+                const PackedArray<MeshComponent>&      meshComponents =      GetComponentList<MeshComponent,      JEMeshComponentManager>();
+                const PackedArray<TransformComponent>& transformComponents = GetComponentList<TransformComponent, JETransformComponentManager>();
 
                 // TODO: eventually get list of lights and pass those instead
 
@@ -107,9 +110,17 @@ namespace JoeEngine {
                 const float endTime = glfwGetTime();
                 const float elapsedTime = endTime - startTime;
                 const float fps = 1.0f / elapsedTime;
+                static float avgElapsed = 0.0f;
+                static float avgFps = 0.0f;
+                static uint32_t numFrames = 0;
+                ++numFrames;
+                avgElapsed += elapsedTime;
+                avgFps += fps;
                 glfwSetWindowTitle(m_vulkanRenderer.GetGLFWWindow(), ("The Joe Engine - Demo - " +
                                                                       std::to_string(elapsedTime * 1000.0f) + " ms / frame, " +
-                                                                      std::to_string(fps) + " fps").c_str());
+                                                                      std::to_string(avgElapsed * 1000.0f / numFrames).c_str() + " avg ms / frame | " +
+                                                                      std::to_string(fps) + " fps, " + 
+                                                                      std::to_string(avgFps / (float)numFrames).c_str() + " avg fps").c_str());
             }
         }
 
@@ -142,6 +153,16 @@ namespace JoeEngine {
         m_vulkanRenderer.Cleanup();
     }
 
+    void JEEngineInstance::DestroyEntities() {
+        for (Entity e : m_destroyedEntities) {
+            for (uint32_t i = 0; i < m_componentManagers.size(); ++i) {
+                m_componentManagers[i]->RemoveComponent(e.GetId());
+            }
+            m_entityManager.DestroyEntity(e);
+        }
+        m_destroyedEntities.clear();
+    }
+
     // User API
 
     Entity JEEngineInstance::SpawnEntity() {
@@ -150,7 +171,7 @@ namespace JoeEngine {
         // Add new default-constructed components for the new entity
         // Any new entity only gets a mesh, material, and transform, hence the 3
         // TODO: get rid of the hard-coded value
-        for (size_t i = 0; i < 3 /*m_componentManagers.size()*/; ++i) {
+        for (uint32_t i = 0; i < 3 /*m_componentManagers.size()*/; ++i) {
             m_componentManagers[i]->AddNewComponent(entity.GetId());
         }
 
@@ -158,10 +179,7 @@ namespace JoeEngine {
     }
 
     void JEEngineInstance::DestroyEntity(Entity entity) {
-        for (size_t i = 0; i < m_componentManagers.size(); ++i) {
-            m_componentManagers[i]->RemoveComponent(entity.GetId());
-        }
-        m_entityManager.DestroyEntity(entity);
+        m_destroyedEntities.push_back(entity);
     }
 
     void JEEngineInstance::LoadScene(uint32_t id) {

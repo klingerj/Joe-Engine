@@ -40,8 +40,8 @@ namespace JoeEngine {
             return m_data.begin() + m_numElements;
         }
 
-        size_t Size() const {
-            return m_data.size();
+        uint32_t Size() const {
+            return m_numElements;
         }
 
         const std::vector<T>& GetData() const {
@@ -83,6 +83,7 @@ namespace JoeEngine {
                     std::swap(m_data[dataIdx], m_data[m_numElements - 1]);
                     m_indirectionMap[index].m_index = -1;
                     m_indirectionMap[m_dataIndices[m_numElements - 1]].m_index = dataIdx;
+                    m_dataIndices[dataIdx] = m_dataIndices[m_numElements - 1];
                     m_dataIndices[m_numElements - 1] = -1;
                 }
                 --m_numElements;

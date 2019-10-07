@@ -149,7 +149,7 @@ namespace JoeEngine {
     void JEVulkanSwapChain::CreateImageViews(VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface, int width, int height) {
         m_swapChainImageViews.resize(m_swapChainImages.size());
 
-        for (size_t i = 0; i < m_swapChainImages.size(); ++i) {
+        for (uint32_t i = 0; i < m_swapChainImages.size(); ++i) {
             m_swapChainImageViews[i] = CreateImageView(device, m_swapChainImages[i], m_swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
         }
     }

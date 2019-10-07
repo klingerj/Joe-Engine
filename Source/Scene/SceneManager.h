@@ -60,7 +60,7 @@ namespace JoeEngine {
         // Resource binding, called during command buffer generation
         //void BindShadowPassResources(VkCommandBuffer commandBuffer);
         //void BindDeferredPassGeometryResources(VkCommandBuffer commandBuffer);
-        //void BindDeferredPassLightingResources(VkCommandBuffer commandBuffer, size_t index);
-        //void BindPostProcessingPassResources(VkCommandBuffer commandBuffer, size_t index, size_t shaderIndex);
+        //void BindDeferredPassLightingResources(VkCommandBuffer commandBuffer, uint32_t index);
+        //void BindPostProcessingPassResources(VkCommandBuffer commandBuffer, uint32_t index, uint32_t shaderIndex);
     };
 }

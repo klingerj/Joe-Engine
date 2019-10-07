@@ -21,8 +21,8 @@ namespace JoeEngine {
     constexpr int JE_DEFAULT_SCREEN_HEIGHT = 720;
     constexpr int JE_DEFAULT_MAX_FRAMES_IN_FLIGHT = 2;
 
-    constexpr int JE_DEFAULT_SHADOW_MAP_WIDTH = 2000;
-    constexpr int JE_DEFAULT_SHADOW_MAP_HEIGHT = 2000;
+    constexpr int JE_DEFAULT_SHADOW_MAP_WIDTH = 4000;
+    constexpr int JE_DEFAULT_SHADOW_MAP_HEIGHT = 4000;
     constexpr float JE_DEFAULT_SHADOW_MAP_DEPTH_BIAS_SLOPE = 1.5f;
     constexpr float JE_DEFAULT_SHADOW_MAP_DEPTH_BIAS_CONSTANT = 0.0f;
 

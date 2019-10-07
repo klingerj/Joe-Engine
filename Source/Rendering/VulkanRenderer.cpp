@@ -100,7 +100,7 @@ namespace JoeEngine {
         // Deferred Pass - Geometry
         vkDestroySemaphore(m_device, m_deferredPass.semaphore, nullptr);
 
-        for (size_t i = 0; i < m_MAX_FRAMES_IN_FLIGHT; ++i) {
+        for (uint32_t i = 0; i < m_MAX_FRAMES_IN_FLIGHT; ++i) {
             vkDestroySemaphore(m_device, m_renderFinishedSemaphores[i], nullptr);
             vkDestroySemaphore(m_device, m_imageAvailableSemaphores[i], nullptr);
             vkDestroyFence(m_device, m_inFlightFences[i], nullptr);
@@ -284,7 +284,7 @@ namespace JoeEngine {
         const std::vector<VkImageView>& swapChainImageViews = m_vulkanSwapChain.GetImageViews();
         m_swapChainFramebuffers.resize(swapChainImageViews.size());
 
-        for (size_t i = 0; i < swapChainImageViews.size(); ++i) {
+        for (uint32_t i = 0; i < swapChainImageViews.size(); ++i) {
             VkImageView attachment = swapChainImageViews[i];
             VkExtent2D extent = m_vulkanSwapChain.GetExtent();
 
@@ -337,7 +337,7 @@ namespace JoeEngine {
         // Command Buffer recording
 
         // Begin command buffer
-        /*for (size_t i = 0; i < m_commandBuffers.size(); ++i) {
+        /*for (uint32_t i = 0; i < m_commandBuffers.size(); ++i) {
             VkCommandBufferBeginInfo beginInfo = {};
             beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
             beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -414,7 +414,7 @@ namespace JoeEngine {
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-        for (size_t i = 0; i < m_MAX_FRAMES_IN_FLIGHT; ++i) {
+        for (uint32_t i = 0; i < m_MAX_FRAMES_IN_FLIGHT; ++i) {
             if (vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i]) != VK_SUCCESS ||
                 vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]) != VK_SUCCESS ||
                 vkCreateFence(m_device, &fenceInfo, nullptr, &m_inFlightFences[i]) != VK_SUCCESS) {
@@ -557,8 +557,8 @@ namespace JoeEngine {
         vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_meshBufferManager.GetIndexListAt(idxHandle).size()), 1, 0, 0, 0);
     }
 
-    void JEVulkanRenderer::DrawShadowPass(/*std vector of JELights*/const std::vector<MeshComponent>& meshComponents,
-                                                                    const std::vector<TransformComponent>& transformComponents, 
+    void JEVulkanRenderer::DrawShadowPass(/*std vector of JELights*/const PackedArray<MeshComponent>& meshComponents,
+                                                                    const PackedArray<TransformComponent>& transformComponents,
                                                                     const JECamera& camera) {
         // Reset the command buffer, as we have decided to re-record it
         if (vkResetCommandBuffer(m_shadowPass.commandBuffer, VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
@@ -597,9 +597,9 @@ namespace JoeEngine {
 
         m_shadowPassShaders[0].BindPushConstants_ViewProj(m_shadowPass.commandBuffer, camera.GetOrthoViewProj());
 
-        for (uint32_t i = 0; i < meshComponents.size(); ++i) {
-            m_shadowPassShaders[0].BindPushConstants_ModelMatrix(m_shadowPass.commandBuffer, transformComponents[i].GetTransform());
-            DrawMesh(m_shadowPass.commandBuffer, meshComponents[i]);
+        for (uint32_t i = 0; i < meshComponents.Size(); ++i) {
+            m_shadowPassShaders[0].BindPushConstants_ModelMatrix(m_shadowPass.commandBuffer, transformComponents.GetData()[i].GetTransform());
+            DrawMesh(m_shadowPass.commandBuffer, meshComponents.GetData()[i]);
         }
 
         vkCmdEndRenderPass(m_shadowPass.commandBuffer);
@@ -609,8 +609,8 @@ namespace JoeEngine {
         }
     }
 
-    void JEVulkanRenderer::DrawMeshComponents(const std::vector<MeshComponent>& meshComponents,
-                                              const std::vector<TransformComponent>& transformComponents,
+    void JEVulkanRenderer::DrawMeshComponents(const PackedArray<MeshComponent>& meshComponents,
+                                              const PackedArray<TransformComponent>& transformComponents,
                                               const JECamera& camera) {
         const bool isDeferred = true;
         if (isDeferred) {
@@ -652,9 +652,9 @@ namespace JoeEngine {
             m_deferredPassGeometryShader.BindPushConstants_ViewProj(m_deferredPass.commandBuffer, camera.GetViewProj());
             m_deferredPassGeometryShader.BindDescriptorSets(m_deferredPass.commandBuffer);
 
-            for (uint32_t i = 0; i < meshComponents.size(); ++i) {
-                m_deferredPassGeometryShader.BindPushConstants_ModelMatrix(m_deferredPass.commandBuffer, transformComponents[i].GetTransform());
-                DrawMesh(m_deferredPass.commandBuffer, meshComponents[i]);
+            for (uint32_t i = 0; i < meshComponents.Size(); ++i) {
+                m_deferredPassGeometryShader.BindPushConstants_ModelMatrix(m_deferredPass.commandBuffer, transformComponents.GetData()[i].GetTransform());
+                DrawMesh(m_deferredPass.commandBuffer, meshComponents.GetData()[i]);
             }
 
             vkCmdEndRenderPass(m_deferredPass.commandBuffer);
@@ -666,7 +666,7 @@ namespace JoeEngine {
             /// Construct deferred lighting and post processing passes
 
             // Begin command buffer
-            for (size_t i = 0; i < m_commandBuffers.size(); ++i) {
+            for (uint32_t i = 0; i < m_commandBuffers.size(); ++i) {
                 VkCommandBufferBeginInfo beginInfo = {};
                 beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
                 beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;

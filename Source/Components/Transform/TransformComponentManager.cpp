@@ -20,7 +20,7 @@ namespace JoeEngine {
         return const_cast<TransformComponent*>(&m_transformComponents[id]);
     }
 
-    const std::vector<TransformComponent>& JETransformComponentManager::GetComponentList() const {
-        return m_transformComponents.GetData();
+    const PackedArray<TransformComponent>& JETransformComponentManager::GetComponentList() const {
+        return m_transformComponents;
     }
 }

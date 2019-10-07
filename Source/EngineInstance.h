@@ -36,9 +36,12 @@ namespace JoeEngine {
         void StopEngine();
 
         template <typename T, typename U>
-        const std::vector<T>& GetComponentList() const {
+        const PackedArray<T>& GetComponentList() const {
             return static_cast<U*>(m_componentManagers[m_componentTypeToIndex.at(typeid(T))].get())->GetComponentList();
         }
+
+        std::vector<Entity> m_destroyedEntities;
+        void DestroyEntities();
 
         /*template <typename T, typename U>
         const std::unique_ptr<U> GetComponentManager() const {

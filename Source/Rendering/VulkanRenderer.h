@@ -13,6 +13,7 @@
 #include "MeshBufferManager.h"
 #include "../Components/Mesh/MeshComponent.h"
 #include "../Components/Transform/TransformComponent.h"
+#include "../Containers/PackedArray.h"
 
 namespace JoeEngine {
     class JESceneManager;
@@ -65,7 +66,7 @@ namespace JoeEngine {
         std::vector<VkCommandBuffer> m_commandBuffers;
 
         // Semaphores and Fences
-        size_t m_currentFrame;
+        uint32_t m_currentFrame;
         const int m_MAX_FRAMES_IN_FLIGHT;
         std::vector<VkSemaphore> m_imageAvailableSemaphores;
         std::vector<VkSemaphore> m_renderFinishedSemaphores;
@@ -163,8 +164,8 @@ namespace JoeEngine {
         MeshComponent CreateMesh(const std::string& filepath);
 
         // Renderer Functions
-        void DrawShadowPass(const std::vector<MeshComponent>& meshComponents, const std::vector<TransformComponent>& transformComponents, const JECamera& camera);
-        void DrawMeshComponents(const std::vector<MeshComponent>& meshComponents, const std::vector<TransformComponent>& transformComponents, const JECamera& camera);
+        void DrawShadowPass(const PackedArray<MeshComponent>& meshComponents, const PackedArray<TransformComponent>& transformComponents, const JECamera& camera);
+        void DrawMeshComponents(const PackedArray<MeshComponent>& meshComponents, const PackedArray<TransformComponent>& transformComponents, const JECamera& camera);
 
         void WaitForIdleDevice() {
             vkDeviceWaitIdle(m_device);

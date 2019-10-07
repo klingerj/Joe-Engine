@@ -23,6 +23,6 @@ namespace JoeEngine {
 
         MeshComponent* GetComponent(uint32_t id) const;
         void SetComponent(uint32_t id, MeshComponent meshComp);
-        const std::vector<MeshComponent>& GetComponentList() const;
+        const PackedArray<MeshComponent>& GetComponentList() const;
     };
 }

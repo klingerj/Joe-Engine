@@ -11,7 +11,7 @@ namespace JoeEngine {
             throw std::runtime_error("failed to open file!");
         }
 
-        size_t fileSize = (size_t)file.tellg();
+        uint32_t fileSize = (uint32_t)file.tellg();
         std::vector<char> buffer(fileSize);
         file.seekg(0);
         file.read(buffer.data(), fileSize);
@@ -206,7 +206,7 @@ namespace JoeEngine {
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
     }
 
-    void JEVulkanPostProcessShader::CreateDescriptorPool(VkDevice device, size_t numSwapChainImages) {
+    void JEVulkanPostProcessShader::CreateDescriptorPool(VkDevice device, uint32_t numSwapChainImages) {
         VkDescriptorPoolSize poolSize;
         poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         poolSize.descriptorCount = static_cast<uint32_t>(numSwapChainImages);
@@ -241,7 +241,7 @@ namespace JoeEngine {
         }
     }
 
-    void JEVulkanPostProcessShader::CreateDescriptorSets(VkDevice device, const JEPostProcessingPass& postProcessingPass, VkImageView postImageView, size_t numSwapChainImages) {
+    void JEVulkanPostProcessShader::CreateDescriptorSets(VkDevice device, const JEPostProcessingPass& postProcessingPass, VkImageView postImageView, uint32_t numSwapChainImages) {
         std::vector<VkDescriptorSetLayout> layouts(numSwapChainImages, m_descriptorSetLayout);
 
         VkDescriptorSetAllocateInfo allocInfo = {};
@@ -255,7 +255,7 @@ namespace JoeEngine {
             throw std::runtime_error("failed to allocate descriptor sets!");
         }
 
-        for (size_t i = 0; i < numSwapChainImages; ++i) {
+        for (uint32_t i = 0; i < numSwapChainImages; ++i) {
             VkDescriptorImageInfo imageInfo = {};
             imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             imageInfo.imageView = postImageView;
@@ -275,7 +275,7 @@ namespace JoeEngine {
         }
     }
 
-    void JEVulkanPostProcessShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages) {
+    void JEVulkanPostProcessShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages) {
         // Nothing to do here
     }
 
@@ -283,7 +283,7 @@ namespace JoeEngine {
         // Nothing to do here
     }
 
-    void JEVulkanPostProcessShader::BindDescriptorSets(VkCommandBuffer commandBuffer, size_t descriptorSetIndex) {
+    void JEVulkanPostProcessShader::BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t descriptorSetIndex) {
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSets[descriptorSetIndex], 0, nullptr);
     }
 
@@ -793,11 +793,11 @@ namespace JoeEngine {
         vkDestroyPipeline(device, m_graphicsPipeline, nullptr);
         vkDestroyDescriptorPool(device, m_descriptorPool, nullptr);
         vkDestroyDescriptorSetLayout(device, m_descriptorSetLayout, nullptr);
-        for (size_t i = 0; i < m_uniformBuffers_ViewProj.size(); ++i) {
+        for (uint32_t i = 0; i < m_uniformBuffers_ViewProj.size(); ++i) {
             vkDestroyBuffer(device, m_uniformBuffers_ViewProj[i], nullptr);
             vkFreeMemory(device, m_uniformBuffersMemory_ViewProj[i], nullptr);
         }
-        for (size_t i = 0; i < m_uniformBuffers_ViewProj.size(); ++i) {
+        for (uint32_t i = 0; i < m_uniformBuffers_ViewProj.size(); ++i) {
             vkDestroyBuffer(device, m_uniformBuffers_ViewProj_Shadow[i], nullptr);
             vkFreeMemory(device, m_uniformBuffersMemory_ViewProj_Shadow[i], nullptr);
         }
@@ -980,7 +980,7 @@ namespace JoeEngine {
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
     }
 
-    void JEVulkanDeferredPassLightingShader::CreateDescriptorPool(VkDevice device, size_t numSwapChainImages) {
+    void JEVulkanDeferredPassLightingShader::CreateDescriptorPool(VkDevice device, uint32_t numSwapChainImages) {
         std::array<VkDescriptorPoolSize, 7> poolSizes = {};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[0].descriptorCount = static_cast<uint32_t>(numSwapChainImages);
@@ -1069,7 +1069,7 @@ namespace JoeEngine {
         }
     }
 
-    void JEVulkanDeferredPassLightingShader::CreateDescriptorSets(VkDevice device, const JETexture& texture, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, size_t numSwapChainImages) {
+    void JEVulkanDeferredPassLightingShader::CreateDescriptorSets(VkDevice device, const JETexture& texture, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, uint32_t numSwapChainImages) {
         std::vector<VkDescriptorSetLayout> layouts(numSwapChainImages, m_descriptorSetLayout);
 
         VkDescriptorSetAllocateInfo allocInfo = {};
@@ -1083,7 +1083,7 @@ namespace JoeEngine {
             throw std::runtime_error("failed to allocate descriptor sets!");
         }
 
-        for (size_t i = 0; i < numSwapChainImages; ++i) {
+        for (uint32_t i = 0; i < numSwapChainImages; ++i) {
             VkDescriptorBufferInfo bufferInfo_vp = {};
             bufferInfo_vp.buffer = m_uniformBuffers_ViewProj[i];
             bufferInfo_vp.offset = 0;
@@ -1181,7 +1181,7 @@ namespace JoeEngine {
         }
     }
 
-    void JEVulkanDeferredPassLightingShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, size_t numSwapChainImages) {
+    void JEVulkanDeferredPassLightingShader::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages) {
         VkDeviceSize bufferSize_viewProj = sizeof(JE_PushConst_ViewProj);
         VkDeviceSize bufferSize_viewProj_inv = sizeof(JEUBO_ViewProj_Inv);
         m_uniformBuffers_ViewProj.resize(numSwapChainImages);
@@ -1189,7 +1189,7 @@ namespace JoeEngine {
         m_uniformBuffers_ViewProj_Shadow.resize(numSwapChainImages);
         m_uniformBuffersMemory_ViewProj_Shadow.resize(numSwapChainImages);
 
-        for (size_t i = 0; i < numSwapChainImages; ++i) {
+        for (uint32_t i = 0; i < numSwapChainImages; ++i) {
             CreateBuffer(physicalDevice, device, bufferSize_viewProj_inv, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_uniformBuffers_ViewProj[i], m_uniformBuffersMemory_ViewProj[i]);
             CreateBuffer(physicalDevice, device, bufferSize_viewProj, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_uniformBuffers_ViewProj_Shadow[i], m_uniformBuffersMemory_ViewProj_Shadow[i]);
         }
@@ -1216,7 +1216,7 @@ namespace JoeEngine {
         vkUnmapMemory(device, m_uniformBuffersMemory_ViewProj_Shadow[currentImage]);
     }
 
-    void JEVulkanDeferredPassLightingShader::BindDescriptorSets(VkCommandBuffer commandBuffer, size_t descriptorSetIndex) {
+    void JEVulkanDeferredPassLightingShader::BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t descriptorSetIndex) {
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSets[descriptorSetIndex], 0, nullptr);
     }
 }
