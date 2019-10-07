@@ -20,7 +20,7 @@ namespace JoeEngine {
         }
 
         // Getters
-        const glm::mat4 GetTransform() const {
+        const glm::mat4& GetTransform() const {
             return m_cachedTransform;
         }
 
