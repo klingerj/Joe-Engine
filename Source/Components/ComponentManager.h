@@ -8,7 +8,7 @@ namespace JoeEngine {
     class JEComponentManager {
     public:
         JEComponentManager() {}
-        ~JEComponentManager() {}
+        virtual ~JEComponentManager() {}
 
         virtual void Update(JEEngineInstance* engineInstance) = 0;
         virtual void AddNewComponent(uint32_t entityID) = 0;

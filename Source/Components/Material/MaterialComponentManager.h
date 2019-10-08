@@ -23,7 +23,7 @@ namespace JoeEngine {
         JEMaterialComponentManager() {}
 
         //! Destructor (default).
-        ~JEMaterialComponentManager() = default;
+        virtual ~JEMaterialComponentManager() = default;
 
         // Can't be copied/moved/assigned
         /*JEMaterialComponentManager(const JEMaterialComponentManager& mgr) = delete;

@@ -22,7 +22,7 @@ namespace JoeEngine {
         JEMeshComponentManager() {}
 
         //! Destructor (default).
-        ~JEMeshComponentManager() = default;
+        virtual ~JEMeshComponentManager() = default;
 
         /*JEMeshComponentManager(const JEMeshComponentManager& mgr) = delete;
         JEMeshComponentManager(JEMeshComponentManager&& mgr) = delete;

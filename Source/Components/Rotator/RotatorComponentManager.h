@@ -10,7 +10,7 @@ private:
 
 public:
     RotatorComponentManager() {}
-    ~RotatorComponentManager() {}
+    virtual ~RotatorComponentManager() {}
 
     /*JETransformComponentManager(const JETransformComponentManager& mgr) = delete;
     JETransformComponentManager(JETransformComponentManager&& mgr) = delete;
