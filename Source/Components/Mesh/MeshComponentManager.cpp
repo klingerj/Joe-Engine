@@ -2,7 +2,7 @@
 
 namespace JoeEngine {
     void JEMeshComponentManager::Update(JEEngineInstance* engineInstance) {
-        /*for (MeshComponent m : m_meshComponents) {
+        /*for (MeshComponent& m : m_meshComponents) {
             // TODO
         }*/
     }

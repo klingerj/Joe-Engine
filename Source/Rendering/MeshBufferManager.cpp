@@ -49,7 +49,8 @@ namespace JoeEngine {
         LoadModelFromFile(filepath);
         CreateVertexBuffer(m_vertexLists[m_numBuffers], &m_vertexBuffers[m_numBuffers], &m_vertexBufferMemory[m_numBuffers]);
         CreateIndexBuffer(m_indexLists[m_numBuffers], &m_indexBuffers[m_numBuffers], &m_indexBufferMemory[m_numBuffers]);
-        return MeshComponent((int)(m_numBuffers++));
+        return MeshComponent((int)(m_numBuffers), (int)(m_numBuffers));
+        ++m_numBuffers;
     }
 
     void JEMeshBufferManager::LoadModelFromFile(const std::string& filepath) {
