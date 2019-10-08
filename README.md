@@ -5,6 +5,9 @@
 
 The goal of the Joe Engine is to be my C++ playground. The engine will contain various engine programming experiments and features related to rendering, systems, and performance.  
 
+### Documentation
+View the docs [here](https://klingerj.github.io/html/)(in-progress).
+
 ### Demo
 Brief [demo video](https://vimeo.com/326088400) here.
 
