@@ -11,7 +11,7 @@ namespace JoeEngine {
 
     public:
         JETransformComponentManager() {}
-        ~JETransformComponentManager() {}
+        virtual ~JETransformComponentManager() {}
 
         /*JETransformComponentManager(const JETransformComponentManager& mgr) = delete;
         JETransformComponentManager(JETransformComponentManager&& mgr) = delete;
