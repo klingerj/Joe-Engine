@@ -83,6 +83,7 @@ namespace JoeEngine {
     };
 }
 
+/*! \hide_from_doxygen PRIVATE */
 namespace std {
     template<> struct hash<JoeEngine::JEMeshVertex> {
         size_t operator()(JoeEngine::JEMeshVertex const& vertex) const {
@@ -92,3 +93,4 @@ namespace std {
         }
     };
 }
+/*! \endcond */
