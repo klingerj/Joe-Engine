@@ -45,7 +45,7 @@ namespace JoeEngine {
           Overrides purely virtual function declared in JEComponentManager.
           \param entityID the id of the entity to add the transform component to
         */
-        void AddNewComponent(uint32_t id) override;
+        void AddNewComponent(uint32_t entityID) override;
 
         //! Remove transform component.
         /*!
@@ -54,7 +54,7 @@ namespace JoeEngine {
           Overrides purely virtual function declared in JEComponentManager.
           \param entityID the id of the entity to remove the transform component from
         */
-        void RemoveComponent(uint32_t id) override;
+        void RemoveComponent(uint32_t entityID) override;
 
         //! Get transform component.
         /*!
@@ -62,7 +62,7 @@ namespace JoeEngine {
           \param entityID the entity ID whose transform component to return
           \return pointer to the transform component attached to the entity ID
         */
-        TransformComponent* GetComponent(uint32_t id) const;
+        TransformComponent* GetComponent(uint32_t entityID) const;
 
         //! Get list of transform components.
         /*!
