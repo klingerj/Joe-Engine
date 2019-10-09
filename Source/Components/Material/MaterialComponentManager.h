@@ -20,7 +20,7 @@ namespace JoeEngine {
     public:
         //! Default constructor.
         /*! No specific behavior. */
-        JEMaterialComponentManager() {}
+        JEMaterialComponentManager() = default;
 
         //! Destructor (default).
         virtual ~JEMaterialComponentManager() = default;

@@ -19,7 +19,7 @@ namespace JoeEngine {
     public:
         //! Default constructor.
         /*! No specific behavior. */
-        JEMeshComponentManager() {}
+        JEMeshComponentManager() = default;
 
         //! Destructor (default).
         virtual ~JEMeshComponentManager() = default;
