@@ -11,11 +11,8 @@ namespace JoeEngine {
         // List of entities
         PackedArray<Entity> m_entities;
 
-        // If the list of entities changes, this bool will be true until marked clean
-        bool m_entitiesDirty;
-
     public:
-        JEEntityManager() : m_idCounter(0), m_entities(), m_entitiesDirty(false) {}
+        JEEntityManager() : m_idCounter(0), m_entities() {}
         ~JEEntityManager() {}
 
         JEEntityManager(const JEEntityManager& mgr) = delete;
@@ -28,13 +25,6 @@ namespace JoeEngine {
 
         uint32_t NumEntities() {
             return m_entities.Size();
-        }
-
-        const bool& EntitiesDirty() const {
-            return m_entitiesDirty;
-        }
-        void EntitiesClean() {
-            m_entitiesDirty = false;
         }
     };
 }

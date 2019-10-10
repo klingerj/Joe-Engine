@@ -528,6 +528,10 @@ namespace JoeEngine {
         }
     }
 
+    const std::vector<BoundingBoxData>& JEVulkanRenderer::GetBoundingBoxData() const {
+        return m_meshBufferManager.GetBoundingBoxData();
+    }
+
     MeshComponent JEVulkanRenderer::CreateMesh(const std::string& filepath) {
         return m_meshBufferManager.CreateMeshComponent(filepath);
     }
@@ -557,8 +561,8 @@ namespace JoeEngine {
         vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_meshBufferManager.GetIndexListAt(idxHandle).size()), 1, 0, 0, 0);
     }
 
-    void JEVulkanRenderer::DrawShadowPass(/*std vector of JELights*/const PackedArray<MeshComponent>& meshComponents,
-                                                                    const PackedArray<TransformComponent>& transformComponents,
+    void JEVulkanRenderer::DrawShadowPass(/*std vector of JELights*/const std::vector<MeshComponent>& meshComponents,
+                                                                    const std::vector<TransformComponent>& transformComponents, uint32_t numEntities,
                                                                     const JECamera& camera) {
         // Reset the command buffer, as we have decided to re-record it
         if (vkResetCommandBuffer(m_shadowPass.commandBuffer, VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
@@ -597,9 +601,9 @@ namespace JoeEngine {
 
         m_shadowPassShaders[0].BindPushConstants_ViewProj(m_shadowPass.commandBuffer, camera.GetOrthoViewProj());
 
-        for (uint32_t i = 0; i < meshComponents.Size(); ++i) {
-            m_shadowPassShaders[0].BindPushConstants_ModelMatrix(m_shadowPass.commandBuffer, transformComponents.GetData()[i].GetTransform());
-            DrawMesh(m_shadowPass.commandBuffer, meshComponents.GetData()[i]);
+        for (uint32_t i = 0; i < numEntities; ++i) {
+            m_shadowPassShaders[0].BindPushConstants_ModelMatrix(m_shadowPass.commandBuffer, transformComponents[i].GetTransform());
+            DrawMesh(m_shadowPass.commandBuffer, meshComponents[i]);
         }
 
         vkCmdEndRenderPass(m_shadowPass.commandBuffer);
@@ -609,8 +613,8 @@ namespace JoeEngine {
         }
     }
 
-    void JEVulkanRenderer::DrawMeshComponents(const PackedArray<MeshComponent>& meshComponents,
-                                              const PackedArray<TransformComponent>& transformComponents,
+    void JEVulkanRenderer::DrawMeshComponents(const std::vector<MeshComponent>& meshComponents,
+                                              const std::vector<TransformComponent>& transformComponents,
                                               const JECamera& camera) {
         const bool isDeferred = true;
         if (isDeferred) {
@@ -652,9 +656,9 @@ namespace JoeEngine {
             m_deferredPassGeometryShader.BindPushConstants_ViewProj(m_deferredPass.commandBuffer, camera.GetViewProj());
             m_deferredPassGeometryShader.BindDescriptorSets(m_deferredPass.commandBuffer);
 
-            for (uint32_t i = 0; i < meshComponents.Size(); ++i) {
-                m_deferredPassGeometryShader.BindPushConstants_ModelMatrix(m_deferredPass.commandBuffer, transformComponents.GetData()[i].GetTransform());
-                DrawMesh(m_deferredPass.commandBuffer, meshComponents.GetData()[i]);
+            for (uint32_t i = 0; i < meshComponents.size(); ++i) {
+                m_deferredPassGeometryShader.BindPushConstants_ModelMatrix(m_deferredPass.commandBuffer, transformComponents[i].GetTransform());
+                DrawMesh(m_deferredPass.commandBuffer, meshComponents[i]);
             }
 
             vkCmdEndRenderPass(m_deferredPass.commandBuffer);

@@ -13,7 +13,6 @@
 #include "MeshBufferManager.h"
 #include "../Components/Mesh/MeshComponent.h"
 #include "../Components/Transform/TransformComponent.h"
-#include "../Containers/PackedArray.h"
 
 namespace JoeEngine {
     class JESceneManager;
@@ -160,12 +159,14 @@ namespace JoeEngine {
         // Submit work to GPU
         void SubmitFrame();
 
-        // Mesh Buffer Functions
+        // Mesh Buffer Manager Functions
+        const std::vector<BoundingBoxData>& GetBoundingBoxData() const;
         MeshComponent CreateMesh(const std::string& filepath);
 
         // Renderer Functions
-        void DrawShadowPass(const PackedArray<MeshComponent>& meshComponents, const PackedArray<TransformComponent>& transformComponents, const JECamera& camera);
-        void DrawMeshComponents(const PackedArray<MeshComponent>& meshComponents, const PackedArray<TransformComponent>& transformComponents, const JECamera& camera);
+        void DrawShadowPass(const std::vector<MeshComponent>& meshComponents, const std::vector<TransformComponent>& transformComponents,
+                            uint32_t numEntities, const JECamera& camera);
+        void DrawMeshComponents(const std::vector<MeshComponent>& meshComponents, const std::vector<TransformComponent>& transformComponents, const JECamera& camera);
 
         void WaitForIdleDevice() {
             vkDeviceWaitIdle(m_device);

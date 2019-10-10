@@ -30,17 +30,6 @@ namespace JoeEngine {
                 // Destroy any entities marked for deletion
                 DestroyEntities();
 
-                // Submit shadow pass to GPU
-                // TODO Don't cull before doing this? Also only send opaque geometry i think, not sure how to do transluscent shadows
-                /*for (JELight l : m_sceneManager.Lights()) {
-                    m_renderer.ShadowPassStart();
-
-                    // bind the light frustum info
-                    // draw all opaque geometry
-
-                    m_renderer.ShadowPassEnd();
-                }*/
-
                 const PackedArray<MeshComponent>&      meshComponents =      GetComponentList<MeshComponent,      JEMeshComponentManager>();
                 const PackedArray<TransformComponent>& transformComponents = GetComponentList<TransformComponent, JETransformComponentManager>();
 
@@ -48,58 +37,39 @@ namespace JoeEngine {
 
                 {
                     //ScopedTimer<float> timer("Shadow Pass Command Buffer Recording");
-                    m_vulkanRenderer.DrawShadowPass(meshComponents, transformComponents, m_sceneManager.m_shadowCamera);
+                    m_vulkanRenderer.DrawShadowPass(meshComponents.GetData(), transformComponents.GetData(), meshComponents.Size(), m_sceneManager.m_shadowCamera);
                 }
-                //m_renderer.Submit();
 
-                // Perform frustum culling
-                // for each camera in the scene (probs one), do frustum culling
-                /*for (JECamera cam : m_sceneManager.Cameras()) {
-                    if (cam.FrustumCullDirty() || m_entityManager.EntitiesDirty()) {
-                        // if any game objects got destroyed or added, need to re-record 
-                        // the command buffer for culling.
-                        // * If I do a compute shader, then maybe the command buffer could stay the same and all I have 
-                        // to do is pass the buffer of bounding boxes. Better allows for draw indirect
-                        // * Could do on CPU to start out, use AVX probs, maybe multi-thread.
+                // Get bounding box info from MeshBuffer Manager
+                const std::vector<BoundingBoxData> boundingBoxes = m_vulkanRenderer.GetBoundingBoxData();
 
-                        cam.Cull(m_boundingBoxComponentManager.GetBoundingBoxData(), m_meshComponentManager.RenderableMeshComponentIndices());
-                        // TODO: if we want to use draw indirect eventually, then we need to convert these indices into the raw vert/index buffer
-                        // handles. Then just call draw indirect on that below.
+                std::vector<MeshComponent> meshComponentsPassedCulling;
+                meshComponentsPassedCulling.reserve(64);
+                std::vector<TransformComponent> transformComponentsPassedCulling;
+                transformComponentsPassedCulling.reserve(64);
 
-                        cam.FrustumCullClean();
-                        m_entityManager.EntitiesClean();
+                {
+                    //ScopedTimer<float> timer("Frustum Culling");
+
+                    // TODO: multi-thread this
+                    for (uint32_t i = 0; i < meshComponents.Size(); ++i) {
+                        const MeshComponent& meshComp = meshComponents.GetData()[i];
+                        if (meshComp.GetVertexHandle() == -1 || meshComp.GetIndexHandle() == -1) {
+                            continue;
+                        }
+
+                        const TransformComponent& transformComp = transformComponents.GetData()[i];
+                        if (m_sceneManager.m_camera.Cull(meshComp, transformComp, boundingBoxes[meshComp.GetVertexHandle()])) {
+                            meshComponentsPassedCulling.emplace_back(meshComp);
+                            transformComponentsPassedCulling.emplace_back(transformComp);
+                        }
                     }
-                }*/
-
-                // At this point, m_meshComponentManager indices should contain the list of indices into its array of mesh components.
-                // We should just be able to run through that list and access the other list to get all of our draw calls.
-
-                //if (m_vulkanRenderer.RenderablesDirty()) { // true if any mesh component is dirty, e.g. camera moved, so diff stuff gets frustum culled
-
-                    //m_renderer.FrameStart();
-
-                    /*for (MeshComponent mc : m_meshComponentManager.GetComponentList()) {
-                        mc.Draw();
-                        // OR
-                        m_vulkanRenderer.DrawMesh(mc);
-                    }*/
+                }
 
                 {
                     //ScopedTimer<float> timer("Deferred Geom/Lighting/Post Passes Command Buffer Recording");
-                    m_vulkanRenderer.DrawMeshComponents(meshComponents, transformComponents, m_sceneManager.m_camera);
+                    m_vulkanRenderer.DrawMeshComponents(meshComponentsPassedCulling, transformComponentsPassedCulling, m_sceneManager.m_camera);
                 }
-
-                    // TODO: This when culling is done
-                    /*for (uint32_t idx : m_meshComponentManager.RenderableMeshComponentIndices()) {
-                        // bind material info via material component mgr
-                        // TODO: need to order this loop optimally ^^^ sorting or something?
-                        m_meshComponentManager.GetComponent(idx).Draw();
-                        // OR
-                        m_renderer.DrawMesh(m_meshComponentManager.GetComponent(idx), m_materialComponentManager.GetComponent(idx));
-                    }*/
-
-                    // TODO: that was for opaque. do the same for transluscent geometry now. Need 2 vectors in the mesh component manager.
-                //}
                 
                 {
                     //ScopedTimer<float> timer("GPU workload submission");

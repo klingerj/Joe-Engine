@@ -46,6 +46,7 @@ namespace JoeEngine {
         m_indexBufferMemory.push_back(VK_NULL_HANDLE);
         m_vertexLists.push_back(std::vector<JEMeshVertex>());
         m_indexLists.push_back(std::vector<uint32_t>());
+        m_boundingBoxes.push_back(BoundingBoxData());
         LoadModelFromFile(filepath);
         CreateVertexBuffer(m_vertexLists[m_numBuffers], &m_vertexBuffers[m_numBuffers], &m_vertexBufferMemory[m_numBuffers]);
         CreateIndexBuffer(m_indexLists[m_numBuffers], &m_indexBuffers[m_numBuffers], &m_indexBufferMemory[m_numBuffers]);
@@ -66,8 +67,8 @@ namespace JoeEngine {
         std::vector<JEMeshVertex>& vertexList = m_vertexLists[m_numBuffers];
 
         // To compute the mesh's OBB (needed for physics), keep track of the min/max extents
-        glm::vec3 minPos = glm::vec3(9999999999.0f);
-        glm::vec3 maxPos = glm::vec3(-9999999999.0f);
+        glm::vec3 minPos = glm::vec3(FLT_MAX);
+        glm::vec3 maxPos = glm::vec3(-FLT_MAX);
 
         for (const auto& shape : shapes) {
             for (const auto& index : shape.mesh.indices) {
@@ -103,12 +104,16 @@ namespace JoeEngine {
             }
         }
 
-        // TODO: do something with the min/max pos for obb
-        /*if (vertexList.size() == 0) {
-            m_meshData_Physics.obbs[m_numMeshes].e = glm::vec3(0.5f * (maxPos - minPos));
-        } else {
-            m_meshData_Physics.obbs[m_numMeshes].e = glm::vec3(0.5f * (maxPos - minPos));
-        }*/
+        if (vertexList.size() > 0) {
+            m_boundingBoxes[m_numBuffers][0] = minPos;
+            m_boundingBoxes[m_numBuffers][1] = glm::vec3(minPos.x, minPos.y, maxPos.z);
+            m_boundingBoxes[m_numBuffers][2] = glm::vec3(minPos.x, maxPos.y, minPos.z);
+            m_boundingBoxes[m_numBuffers][3] = glm::vec3(minPos.x, maxPos.y, maxPos.z);
+            m_boundingBoxes[m_numBuffers][4] = glm::vec3(maxPos.x, minPos.y, minPos.z);
+            m_boundingBoxes[m_numBuffers][5] = glm::vec3(maxPos.x, minPos.y, maxPos.z);
+            m_boundingBoxes[m_numBuffers][6] = glm::vec3(maxPos.x, maxPos.y, minPos.z);
+            m_boundingBoxes[m_numBuffers][7] = maxPos;
+        }
     }
 
     void JEMeshBufferManager::CreateVertexBuffer(const std::vector<JEMeshVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory) {

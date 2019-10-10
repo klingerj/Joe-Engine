@@ -1197,9 +1197,8 @@ namespace JoeEngine {
 
     void JEVulkanDeferredPassLightingShader::UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const JECamera& camera, const JECamera& shadowCamera) {
         JEUBO_ViewProj_Inv ubo_vp_inv = {};
-        glm::mat4 view = camera.GetView();
-        glm::mat4 proj = camera.GetProj();
-        proj[1][1] *= -1.0f;
+        const glm::mat4& view = camera.GetView();
+        const glm::mat4& proj = camera.GetProj();
         ubo_vp_inv.invProj = glm::inverse(proj);
         ubo_vp_inv.invView = glm::inverse(view);
 
