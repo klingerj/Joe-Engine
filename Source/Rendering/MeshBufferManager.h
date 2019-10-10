@@ -13,6 +13,8 @@
 #include "../Components/Mesh/MeshComponent.h"   
 
 namespace JoeEngine {
+    using BoundingBoxData = std::array<glm::vec3, 8>;
+
     class JEMeshBufferManager {
     private:
         std::vector<VkBuffer> m_vertexBuffers;
@@ -21,6 +23,7 @@ namespace JoeEngine {
         std::vector<VkDeviceMemory> m_indexBufferMemory;
         std::vector<std::vector<JEMeshVertex>> m_vertexLists;
         std::vector<std::vector<uint32_t>> m_indexLists;
+        std::vector<BoundingBoxData> m_boundingBoxes;
         uint16_t m_numBuffers; // TODO: make more intelligent w/ free list for when mesh data is no longer used
 
         // Vulkan object references (for convenience)
@@ -40,6 +43,7 @@ namespace JoeEngine {
             m_indexBufferMemory.reserve(128);
             m_vertexLists.reserve(128);
             m_indexLists.reserve(128);
+            m_boundingBoxes.reserve(128);
         }
         ~JEMeshBufferManager() {}
 
@@ -53,7 +57,7 @@ namespace JoeEngine {
         void CreateIndexBuffer(const std::vector<uint32_t>& indices, VkBuffer* indexBuffer, VkDeviceMemory* indexBufferMemory);
 
         // Getters
-        const VkBuffer& GetVertexBufferAt(int index) {
+        const VkBuffer& GetVertexBufferAt(int index) const {
             if (index < 0) {
                 // TODO: throw?
             }
@@ -61,7 +65,7 @@ namespace JoeEngine {
             return m_vertexBuffers[index];
         }
 
-        const VkBuffer& GetIndexBufferAt(int index) {
+        const VkBuffer& GetIndexBufferAt(int index) const {
             if (index < 0) {
                 // TODO: throw?
             }
@@ -69,12 +73,16 @@ namespace JoeEngine {
             return m_indexBuffers[index];
         }
 
-        const std::vector<uint32_t>& GetIndexListAt(int index) {
+        const std::vector<uint32_t>& GetIndexListAt(int index) const {
             if (index < 0) {
                 // TODO: throw?
             }
 
             return m_indexLists[index];
+        }
+
+        const std::vector<BoundingBoxData>& GetBoundingBoxData() const {
+            return m_boundingBoxes;
         }
 
         const JEMesh_SSTriangle& GetScreenSpaceTriMesh() const {

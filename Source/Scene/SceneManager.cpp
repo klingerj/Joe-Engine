@@ -38,7 +38,7 @@ namespace JoeEngine {
             TransformComponent* trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(newEntity);
             trans->SetTranslation(glm::vec3(0.0f, -0.05f, 0.0f));
             trans->SetRotation(glm::angleAxis(glm::radians(-90.0f), glm::vec3(1, 0, 0)));
-            trans->SetScale(glm::vec3(30.0f, 30.0f, 30.0f));
+            trans->SetScale(glm::vec3(25.0f, 25.0f, 25.0f));
             m_engineInstance->AddComponent<RotatorComponent>(newEntity);
             RotatorComponent* rot = m_engineInstance->GetComponent<RotatorComponent, RotatorComponentManager>(newEntity);
             rot->m_entityId = newEntity.GetId();
