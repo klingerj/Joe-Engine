@@ -94,6 +94,8 @@ namespace JoeEngine {
         JEVulkanDeferredPassLightingShader m_deferredPassLightingShader; // TODO: change me to a list?
         //std::vector<JEVulkanMeshShader> m_meshShaders; // TODO: add this to VulkanShader.h and re-implement
         std::vector<JEVulkanPostProcessShader> m_postProcessingShaders;
+        JEVulkanFlatShader m_flatShader;
+        JEVulkanForwardShader m_forwardShader;
         void CreateShaders();
         void CleanupShaders();
 
@@ -112,6 +114,13 @@ namespace JoeEngine {
         void CreateShadowRenderPass();
         void CreateShadowFramebuffer();
         void CreateShadowCommandBuffer();
+
+        // Forward Rendering
+        JEForwardPass m_forwardPass;
+        void CreateForwardPassResources();
+        void CreateForwardPassRenderPass();
+        void CreateForwardPassFramebuffer();
+        void CreateForwardPassCommandBuffer();
 
         // Deferred Rendering - geometry pass
         JEOffscreenDeferredPass m_deferredPass;
@@ -139,6 +148,7 @@ namespace JoeEngine {
 
         void DrawMesh(VkCommandBuffer commandBuffer, const MeshComponent& meshComponent);
         void DrawScreenSpaceTriMesh(VkCommandBuffer commandBuffer);
+        void DrawBoundingBoxMesh(VkCommandBuffer commandBuffer);
 
         void UpdateShaderUniformBuffers(uint32_t imageIndex);
 

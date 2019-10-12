@@ -6,7 +6,8 @@
 #include "MeshBufferManager.h"
 
 namespace JoeEngine {
-    JEMesh_SSTriangle JEMeshBufferManager::m_screenSpaceTriangle{};
+    JESingleMesh JEMeshBufferManager::m_screenSpaceTriangle {};
+    JESingleMesh JEMeshBufferManager::m_boundingBoxMesh {};
 
     void JEMeshBufferManager::Initialize(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue) {
         this->physicalDevice = physicalDevice;
@@ -15,14 +16,33 @@ namespace JoeEngine {
         this->graphicsQueue = graphicsQueue;
         
         // Setup screen space triangle
-        const std::vector<JEMeshVertex> screenSpaceTriangleVertices = { { glm::vec3(-1.0, -1.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0, 0.0) },
-                                                                      { glm::vec3(3.0, -1.0, 0.0),  glm::vec3(0.0, 0.0, 0.0),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(2.0, 0.0) },
-                                                                      { glm::vec3(-1.0, 3.0, 0.0),  glm::vec3(0.0, 0.0, 0.0),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0, 2.0) } };
+        const std::vector<JEMeshVertex> screenSpaceTriangleVertices = { { glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f) },
+                                                                      { glm::vec3(3.0f, -1.0f, 0.0f),  glm::vec3(0.0f, 0.0f, 0.0f),  glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(2.0f, 0.0f) },
+                                                                      { glm::vec3(-1.0f, 3.0f, 0.0f),  glm::vec3(0.0f, 0.0f, 0.0f),  glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.0f, 2.0f) } };
         const std::vector<uint32_t> screenSpaceTriangleIndices = { 2, 1, 0 };
         m_screenSpaceTriangle.vertexList = screenSpaceTriangleVertices;
         m_screenSpaceTriangle.indexList = screenSpaceTriangleIndices;
         CreateVertexBuffer(screenSpaceTriangleVertices, &m_screenSpaceTriangle.vertexBuffer, &m_screenSpaceTriangle.vertexBufferMemory);
         CreateIndexBuffer(screenSpaceTriangleIndices, &m_screenSpaceTriangle.indexBuffer, &m_screenSpaceTriangle.indexBufferMemory);
+
+        // Setup bounding box mesh
+        std::vector<JEMeshVertex> boundingBoxVertices;
+
+        for (int i = -1; i <= 1; i += 2) {
+            for (int j = -1; j <= 1; j += 2) {
+                for (int k = -1; k <= 1; k += 2) {
+                    boundingBoxVertices.push_back( { glm::vec3(i, j, k), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f) } );
+                }
+            }
+        }
+
+        const std::vector<uint32_t> boundingBoxIndices = { 0, 1, 2, 3, 4, 5, 6, 7,
+                                                           0, 4, 1, 5, 2, 6, 3, 7,
+                                                           0, 2, 4, 6, 1, 3, 5, 7 };
+        m_boundingBoxMesh.vertexList = boundingBoxVertices;
+        m_boundingBoxMesh.indexList = boundingBoxIndices;
+        CreateVertexBuffer(boundingBoxVertices, &m_boundingBoxMesh.vertexBuffer, &m_boundingBoxMesh.vertexBufferMemory);
+        CreateIndexBuffer(boundingBoxIndices, &m_boundingBoxMesh.indexBuffer, &m_boundingBoxMesh.indexBufferMemory);
     }
 
     void JEMeshBufferManager::Cleanup() {
@@ -36,6 +56,10 @@ namespace JoeEngine {
         vkFreeMemory(device, m_screenSpaceTriangle.vertexBufferMemory, nullptr);
         vkDestroyBuffer(device, m_screenSpaceTriangle.indexBuffer, nullptr);
         vkFreeMemory(device, m_screenSpaceTriangle.indexBufferMemory, nullptr);
+        vkDestroyBuffer(device, m_boundingBoxMesh.vertexBuffer, nullptr);
+        vkFreeMemory(device, m_boundingBoxMesh.vertexBufferMemory, nullptr);
+        vkDestroyBuffer(device, m_boundingBoxMesh.indexBuffer, nullptr);
+        vkFreeMemory(device, m_boundingBoxMesh.indexBufferMemory, nullptr);
         m_numBuffers = 0;
     }
 

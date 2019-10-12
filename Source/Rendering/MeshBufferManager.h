@@ -33,7 +33,8 @@ namespace JoeEngine {
         JEVulkanQueue graphicsQueue;
 
         // Mesh used for post processing
-        static JEMesh_SSTriangle m_screenSpaceTriangle;
+        static JESingleMesh m_screenSpaceTriangle;
+        static JESingleMesh m_boundingBoxMesh;
 
     public:
         JEMeshBufferManager() : m_numBuffers(0) {
@@ -85,8 +86,12 @@ namespace JoeEngine {
             return m_boundingBoxes;
         }
 
-        const JEMesh_SSTriangle& GetScreenSpaceTriMesh() const {
+        const JESingleMesh& GetScreenSpaceTriMesh() const {
             return m_screenSpaceTriangle;
+        }
+
+        const JESingleMesh& GetBoundingBoxMesh() const {
+            return m_boundingBoxMesh;
         }
     };
 }

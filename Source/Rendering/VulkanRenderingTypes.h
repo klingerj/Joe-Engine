@@ -15,6 +15,17 @@ namespace JoeEngine {
         VkImageView imageView;
     } JEFramebufferAttachment;
 
+    typedef struct je_offscreen_forward_pass_t {
+        uint32_t width = JE_DEFAULT_SCREEN_WIDTH, height = JE_DEFAULT_SCREEN_HEIGHT;
+        VkFramebuffer framebuffer;
+        JEFramebufferAttachment color;
+        JEFramebufferAttachment depth;
+        VkRenderPass renderPass;
+        VkSampler sampler;
+        VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+        VkSemaphore semaphore = VK_NULL_HANDLE; // Semaphore used to synchronize between this and the next render pass
+    } JEForwardPass;
+
     // Render pass information for a shadow pass (depth-only)
     typedef struct je_offscreen_shadow_pass_t {
         uint32_t width = JE_DEFAULT_SHADOW_MAP_WIDTH, height = JE_DEFAULT_SHADOW_MAP_HEIGHT;
@@ -105,5 +116,5 @@ namespace JoeEngine {
         VkDeviceMemory indexBufferMemory;
         std::vector<JEMeshVertex> vertexList;
         std::vector<uint32_t> indexList;
-    } JEMesh_SSTriangle;
+    } JESingleMesh;
 }

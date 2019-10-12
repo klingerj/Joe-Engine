@@ -14,15 +14,15 @@ namespace JoeEngine {
         if (sceneId == 0) {
             std::vector<Entity> entities;
             MeshComponent meshComp_wahoo = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "wahoo.obj");
-            for (uint32_t i = 0; i < 64; ++i) {
-                for (uint32_t j = 0; j < 64; ++j) {
+            for (int i = 0; i < 16; ++i) {
+                for (int j = 0; j < 16; ++j) {
                     Entity newEntity = m_engineInstance->SpawnEntity();
                     entities.push_back(newEntity);
                     m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_wahoo);
 
                     TransformComponent* trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(newEntity);
-                    trans->SetTranslation(glm::vec3(i, 0, j) * 0.1f);
-                    trans->SetScale(glm::vec3(0.015f, 0.015f, 0.015f));
+                    trans->SetTranslation(glm::vec3(i - 32, 0, j - 32) * 0.1f);
+                    trans->SetScale(glm::vec3(0.01f, 0.01f, 0.01f));
 
                     m_engineInstance->AddComponent<RotatorComponent>(newEntity);
                     RotatorComponent* rot = m_engineInstance->GetComponent<RotatorComponent, RotatorComponentManager>(newEntity);
@@ -36,9 +36,9 @@ namespace JoeEngine {
             MeshComponent meshComp_plane = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "plane.obj");
             m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_plane);
             TransformComponent* trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(newEntity);
-            trans->SetTranslation(glm::vec3(0.0f, -0.05f, 0.0f));
+            trans->SetTranslation(glm::vec3(0.0f, -0.25f, 0.0f));
             trans->SetRotation(glm::angleAxis(glm::radians(-90.0f), glm::vec3(1, 0, 0)));
-            trans->SetScale(glm::vec3(25.0f, 25.0f, 25.0f));
+            trans->SetScale(glm::vec3(25.0f, 25.0f, 1.0f));
             m_engineInstance->AddComponent<RotatorComponent>(newEntity);
             RotatorComponent* rot = m_engineInstance->GetComponent<RotatorComponent, RotatorComponentManager>(newEntity);
             rot->m_entityId = newEntity.GetId();

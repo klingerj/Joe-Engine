@@ -28,6 +28,110 @@ namespace JoeEngine {
     std::vector<char> ReadFile(const std::string& filename);
     VkShaderModule CreateShaderModule(VkDevice device, const std::vector<char>& code);
 
+    // Forward shader
+
+    class JEVulkanForwardShader {
+    private:
+        VkPipeline m_graphicsPipeline;
+        VkPipelineLayout m_pipelineLayout;
+        VkDescriptorPool m_descriptorPool;
+        VkDescriptorSetLayout m_descriptorSetLayout;
+        VkDescriptorSet m_descriptorSet;
+
+        // Creation functions
+        void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
+            const JEVulkanSwapChain& swapChain, VkRenderPass renderPass);
+        void CreateDescriptorPool(VkDevice device);
+        void CreateDescriptorSetLayout(VkDevice device);
+        void CreateDescriptorSets(VkDevice device, const JETexture& texture);
+        void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device);
+
+    public:
+        JEVulkanForwardShader() {}
+        JEVulkanForwardShader(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanSwapChain& swapChain, VkRenderPass renderPass,
+            const JETexture& texture, const std::string& vertShader, const std::string& fragShader) {
+            // Read in shader code
+            auto vertShaderCode = ReadFile(vertShader);
+            auto fragShaderCode = ReadFile(fragShader);
+
+            // Create shader modules
+            VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
+            VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
+
+            uint32_t numSwapChainImages = swapChain.GetImageViews().size();
+            CreateUniformBuffers(physicalDevice, device);
+            CreateDescriptorSetLayout(device);
+            CreateDescriptorPool(device);
+            CreateDescriptorSets(device, texture);
+            CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain, renderPass);
+        }
+
+        ~JEVulkanForwardShader() {}
+
+        void Cleanup(VkDevice device);
+
+        void UpdateUniformBuffers(VkDevice device);
+        void BindDescriptorSets(VkCommandBuffer commandBuffer);
+
+        void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj);
+        void BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat);
+
+        // Getters
+        VkPipeline GetPipeline() const {
+            return m_graphicsPipeline;
+        }
+    };
+
+    // Flat shader
+
+    class JEVulkanFlatShader {
+    private:
+        VkPipeline m_graphicsPipeline;
+        VkPipelineLayout m_pipelineLayout;
+
+        // Creation functions
+        void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
+            VkExtent2D extent, VkRenderPass renderPass);
+        //void CreateDescriptorPool(VkDevice device, uint32_t numSwapChainImages);
+        //void CreateDescriptorSetLayout(VkDevice device);
+        //void CreateDescriptorSets(VkDevice device, const JEPostProcessingPass& postProcessingPass, VkImageView postImageView, uint32_t numSwapChainImages);
+        //void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages);
+
+    public:
+        JEVulkanFlatShader() {}
+        JEVulkanFlatShader(VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, VkExtent2D extent,
+            const std::string& vertShader, const std::string& fragShader) {
+            // Read in shader code
+            auto vertShaderCode = ReadFile(vertShader);
+            auto fragShaderCode = ReadFile(fragShader);
+
+            // Create shader modules
+            VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
+            VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
+
+            //uint32_t numSwapChainImages = swapChain.GetImageViews().size();
+            //CreateUniformBuffers(physicalDevice, device, numSwapChainImages);
+            //CreateDescriptorSetLayout(device);
+            //CreateDescriptorPool(device, numSwapChainImages);
+            //CreateDescriptorSets(device, postProcessingPass, postImageView, numSwapChainImages);
+            CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, extent, renderPass);
+        }
+
+        ~JEVulkanFlatShader() {}
+
+        void Cleanup(VkDevice device);
+
+        //void UpdateUniformBuffers(VkDevice device, uint32_t currentImage);
+        //void BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t descriptorSetIndex);
+        void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj);
+        void BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat);
+
+        // Getters
+        VkPipeline GetPipeline() const {
+            return m_graphicsPipeline;
+        }
+    };
+
     // Post Processing Shader: Draws a meshes with a texture uniform.
 
     class JEVulkanPostProcessShader {
@@ -97,7 +201,7 @@ namespace JoeEngine {
         VkDeviceMemory m_uniformBuffersMemory_Model;*/
 
         // Creation functions
-        void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule , VkExtent2D extent, VkRenderPass renderPass);
+        void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkExtent2D extent, VkRenderPass renderPass);
         void CreateDescriptorPool(VkDevice device);
         void CreateDescriptorSetLayout(VkDevice device);
         void CreateDescriptorSets(VkDevice device);

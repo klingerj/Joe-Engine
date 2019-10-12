@@ -12,6 +12,8 @@ namespace JoeEngine {
         auto& renderer = reinterpret_cast<JEEngineInstance*>(glfwGetWindowUserPointer(window))->GetRenderSubsystem();
         renderer.FramebufferResized();
     }
+    
+    static constexpr bool isDeferred = false;
 
     void JEVulkanRenderer::Initialize(JESceneManager* sceneManager, JEEngineInstance* engineInstance) {
 
@@ -65,6 +67,9 @@ namespace JoeEngine {
         CreateDeferredPassGeometryResources();
         CreateDeferredPassLightingResources();
 
+        // Forward Rendering Pass
+        CreateForwardPassResources();
+
         // Create the swap chain framebuffers
         CreateSwapChainFramebuffers();
 
@@ -75,6 +80,7 @@ namespace JoeEngine {
         CreateShadowCommandBuffer();
         CreateDeferredPassGeometryCommandBuffer();
         CreateDeferredLightingAndPostProcessingCommandBuffer();
+        CreateForwardPassCommandBuffer();
 
         // Sync objects
         CreateSemaphoresAndFences();
@@ -82,9 +88,7 @@ namespace JoeEngine {
 
     void JEVulkanRenderer::Cleanup() {
         CleanupWindowDependentResources();
-        //m_sceneManager->CleanupMeshesAndTextures(m_device);
         m_meshBufferManager.Cleanup();
-        //CleanupShaders();
         CleanupTextures();
 
         // Cleanup shadow pass
@@ -285,13 +289,21 @@ namespace JoeEngine {
         m_swapChainFramebuffers.resize(swapChainImageViews.size());
 
         for (uint32_t i = 0; i < swapChainImageViews.size(); ++i) {
-            VkImageView attachment = swapChainImageViews[i];
             VkExtent2D extent = m_vulkanSwapChain.GetExtent();
 
             VkFramebufferCreateInfo framebufferInfo = {};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.attachmentCount = 1;
-            framebufferInfo.pAttachments = &attachment;
+
+            if constexpr (isDeferred) {
+                VkImageView attachment = swapChainImageViews[i];
+                framebufferInfo.attachmentCount = 1;
+                framebufferInfo.pAttachments = &attachment;
+            } else {
+                std::array<VkImageView, 2> attachments = { swapChainImageViews[i], m_forwardPass.depth.imageView };
+                framebufferInfo.attachmentCount = attachments.size();
+                framebufferInfo.pAttachments = attachments.data();
+            }
+
             framebufferInfo.width = extent.width;
             framebufferInfo.height = extent.height;
             framebufferInfo.layers = 1;
@@ -299,7 +311,11 @@ namespace JoeEngine {
             if (m_postProcessingPasses.size() > 0) {
                 framebufferInfo.renderPass = m_postProcessingPasses[m_postProcessingPasses.size() - 1].renderPass;
             } else {
-                framebufferInfo.renderPass = m_renderPass_deferredLighting;
+                if constexpr (isDeferred) {
+                    framebufferInfo.renderPass = m_renderPass_deferredLighting;
+                } else {
+                    framebufferInfo.renderPass = m_forwardPass.renderPass;
+                }
             }
 
             if (vkCreateFramebuffer(m_device, &framebufferInfo, nullptr, &m_swapChainFramebuffers[i]) != VK_SUCCESS) {
@@ -481,7 +497,6 @@ namespace JoeEngine {
     }
 
     void JEVulkanRenderer::CreateShaders() {
-        // TODO: make sure the number of model matrices passed in here is correct (and also updated every time an entity is created/destroyed)
         m_shadowPassShaders.emplace_back(JEVulkanShadowPassShader(m_physicalDevice, m_device, m_shadowPass.renderPass, { static_cast<uint32_t>(m_shadowPass.width), static_cast<uint32_t>(m_shadowPass.height) },
             JE_SHADER_DIR + "vert_shadow.spv", JE_SHADER_DIR + "frag_shadow.spv"));
         m_deferredPassGeometryShader = JEVulkanDeferredPassGeometryShader(m_physicalDevice, m_device, m_vulkanSwapChain, m_deferredPass.renderPass, m_textures[0],
@@ -491,15 +506,25 @@ namespace JoeEngine {
         for (uint32_t p = 0; p < m_postProcessingPasses.size(); ++p) {
             JEPostProcessingPass& currentPass = m_postProcessingPasses[p];
             if (p == 0) {
-                // Use the output of the deferred lighting pass as the input into the first post processing shader
-                m_postProcessingShaders.emplace_back(JEVulkanPostProcessShader(m_physicalDevice, m_device, m_vulkanSwapChain, currentPass, m_framebufferAttachment_deferredLighting.imageView,
-                    JE_SHADER_DIR + "vert_passthrough.spv", JE_SHADER_DIR + JEBuiltInPostProcessingShaderPaths[currentPass.shaderIndex]));
+                if constexpr (isDeferred) {
+                    // Use the output of the deferred lighting pass as the input into the first post processing shader
+                    m_postProcessingShaders.emplace_back(JEVulkanPostProcessShader(m_physicalDevice, m_device, m_vulkanSwapChain, currentPass, m_framebufferAttachment_deferredLighting.imageView,
+                        JE_SHADER_DIR + "vert_passthrough.spv", JE_SHADER_DIR + JEBuiltInPostProcessingShaderPaths[currentPass.shaderIndex]));
+                } else {
+                    // Use the output of the deferred lighting pass as the input into the first post processing shader
+                    m_postProcessingShaders.emplace_back(JEVulkanPostProcessShader(m_physicalDevice, m_device, m_vulkanSwapChain, currentPass, m_forwardPass.color.imageView,
+                        JE_SHADER_DIR + "vert_passthrough.spv", JE_SHADER_DIR + JEBuiltInPostProcessingShaderPaths[currentPass.shaderIndex]));
+                }
             } else {
                 // Use the output of the previous post processing shader as the input into the first post processing shader
                 m_postProcessingShaders.emplace_back(JEVulkanPostProcessShader(m_physicalDevice, m_device, m_vulkanSwapChain, m_postProcessingPasses[p], m_postProcessingPasses[p - 1].texture.imageView,
                     JE_SHADER_DIR + "vert_passthrough.spv", JE_SHADER_DIR + JEBuiltInPostProcessingShaderPaths[currentPass.shaderIndex]));
             }
         }
+        m_flatShader = JEVulkanFlatShader(m_physicalDevice, m_device, m_forwardPass.renderPass, m_vulkanSwapChain.GetExtent(), 
+            JE_SHADER_DIR + "vert_flat.spv", JE_SHADER_DIR + "frag_flat.spv");
+        m_forwardShader = JEVulkanForwardShader(m_physicalDevice, m_device, m_vulkanSwapChain, m_forwardPass.renderPass, m_textures[0],
+            JE_SHADER_DIR + "vert_forward.spv", JE_SHADER_DIR + "frag_forward.spv");
     }
 
     void JEVulkanRenderer::CleanupShaders() {
@@ -513,14 +538,11 @@ namespace JoeEngine {
         }
         m_shadowPassShaders.clear();
         m_postProcessingShaders.clear();
+        m_flatShader.Cleanup(m_device);
+        m_forwardShader.Cleanup(m_device);
     }
 
     void JEVulkanRenderer::UpdateShaderUniformBuffers(uint32_t imageIndex) {
-        /*for (auto& shadowPassShader : m_shadowPassShaders) {
-            shadowPassShader.UpdateUniformBuffers(m_device, m_sceneManager->m_shadowCamera);
-        }*/
-
-        //m_deferredPassGeometryShader.UpdateUniformBuffers(m_device, m_sceneManager->m_camera);
         m_deferredPassLightingShader.UpdateUniformBuffers(m_device, imageIndex, m_sceneManager->m_camera, m_sceneManager->m_shadowCamera);
 
         for (auto& postProcessingShader : m_postProcessingShaders) {
@@ -536,8 +558,18 @@ namespace JoeEngine {
         return m_meshBufferManager.CreateMeshComponent(filepath);
     }
 
+    void JEVulkanRenderer::DrawBoundingBoxMesh(VkCommandBuffer commandBuffer) {
+        const JESingleMesh& boundingBox = m_meshBufferManager.GetBoundingBoxMesh();
+        VkBuffer vertexBuffers[] = { boundingBox.vertexBuffer };
+        VkDeviceSize offsets[] = { 0 };
+
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdBindIndexBuffer(commandBuffer, boundingBox.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(boundingBox.indexList.size()), 1, 0, 0, 0);
+    }
+
     void JEVulkanRenderer::DrawScreenSpaceTriMesh(VkCommandBuffer commandBuffer) {
-        const JEMesh_SSTriangle& postTri = m_meshBufferManager.GetScreenSpaceTriMesh();
+        const JESingleMesh& postTri = m_meshBufferManager.GetScreenSpaceTriMesh();
         VkBuffer vertexBuffers[] = { postTri.vertexBuffer };
         VkDeviceSize offsets[] = { 0 };
 
@@ -616,11 +648,8 @@ namespace JoeEngine {
     void JEVulkanRenderer::DrawMeshComponents(const std::vector<MeshComponent>& meshComponents,
                                               const std::vector<TransformComponent>& transformComponents,
                                               const JECamera& camera) {
-        const bool isDeferred = true;
-        if (isDeferred) {
+        if constexpr (isDeferred) {
             /// Construct deferred geometry render pass
-
-            // Reset the command buffer, as we have decided to re-record it
             if (vkResetCommandBuffer(m_deferredPass.commandBuffer, VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
                 throw std::runtime_error("failed to reset deferred geometry pass command buffer!");
             }
@@ -635,13 +664,12 @@ namespace JoeEngine {
             }
 
             // Begin render pass
-
             VkRenderPassBeginInfo renderPassInfo = {};
             renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
             renderPassInfo.renderPass = m_deferredPass.renderPass;
             renderPassInfo.framebuffer = m_deferredPass.framebuffer;
             renderPassInfo.renderArea.offset = { 0, 0 };
-            renderPassInfo.renderArea.extent = { m_deferredPass.width, m_deferredPass.height };
+            renderPassInfo.renderArea.extent = { m_width, m_height };
 
             std::array<VkClearValue, 3> clearValues;
             clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
@@ -671,6 +699,10 @@ namespace JoeEngine {
 
             // Begin command buffer
             for (uint32_t i = 0; i < m_commandBuffers.size(); ++i) {
+                if (vkResetCommandBuffer(m_commandBuffers[i], VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
+                    throw std::runtime_error("failed to reset command buffer!");
+                }
+
                 VkCommandBufferBeginInfo beginInfo = {};
                 beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
                 beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -738,7 +770,96 @@ namespace JoeEngine {
                 }
             }
         } else {
-            // Do forward rendering
+            for (uint32_t i = 0; i < m_commandBuffers.size(); ++i) {
+                VkCommandBufferBeginInfo beginInfo = {};
+                beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+                beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+                beginInfo.pInheritanceInfo = nullptr;
+
+                if (vkBeginCommandBuffer(m_commandBuffers[i], &beginInfo) != VK_SUCCESS) {
+                    throw std::runtime_error("failed to begin recording command buffer!");
+                }
+
+                // Begin render pass
+                VkRenderPassBeginInfo renderPassInfo = {};
+                renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+                renderPassInfo.renderPass = m_forwardPass.renderPass;
+                if (m_postProcessingPasses.size() > 0) {
+                    renderPassInfo.framebuffer = m_forwardPass.framebuffer;
+                } else {
+                    renderPassInfo.framebuffer = m_swapChainFramebuffers[i];
+                }
+                renderPassInfo.renderArea.offset = { 0, 0 };
+                renderPassInfo.renderArea.extent = { m_width, m_height };
+
+                std::array<VkClearValue, 2> clearValues = {};
+                clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+                clearValues[1].depthStencil = { 1.0f, 0 };
+                renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+                renderPassInfo.pClearValues = clearValues.data();
+
+                vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+                // Draw mesh components
+                vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_forwardShader.GetPipeline());
+                m_forwardShader.BindPushConstants_ViewProj(m_commandBuffers[i], camera.GetViewProj());
+                m_forwardShader.BindDescriptorSets(m_commandBuffers[i]);
+
+                for (uint32_t j = 0; j < meshComponents.size(); ++j) {
+                    m_forwardShader.BindPushConstants_ModelMatrix(m_commandBuffers[i], transformComponents[j].GetTransform());
+                    DrawMesh(m_commandBuffers[i], meshComponents[j]);
+                }
+
+                // Draw bounding boxes / debug geometry
+                vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_flatShader.GetPipeline());
+                m_flatShader.BindPushConstants_ViewProj(m_commandBuffers[i], camera.GetViewProj());
+                vkCmdSetLineWidth(m_commandBuffers[i], 2.0f);
+
+                const std::vector<BoundingBoxData> boundingBoxData = m_meshBufferManager.GetBoundingBoxData();
+                for (uint32_t j = 0; j < transformComponents.size(); ++j) {
+                    // TODO: move to helper function somehow
+                    const glm::vec3& minPos = boundingBoxData[meshComponents[j].GetVertexHandle()][0];
+                    const glm::vec3& maxPos = boundingBoxData[meshComponents[j].GetVertexHandle()][7];
+                    const glm::vec3 scale = 0.5f * (maxPos - minPos);
+                    const glm::mat4 meshTrans = glm::translate(glm::mat4(1.0f), minPos + scale) * glm::scale(glm::mat4(1.0f), scale);
+                    m_flatShader.BindPushConstants_ModelMatrix(m_commandBuffers[i], transformComponents[j].GetTransform() * meshTrans);
+                    DrawBoundingBoxMesh(m_commandBuffers[i]);
+                }
+
+                vkCmdEndRenderPass(m_commandBuffers[i]);
+
+                // Loop over each post processing pass
+                for (uint32_t p = 0; p < m_postProcessingPasses.size(); ++p) {
+                    VkRenderPassBeginInfo renderPassInfo = {};
+                    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+                    if (p == m_postProcessingPasses.size() - 1) {
+                        renderPassInfo.framebuffer = m_swapChainFramebuffers[i];
+                        renderPassInfo.renderArea.extent = m_vulkanSwapChain.GetExtent();
+                    } else {
+                        renderPassInfo.framebuffer = m_postProcessingPasses[p].framebuffer;
+                        renderPassInfo.renderArea.extent = { m_width, m_height };
+                    }
+                    renderPassInfo.renderPass = m_postProcessingPasses[p].renderPass;
+                    renderPassInfo.renderArea.offset = { 0, 0 };
+
+                    std::array<VkClearValue, 1> clearValues = {};
+                    clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+                    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+                    renderPassInfo.pClearValues = clearValues.data();
+
+                    vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+                    vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_postProcessingShaders[p].GetPipeline());
+                    m_postProcessingShaders[p].BindDescriptorSets(m_commandBuffers[i], i);
+                    DrawScreenSpaceTriMesh(m_commandBuffers[i]);
+
+                    vkCmdEndRenderPass(m_commandBuffers[i]);
+                }
+
+                if (vkEndCommandBuffer(m_commandBuffers[i]) != VK_SUCCESS) {
+                    throw std::runtime_error("failed to record command buffer!");
+                }
+            }
         }
     }
 
@@ -842,11 +963,123 @@ namespace JoeEngine {
         CreateShadowFramebuffer();
     }
 
+    /// Forard Pass creation
+
+    void JEVulkanRenderer::CreateForwardPassRenderPass() {
+        std::array<VkAttachmentDescription, 2> attachmentDescs = {};
+        for (uint32_t i = 0; i < attachmentDescs.size(); ++i) {
+            attachmentDescs[i].samples = VK_SAMPLE_COUNT_1_BIT;
+            attachmentDescs[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            attachmentDescs[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            attachmentDescs[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            attachmentDescs[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            if (i == 1) {
+                attachmentDescs[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+                attachmentDescs[i].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            } else {
+                attachmentDescs[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+                attachmentDescs[i].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            }
+        }
+
+        attachmentDescs[0].format = VK_FORMAT_R8G8B8A8_UNORM;
+        attachmentDescs[1].format = FindDepthFormat(m_physicalDevice);
+
+        std::vector<VkAttachmentReference> colorReferences;
+        colorReferences.push_back({ 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
+
+        VkAttachmentReference depthAttachmentRef = {};
+        depthAttachmentRef.attachment = 1;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        std::array<VkSubpassDescription, 1> subpassDescs = {};
+        subpassDescs[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpassDescs[0].colorAttachmentCount = static_cast<uint32_t>(colorReferences.size());
+        subpassDescs[0].pColorAttachments = colorReferences.data();
+        subpassDescs[0].pDepthStencilAttachment = &depthAttachmentRef;
+
+        std::array<VkSubpassDependency, 2> subpassDependencies;
+        subpassDependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        subpassDependencies[0].dstSubpass = 0;
+        subpassDependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        subpassDependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpassDependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        subpassDependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpassDependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        subpassDependencies[1].srcSubpass = 0;
+        subpassDependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        subpassDependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpassDependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        subpassDependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpassDependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        subpassDependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        VkRenderPassCreateInfo renderPassInfo = {};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = attachmentDescs.size();
+        renderPassInfo.pAttachments = attachmentDescs.data();
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = subpassDescs.data();
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(subpassDependencies.size());
+        renderPassInfo.pDependencies = subpassDependencies.data();
+
+        if (vkCreateRenderPass(m_device, &renderPassInfo, nullptr, &m_forwardPass.renderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create forward pass render pass!");
+        }
+    }
+
+    void JEVulkanRenderer::CreateForwardPassFramebuffer() {
+        std::array<VkImageView, 2> attachments = { m_forwardPass.color.imageView, m_forwardPass.depth.imageView };
+
+        VkFramebufferCreateInfo framebufferInfo = {};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = m_forwardPass.renderPass;
+        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        framebufferInfo.pAttachments = attachments.data();
+        framebufferInfo.width = m_forwardPass.width;
+        framebufferInfo.height = m_forwardPass.height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(m_device, &framebufferInfo, nullptr, &m_forwardPass.framebuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create forward pass framebuffer!");
+        }
+    }
+
+    void JEVulkanRenderer::CreateForwardPassCommandBuffer() {
+        /*VkCommandBufferAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.commandPool = m_commandPool;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandBufferCount = 1;
+
+        if (vkAllocateCommandBuffers(m_device, &allocInfo, &m_forwardPass.commandBuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate forward pass command buffer!");
+        }*/
+
+        if (m_forwardPass.semaphore == VK_NULL_HANDLE) {
+            VkSemaphoreCreateInfo semaphoreInfo = {};
+            semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+            if (vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_forwardPass.semaphore) != VK_SUCCESS) {
+                throw std::runtime_error("failed to create forward pass semaphore!");
+            }
+        }
+    }
+
+    void JEVulkanRenderer::CreateForwardPassResources() {
+        CreateFramebufferAttachment(m_forwardPass.color, { m_forwardPass.width, m_forwardPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R8G8B8A8_UNORM);
+        CreateFramebufferAttachment(m_forwardPass.depth, { m_forwardPass.width, m_forwardPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), FindDepthFormat(m_physicalDevice));
+        CreateFramebufferAttachmentSampler(m_forwardPass.sampler);
+        CreateForwardPassRenderPass();
+        CreateForwardPassFramebuffer();
+    }
+
     /// Deferred Rendering Geometry Pass creation
 
     void JEVulkanRenderer::CreateDeferredPassGeometryRenderPass() {
         std::array<VkAttachmentDescription, 3> attachmentDescs = {};
-        for (uint32_t i = 0; i < 3; ++i) {
+        for (uint32_t i = 0; i < attachmentDescs.size(); ++i) {
             attachmentDescs[i].samples = VK_SAMPLE_COUNT_1_BIT;
             attachmentDescs[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
             attachmentDescs[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -861,8 +1094,8 @@ namespace JoeEngine {
             }
         }
 
-        attachmentDescs[0].format = VK_FORMAT_R16G16B16A16_SFLOAT;
-        attachmentDescs[1].format = VK_FORMAT_R16G16B16A16_SFLOAT;
+        attachmentDescs[0].format = VK_FORMAT_R8G8B8A8_UNORM; // VK_FORMAT_R16G16B16A16_SFLOAT;
+        attachmentDescs[1].format = VK_FORMAT_R8G8B8A8_UNORM; // VK_FORMAT_R16G16B16A16_SFLOAT;
         attachmentDescs[2].format = FindDepthFormat(m_physicalDevice);
 
         std::vector<VkAttachmentReference> colorReferences;
@@ -949,8 +1182,8 @@ namespace JoeEngine {
     }
 
     void JEVulkanRenderer::CreateDeferredPassGeometryResources() {
-        CreateFramebufferAttachment(m_deferredPass.color, { m_deferredPass.width, m_deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
-        CreateFramebufferAttachment(m_deferredPass.normal, { m_deferredPass.width, m_deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R16G16B16A16_SFLOAT);
+        CreateFramebufferAttachment(m_deferredPass.color, { m_deferredPass.width, m_deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R8G8B8A8_UNORM /*VK_FORMAT_R16G16B16A16_SFLOAT*/);
+        CreateFramebufferAttachment(m_deferredPass.normal, { m_deferredPass.width, m_deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R8G8B8A8_UNORM /*VK_FORMAT_R16G16B16A16_SFLOAT*/);
         CreateFramebufferAttachment(m_deferredPass.depth, { m_deferredPass.width, m_deferredPass.height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), FindDepthFormat(m_physicalDevice));
         CreateFramebufferAttachmentSampler(m_deferredPass.sampler);
         CreateDeferredPassGeometryRenderPass();
@@ -1158,6 +1391,7 @@ namespace JoeEngine {
 
         VkSubmitInfo submitInfo_shadowPass = {};
         submitInfo_shadowPass.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo_shadowPass.pNext = nullptr;
         submitInfo_shadowPass.pWaitSemaphores = &m_imageAvailableSemaphores[m_currentFrame];
         submitInfo_shadowPass.waitSemaphoreCount = 1;
         submitInfo_shadowPass.pWaitDstStageMask = waitStages;
@@ -1172,31 +1406,39 @@ namespace JoeEngine {
             throw std::runtime_error("failed to submit shadow pass command buffer!");
         }
 
-        // Submit deferred render pass with g-buffers
+        if constexpr (isDeferred) {
+            // Submit deferred render pass with g-buffers
+            VkSubmitInfo submitInfo_deferred_gBuffers = {};
+            submitInfo_deferred_gBuffers.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submitInfo_deferred_gBuffers.pNext = nullptr;
+            submitInfo_deferred_gBuffers.waitSemaphoreCount = 1;
+            submitInfo_deferred_gBuffers.pWaitSemaphores = &m_shadowPass.semaphore;
+            submitInfo_deferred_gBuffers.pWaitDstStageMask = waitStages;
+            submitInfo_deferred_gBuffers.commandBufferCount = 1;
+            submitInfo_deferred_gBuffers.pCommandBuffers = &m_deferredPass.commandBuffer;
+            submitInfo_deferred_gBuffers.signalSemaphoreCount = 1;
+            submitInfo_deferred_gBuffers.pSignalSemaphores = &m_deferredPass.semaphore;
 
-        VkSubmitInfo submitInfo_deferred_gBuffers = {};
-        submitInfo_deferred_gBuffers.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo_deferred_gBuffers.waitSemaphoreCount = 1;
-        submitInfo_deferred_gBuffers.pWaitSemaphores = &m_shadowPass.semaphore;
-        submitInfo_deferred_gBuffers.pWaitDstStageMask = waitStages;
-        submitInfo_deferred_gBuffers.commandBufferCount = 1;
-        submitInfo_deferred_gBuffers.pCommandBuffers = &m_deferredPass.commandBuffer;
-        submitInfo_deferred_gBuffers.signalSemaphoreCount = 1;
-        submitInfo_deferred_gBuffers.pSignalSemaphores = &m_deferredPass.semaphore;
+            vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
+            vkResetFences(m_device, 1, &m_inFlightFences[m_currentFrame]);
 
-        vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
-        vkResetFences(m_device, 1, &m_inFlightFences[m_currentFrame]);
-
-        if (vkQueueSubmit(m_graphicsQueue.GetQueue(), 1, &submitInfo_deferred_gBuffers, m_inFlightFences[m_currentFrame]) != VK_SUCCESS) {
-            throw std::runtime_error("failed to submit deferred geometry command buffer!");
+            if (vkQueueSubmit(m_graphicsQueue.GetQueue(), 1, &submitInfo_deferred_gBuffers, m_inFlightFences[m_currentFrame]) != VK_SUCCESS) {
+                throw std::runtime_error("failed to submit deferred geometry command buffer!");
+            }
         }
 
         // Submit render-to-screen command buffer
 
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.pNext = nullptr;
         submitInfo.waitSemaphoreCount = 1;
         submitInfo.pWaitSemaphores = &m_deferredPass.semaphore;
+
+        if constexpr (!isDeferred) {
+            submitInfo.pWaitSemaphores = &m_shadowPass.semaphore;
+        }
+
         submitInfo.pWaitDstStageMask = waitStages;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &m_commandBuffers[imageIndex];
@@ -1264,6 +1506,18 @@ namespace JoeEngine {
             vkDestroyFramebuffer(m_device, m_framebuffer_deferredLighting, nullptr);
         }
 
+        // Forward Pass
+        vkDestroyImage(m_device, m_forwardPass.color.image, nullptr);
+        vkDestroyImage(m_device, m_forwardPass.depth.image, nullptr);
+        vkFreeMemory(m_device, m_forwardPass.color.deviceMemory, nullptr);
+        vkFreeMemory(m_device, m_forwardPass.depth.deviceMemory, nullptr);
+        vkDestroyImageView(m_device, m_forwardPass.color.imageView, nullptr);
+        vkDestroyImageView(m_device, m_forwardPass.depth.imageView, nullptr);
+        vkDestroyRenderPass(m_device, m_forwardPass.renderPass, nullptr);
+        vkDestroyFramebuffer(m_device, m_forwardPass.framebuffer, nullptr);
+        //vkFreeCommandBuffers(m_device, m_commandPool, 1, &m_forwardPass.commandBuffer);
+        vkDestroySampler(m_device, m_forwardPass.sampler, nullptr);
+
         // Post Processing
         for (uint32_t p = 0; p < m_postProcessingPasses.size(); ++p) {
             vkDestroyImage(m_device, m_postProcessingPasses[p].texture.image, nullptr);
@@ -1293,6 +1547,11 @@ namespace JoeEngine {
 
         CleanupWindowDependentResources();
         m_vulkanSwapChain.Create(m_physicalDevice, m_device, m_vulkanWindow, newWidth, newHeight);
+
+        // Forward Pass
+        m_forwardPass.width = newWidth;
+        m_forwardPass.height = newHeight;
+        CreateForwardPassResources();
 
         // Deferred Pass - Geometry
         m_deferredPass.width = newWidth;
