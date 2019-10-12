@@ -20,7 +20,7 @@ namespace JoeEngine {
                 }
 
                 // Update components
-                for (uint32_t i = 0; i < m_componentManagers.size(); ++i) {
+                for (int i = 0; i < m_componentManagers.size(); ++i) {
                     {
                         //ScopedTimer<float> timer("Component Manager " + std::to_string(i));
                         m_componentManagers[i]->Update(this);

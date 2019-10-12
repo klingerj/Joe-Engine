@@ -15,6 +15,7 @@ namespace JoeEngine {
     
     static constexpr bool isDeferred = false;
 
+
     void JEVulkanRenderer::Initialize(JESceneManager* sceneManager, JEEngineInstance* engineInstance) {
 
         m_engineInstance = engineInstance;
@@ -130,7 +131,7 @@ namespace JoeEngine {
         if (m_vulkanValidationLayers.AreValidationLayersEnabled()) {
             extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
         }
-
+        
         return extensions;
     }
 
@@ -349,73 +350,6 @@ namespace JoeEngine {
         if (vkAllocateCommandBuffers(m_device, &allocInfo, m_commandBuffers.data()) != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate command buffers!");
         }
-
-        // Command Buffer recording
-
-        // Begin command buffer
-        /*for (uint32_t i = 0; i < m_commandBuffers.size(); ++i) {
-            VkCommandBufferBeginInfo beginInfo = {};
-            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-            beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-            beginInfo.pInheritanceInfo = nullptr;
-
-            if (vkBeginCommandBuffer(m_commandBuffers[i], &beginInfo) != VK_SUCCESS) {
-                throw std::runtime_error("failed to begin recording command buffer!");
-            }
-
-            // Begin render pass
-            VkRenderPassBeginInfo renderPassInfo = {};
-            renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-            renderPassInfo.renderPass = m_renderPass_deferredLighting;
-            if (m_postProcessingPasses.size() > 0) {
-                renderPassInfo.framebuffer = m_framebuffer_deferredLighting;
-            } else {
-                renderPassInfo.framebuffer = m_swapChainFramebuffers[i];
-            }
-            renderPassInfo.renderArea.offset = { 0, 0 };
-            renderPassInfo.renderArea.extent = { m_width, m_height };
-
-            std::array<VkClearValue, 1> clearValues = {};
-            clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-            renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-            renderPassInfo.pClearValues = clearValues.data();
-
-            vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-            m_sceneManager->BindDeferredPassLightingResources(m_commandBuffers[i], i);
-
-            vkCmdEndRenderPass(m_commandBuffers[i]);
-
-            // Loop over each post processing pass
-            for (uint32_t p = 0; p < m_postProcessingPasses.size(); ++p) {
-                VkRenderPassBeginInfo renderPassInfo = {};
-                renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-                if (p == m_postProcessingPasses.size() - 1) {
-                    renderPassInfo.framebuffer = m_swapChainFramebuffers[i];
-                    renderPassInfo.renderArea.extent = m_vulkanSwapChain.GetExtent();
-                } else {
-                    renderPassInfo.framebuffer = m_postProcessingPasses[p].framebuffer;
-                    renderPassInfo.renderArea.extent = { m_width, m_height };
-                }
-                renderPassInfo.renderPass = m_postProcessingPasses[p].renderPass;
-                renderPassInfo.renderArea.offset = { 0, 0 };
-
-                std::array<VkClearValue, 1> clearValues = {};
-                clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-                renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-                renderPassInfo.pClearValues = clearValues.data();
-
-                vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-                m_sceneManager->BindPostProcessingPassResources(m_commandBuffers[i], i, p);
-
-                vkCmdEndRenderPass(m_commandBuffers[i]);
-            }
-
-            if (vkEndCommandBuffer(m_commandBuffers[i]) != VK_SUCCESS) {
-                throw std::runtime_error("failed to record command buffer!");
-            }
-        }*/
     }
 
     void JEVulkanRenderer::CreateSemaphoresAndFences() {
@@ -544,7 +478,7 @@ namespace JoeEngine {
 
     void JEVulkanRenderer::UpdateShaderUniformBuffers(uint32_t imageIndex) {
         m_deferredPassLightingShader.UpdateUniformBuffers(m_device, imageIndex, m_sceneManager->m_camera, m_sceneManager->m_shadowCamera);
-
+        
         for (auto& postProcessingShader : m_postProcessingShaders) {
             postProcessingShader.UpdateUniformBuffers(m_device, imageIndex);
         }
@@ -612,7 +546,7 @@ namespace JoeEngine {
         if (vkBeginCommandBuffer(m_shadowPass.commandBuffer, &beginInfo) != VK_SUCCESS) {
             throw std::runtime_error("failed to begin recording shadow pass command buffer!");
         }
-
+        
         /*TODO: for each light source...*/
 
         // Begin render pass
@@ -771,6 +705,10 @@ namespace JoeEngine {
             }
         } else {
             for (uint32_t i = 0; i < m_commandBuffers.size(); ++i) {
+                if (vkResetCommandBuffer(m_commandBuffers[i], VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
+                    throw std::runtime_error("failed to reset command buffer!");
+                }
+
                 VkCommandBufferBeginInfo beginInfo = {};
                 beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
                 beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -883,6 +821,7 @@ namespace JoeEngine {
         VkSubpassDescription subpass = {};
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpass.colorAttachmentCount = 0;
+        subpass.pColorAttachments = nullptr;
         subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
         // Use subpass dependencies for layout transitions
@@ -1371,8 +1310,6 @@ namespace JoeEngine {
     }
 
     void JEVulkanRenderer::SubmitFrame() {
-        vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
-
         uint32_t imageIndex;
         VkResult result = vkAcquireNextImageKHR(m_device, m_vulkanSwapChain.GetSwapChain(), std::numeric_limits<uint64_t>::max(), m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &imageIndex);
 
@@ -1433,9 +1370,10 @@ namespace JoeEngine {
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.pNext = nullptr;
         submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = &m_deferredPass.semaphore;
 
-        if constexpr (!isDeferred) {
+        if constexpr (isDeferred) {
+            submitInfo.pWaitSemaphores = &m_deferredPass.semaphore;
+        } else {
             submitInfo.pWaitSemaphores = &m_shadowPass.semaphore;
         }
 
@@ -1449,8 +1387,10 @@ namespace JoeEngine {
         vkResetFences(m_device, 1, &m_inFlightFences[m_currentFrame]);
 
         if (vkQueueSubmit(m_graphicsQueue.GetQueue(), 1, &submitInfo, m_inFlightFences[m_currentFrame]) != VK_SUCCESS) {
-            throw std::runtime_error("failed to submit deferred lighting command buffer!");
+            throw std::runtime_error("failed to submit command buffer!");
         }
+        
+        vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
         VkPresentInfoKHR presentInfo = {};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;

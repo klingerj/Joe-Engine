@@ -14,12 +14,12 @@ namespace JoeEngine {
         if (sceneId == 0) {
             std::vector<Entity> entities;
             MeshComponent meshComp_wahoo = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "wahoo.obj");
-            for (int i = 0; i < 16; ++i) {
-                for (int j = 0; j < 16; ++j) {
+            for (int i = 0; i < 64; ++i) {
+                for (int j = 0; j < 64; ++j) {
                     Entity newEntity = m_engineInstance->SpawnEntity();
                     entities.push_back(newEntity);
                     m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_wahoo);
-
+                    
                     TransformComponent* trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(newEntity);
                     trans->SetTranslation(glm::vec3(i - 32, 0, j - 32) * 0.1f);
                     trans->SetScale(glm::vec3(0.01f, 0.01f, 0.01f));
