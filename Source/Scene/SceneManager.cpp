@@ -14,12 +14,16 @@ namespace JoeEngine {
         if (sceneId == 0) {
             std::vector<Entity> entities;
             MeshComponent meshComp_wahoo = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "wahoo.obj");
+            MeshComponent meshComp_sphere = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "sphere.obj");
             for (int i = 0; i < 64; ++i) {
                 for (int j = 0; j < 64; ++j) {
                     Entity newEntity = m_engineInstance->SpawnEntity();
                     entities.push_back(newEntity);
-                    m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_wahoo);
+                    m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, i % 2 == 0 ? meshComp_wahoo : meshComp_sphere);
                     
+                    MaterialComponent* mat = m_engineInstance->GetComponent<MaterialComponent, JEMaterialComponentManager>(newEntity);
+                    mat->m_materialSettings = i % 2 == 0 ? CASTS_SHADOWS : NO_SETTINGS;
+
                     TransformComponent* trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(newEntity);
                     trans->SetTranslation(glm::vec3(i - 32, 0, j - 32) * 0.1f);
                     trans->SetScale(glm::vec3(0.01f, 0.01f, 0.01f));
@@ -31,14 +35,14 @@ namespace JoeEngine {
                 }
             }
             
-            uint32_t tex1 = m_engineInstance->LoadTexture(JE_TEXTURES_DIR + "ducreux.jpg");
+            /*uint32_t tex1 = m_engineInstance->LoadTexture(JE_TEXTURES_DIR + "ducreux.jpg");
 
             MaterialComponent mat1;
             mat1.m_geomType = TRIANGLES;
             mat1.m_materialSettings = ALL_SETTINGS;
             mat1.m_renderLayer = OPAQUE;
             mat1.m_sourceTextures.push_back(tex1);
-            m_engineInstance->RegisterMaterialComponent(mat1, "", "");
+            m_engineInstance->RegisterMaterialComponent(mat1, "", "");*/
 
             Entity newEntity = m_engineInstance->SpawnEntity();
             entities.push_back(newEntity);

@@ -13,7 +13,7 @@ namespace JoeEngine {
         renderer.FramebufferResized();
     }
     
-    static constexpr bool isDeferred = false;
+    static constexpr bool isDeferred = true;
 
 
     void JEVulkanRenderer::Initialize(JESceneManager* sceneManager, JEEngineInstance* engineInstance) {
@@ -429,7 +429,7 @@ namespace JoeEngine {
         }
         m_textures.clear();
 
-        m_textureLibraryGlobal.Cleanup(m_device);
+        //m_textureLibraryGlobal.Cleanup(m_device);
     }
 
     void JEVulkanRenderer::CreateShaders() {
@@ -496,17 +496,19 @@ namespace JoeEngine {
 
     uint32_t JEVulkanRenderer::CreateTexture(const std::string& filepath) {
         // TODO: specify global/level/etc
-        const uint32_t textureID = m_textureLibraryGlobal.CreateTexture(m_device, m_physicalDevice, m_graphicsQueue, m_commandPool, filepath);
-        return textureID;
+        //const uint32_t textureID = m_textureLibraryGlobal.CreateTexture(m_device, m_physicalDevice, m_graphicsQueue, m_commandPool, filepath);
+        return 0;
+        //return textureID;
     }
 
     uint32_t JEVulkanRenderer::CreateShader(const std::string& vertFilepath, const std::string& fragFilepath) {
-        const uint32_t shaderID = /* create new shader */;
+        //const uint32_t shaderID = /* create new shader */;
         /*
         if deferred pipeline, create new instance of deferred lighting shader
         if forward, create new forward shader
         */
-        return shaderID;
+        return 0;
+        //return shaderID;
     }
 
     void JEVulkanRenderer::DrawBoundingBoxMesh(VkCommandBuffer commandBuffer) {
@@ -545,8 +547,7 @@ namespace JoeEngine {
     }
 
     void JEVulkanRenderer::DrawShadowPass(/*std vector of JELights*/const std::vector<MeshComponent>& meshComponents,
-                                                                    const std::vector<TransformComponent>& transformComponents, uint32_t numEntities,
-                                                                    const JECamera& camera) {
+                                                                    const std::vector<TransformComponent>& transformComponents, const JECamera& camera) {
         // Reset the command buffer, as we have decided to re-record it
         if (vkResetCommandBuffer(m_shadowPass.commandBuffer, VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
             throw std::runtime_error("failed to reset shadow pass command buffer!");
@@ -584,7 +585,7 @@ namespace JoeEngine {
 
         m_shadowPassShaders[0].BindPushConstants_ViewProj(m_shadowPass.commandBuffer, camera.GetOrthoViewProj());
 
-        for (uint32_t i = 0; i < numEntities; ++i) {
+        for (uint32_t i = 0; i < meshComponents.size(); ++i) {
             m_shadowPassShaders[0].BindPushConstants_ModelMatrix(m_shadowPass.commandBuffer, transformComponents[i].GetTransform());
             DrawMesh(m_shadowPass.commandBuffer, meshComponents[i]);
         }

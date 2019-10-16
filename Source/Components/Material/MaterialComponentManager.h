@@ -25,5 +25,6 @@ namespace JoeEngine {
 
         MaterialComponent* GetComponent(uint32_t id) const;
         void SetComponent(uint32_t id, MaterialComponent newComp);
+        const PackedArray<MaterialComponent>& GetComponentList() const;
     };
 }

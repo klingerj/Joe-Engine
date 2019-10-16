@@ -17,6 +17,7 @@ namespace JoeEngine {
     } GeomType;
 
     typedef enum JE_MATERIAL_SETTINGS : uint32_t {
+        NO_SETTINGS = 0x0,
         RECEIVES_SHADOWS = 0x1,
         CASTS_SHADOWS = 0x2,
         ALL_SETTINGS = 0xF

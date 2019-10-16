@@ -5,7 +5,7 @@
 namespace JoeEngine {
     class ShaderManager {
     private:
-        std::vector<JEShader*> m_shaders;
+        //std::vector<JEShader*> m_shaders;
         // TODO: deferred geometry pass shader as static
         // also static shadow pass shader   
         // "real" materials like forward shaders and deferred lighting shaders can go in the above vector

@@ -12,7 +12,8 @@ namespace JoeEngine {
     }
 
     void JEMaterialComponentManager::RemoveComponent(uint32_t id) {
-        m_materialComponents.RemoveElement(id);
+        m_materialComponents[id] = MaterialComponent();
+        //m_materialComponents.RemoveElement(id);
     }
 
     MaterialComponent* JEMaterialComponentManager::GetComponent(uint32_t id) const {
@@ -22,5 +23,9 @@ namespace JoeEngine {
 
     void JEMaterialComponentManager::SetComponent(uint32_t id, MaterialComponent newComp) {
         m_materialComponents[id] = newComp;
+    }
+
+    const PackedArray<MaterialComponent>& JEMaterialComponentManager::GetComponentList() const {
+        return m_materialComponents;
     }
 }

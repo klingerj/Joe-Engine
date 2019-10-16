@@ -97,12 +97,11 @@ namespace JoeEngine {
         std::vector<JEVulkanPostProcessShader> m_postProcessingShaders;
         JEVulkanFlatShader m_flatShader;
         JEVulkanForwardShader m_forwardShader;
-        uint32_t CreateShader(const std::string& vertFilepath, const std::string& fragFilepath);
         void CreateShaders();
         void CleanupShaders();
 
         // Textures
-        JETextureLibrary m_textureLibraryGlobal;
+        //JETextureLibrary m_textureLibraryGlobal;
         
         std::vector<JETexture> m_textures;
         void CreateTextures();
@@ -177,10 +176,10 @@ namespace JoeEngine {
         const std::vector<BoundingBoxData>& GetBoundingBoxData() const;
         MeshComponent CreateMesh(const std::string& filepath);
         uint32_t CreateTexture(const std::string& filepath);
+        uint32_t CreateShader(const std::string& vertFilepath, const std::string& fragFilepath);
 
         // Renderer Functions
-        void DrawShadowPass(const std::vector<MeshComponent>& meshComponents, const std::vector<TransformComponent>& transformComponents,
-                            uint32_t numEntities, const JECamera& camera);
+        void DrawShadowPass(const std::vector<MeshComponent>& meshComponents, const std::vector<TransformComponent>& transformComponents, const JECamera& camera);
         void DrawMeshComponents(const std::vector<MeshComponent>& meshComponents, const std::vector<TransformComponent>& transformComponents, const JECamera& camera);
 
         void WaitForIdleDevice() {

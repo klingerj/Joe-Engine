@@ -1,6 +1,7 @@
 #include <exception>
 #include <memory>
 #include <string>
+//#include <utility>
 
 #include "Utils/ScopedTimer.h"
 #include "EngineInstance.h"
@@ -26,18 +27,44 @@ namespace JoeEngine {
                         m_componentManagers[i]->Update(this);
                     }
                 }
-                
+
                 // Destroy any entities marked for deletion
                 DestroyEntities();
 
-                const PackedArray<MeshComponent>&      meshComponents =      GetComponentList<MeshComponent,      JEMeshComponentManager>();
+                const PackedArray<MeshComponent>&      meshComponents      = GetComponentList<MeshComponent, JEMeshComponentManager>();
+                const PackedArray<MaterialComponent>&  materialComponents  = GetComponentList<MaterialComponent, JEMaterialComponentManager>();
                 const PackedArray<TransformComponent>& transformComponents = GetComponentList<TransformComponent, JETransformComponentManager>();
 
                 // TODO: eventually get list of lights and pass those instead
 
+                // TODO: scan/sort all material components so we only pass those that cast shadows to the shadow pass
+                const std::vector<MaterialComponent>& materialComponentsVector = materialComponents.GetData();
+                std::vector<std::pair<MaterialComponent, uint32_t>> indices;
+                for (uint32_t i = 0; i < materialComponents.Size(); ++i) {
+                    indices.emplace_back(std::pair<MaterialComponent, uint32_t>(materialComponentsVector[i], i));
+                }
+
+                std::sort(std::begin(indices), std::end(indices),
+                    [](const std::pair<MaterialComponent, uint32_t>& a, const std::pair<MaterialComponent, uint32_t>& b) -> bool {
+                    return (a.first.m_materialSettings & CASTS_SHADOWS) > (b.first.m_materialSettings & CASTS_SHADOWS);
+                });
+                
+                std::vector<MeshComponent>      meshComponentsSorted;
+                std::vector<MaterialComponent>  materialComponentsSorted;
+                std::vector<TransformComponent> transformComponentsSorted;
+
+                for (uint32_t i = 0; i < indices.size(); ++i) {
+                    if (!(indices[i].first.m_materialSettings & CASTS_SHADOWS)) {
+                        break;
+                    }
+                    materialComponentsSorted.emplace_back(indices[i].first);
+                    meshComponentsSorted.emplace_back(meshComponents.GetData()[indices[i].second]);
+                    transformComponentsSorted.emplace_back(transformComponents.GetData()[indices[i].second]);
+                }
+
                 {
                     //ScopedTimer<float> timer("Shadow Pass Command Buffer Recording");
-                    m_vulkanRenderer.DrawShadowPass(meshComponents.GetData(), transformComponents.GetData(), meshComponents.Size(), m_sceneManager.m_shadowCamera);
+                    m_vulkanRenderer.DrawShadowPass(meshComponentsSorted, transformComponentsSorted, m_sceneManager.m_shadowCamera);
                 }
 
                 // Get bounding box info from MeshBuffer Manager
