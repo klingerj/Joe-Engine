@@ -59,7 +59,7 @@ namespace JoeEngine {
         }
 
 
-        VkSampler GetSampler(int i) const {
+        VkSampler GetSamplerAt(int i) const {
             return m_samplers[i];
         }
     };

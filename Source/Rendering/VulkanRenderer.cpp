@@ -494,10 +494,19 @@ namespace JoeEngine {
         return m_meshBufferManager.CreateMeshComponent(filepath);
     }
 
-    uint32_t JEVulkanRenderer::LoadTexture(const std::string& filepath) {
+    uint32_t JEVulkanRenderer::CreateTexture(const std::string& filepath) {
         // TODO: specify global/level/etc
         const uint32_t textureID = m_textureLibraryGlobal.CreateTexture(m_device, m_physicalDevice, m_graphicsQueue, m_commandPool, filepath);
         return textureID;
+    }
+
+    uint32_t JEVulkanRenderer::CreateShader(const std::string& vertFilepath, const std::string& fragFilepath) {
+        const uint32_t shaderID = /* create new shader */;
+        /*
+        if deferred pipeline, create new instance of deferred lighting shader
+        if forward, create new forward shader
+        */
+        return shaderID;
     }
 
     void JEVulkanRenderer::DrawBoundingBoxMesh(VkCommandBuffer commandBuffer) {

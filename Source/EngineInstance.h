@@ -83,7 +83,7 @@ namespace JoeEngine {
         MeshComponent CreateMeshComponent(const std::string& filepath);
 
         uint32_t LoadTexture(const std::string& filepath);
-        void RegisterMaterialComponent(MaterialComponent& materialComponent);
+        void RegisterMaterialComponent(MaterialComponent& materialComponent, const std::string& vertFilepath, const std::string& fragFilepath);
 
         template<typename T>
         void AddComponent(const Entity& entity) {

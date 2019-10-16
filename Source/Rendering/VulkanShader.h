@@ -9,7 +9,9 @@
 #include "VulkanSwapChain.h"
 #include "VulkanRenderingTypes.h"
 #include "Texture.h"
+#include "TextureLibrary.h"
 #include "../Scene/Camera.h"
+#include "../Components/Material/MaterialComponent.h"
 
 namespace JoeEngine {
     struct JE_PushConst_ViewProj {
@@ -27,6 +29,65 @@ namespace JoeEngine {
 
     std::vector<char> ReadFile(const std::string& filename);
     VkShaderModule CreateShaderModule(VkDevice device, const std::vector<char>& code);
+
+    // JEShader - abstract base class
+    class JEShader {
+    protected:
+        const std::string m_vertPath;
+        const std::string m_fragPath;
+
+    public:
+        JEShader(const std::string& vertPath, const std::string& fragPath) : m_vertPath(vertPath), m_fragPath(fragPath) {}
+        virtual ~JEShader() = default;
+    };
+
+    //JEDeferredShader - deferred lighting variant
+    class JEDeferredShader : JEShader {
+    private:
+        VkPipeline m_graphicsPipeline = VK_NULL_HANDLE;
+        VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
+        VkDescriptorPool m_descriptorPool = VK_NULL_HANDLE;
+        VkDescriptorSetLayout m_descriptorSetLayout = VK_NULL_HANDLE;
+        std::vector<VkDescriptorSet> m_descriptorSets;
+
+        // Creation functions
+        //void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device);
+        void CreateDescriptorSetLayout(VkDevice device, const MaterialComponent& materialComponent);
+        void CreateDescriptorPool(VkDevice device, const MaterialComponent& materialComponent, uint32_t numSwapChainImages);
+        void CreateDescriptorSets(VkDevice device, const MaterialComponent& materialComponent, const JETextureLibrary& textures,
+                                  std::vector<JEOffscreenShadowPass> shadowPasses, JEOffscreenDeferredPass deferredGeometryPass, uint32_t numSwapChainImages);
+        void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
+                                    VkExtent2D frameExtent, VkRenderPass renderPass, const MaterialComponent& materialComponent);
+
+    public:
+        JEDeferredShader() = delete;
+        JEDeferredShader(const MaterialComponent& materialComponent, const JETextureLibrary& textures, std::vector<JEOffscreenShadowPass> shadowPasses,
+                         JEOffscreenDeferredPass deferredGeometryPass, VkDevice device, VkPhysicalDevice physicalDevice, const JEVulkanSwapChain& swapChain,
+                         VkRenderPass renderPass, const std::string& vertPath, const std::string& fragPath) : JEShader(vertPath, fragPath) {
+            auto vertShaderCode = ReadFile(m_vertPath);
+            auto fragShaderCode = ReadFile(m_fragPath);
+            // Create shader modules
+            VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
+            VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
+
+            uint32_t numSwapChainImages = swapChain.GetImageViews().size();
+            //CreateUniformBuffers(physicalDevice, device);
+            CreateDescriptorSetLayout(device, materialComponent);
+            CreateDescriptorPool(device, materialComponent, numSwapChainImages);
+            CreateDescriptorSets(device, materialComponent, textures, shadowPasses, deferredGeometryPass, numSwapChainImages);
+            CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain.GetExtent(), renderPass, materialComponent);
+        }
+
+        void Cleanup(VkDevice device);
+
+        //void UpdateUniformBuffers(VkDevice device);
+        void BindDescriptorSets(VkCommandBuffer commandBuffer);
+
+        void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj);
+        void BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat);
+    };
+
+
 
     // Forward shader
 
@@ -57,8 +118,7 @@ namespace JoeEngine {
             // Create shader modules
             VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
             VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
-
-            uint32_t numSwapChainImages = swapChain.GetImageViews().size();
+            
             CreateUniformBuffers(physicalDevice, device);
             CreateDescriptorSetLayout(device);
             CreateDescriptorPool(device);

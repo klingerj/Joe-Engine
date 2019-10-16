@@ -97,6 +97,7 @@ namespace JoeEngine {
         std::vector<JEVulkanPostProcessShader> m_postProcessingShaders;
         JEVulkanFlatShader m_flatShader;
         JEVulkanForwardShader m_forwardShader;
+        uint32_t CreateShader(const std::string& vertFilepath, const std::string& fragFilepath);
         void CreateShaders();
         void CleanupShaders();
 
@@ -175,7 +176,7 @@ namespace JoeEngine {
         // Mesh Buffer Manager Functions
         const std::vector<BoundingBoxData>& GetBoundingBoxData() const;
         MeshComponent CreateMesh(const std::string& filepath);
-        uint32_t LoadTexture(const std::string& filepath);
+        uint32_t CreateTexture(const std::string& filepath);
 
         // Renderer Functions
         void DrawShadowPass(const std::vector<MeshComponent>& meshComponents, const std::vector<TransformComponent>& transformComponents,

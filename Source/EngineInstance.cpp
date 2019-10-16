@@ -163,12 +163,13 @@ namespace JoeEngine {
     }
 
     uint32_t JEEngineInstance::LoadTexture(const std::string& filepath) {
-        return m_vulkanRenderer.LoadTexture(filepath);
+        return m_vulkanRenderer.CreateTexture(filepath);
     }
 
-    void JEEngineInstance::RegisterMaterialComponent(MaterialComponent& materialComponent) {
+    void JEEngineInstance::RegisterMaterialComponent(MaterialComponent& materialComponent,
+                                                     const std::string& vertFilepath, const std::string& fragFilepath) {
         // send the mat comp to the renderer, which will create a new shader with the shader mgr
         // that should return a handle to the shader mgr
-        //materialComponent.shaderID = that index;
+        materialComponent.m_shaderID = m_vulkanRenderer.CreateShader(vertFilepath, fragFilepath);
     }
 }

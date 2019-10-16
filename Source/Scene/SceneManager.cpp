@@ -38,7 +38,7 @@ namespace JoeEngine {
             mat1.m_materialSettings = ALL_SETTINGS;
             mat1.m_renderLayer = OPAQUE;
             mat1.m_sourceTextures.push_back(tex1);
-            m_engineInstance->RegisterMaterialComponent(mat1);
+            m_engineInstance->RegisterMaterialComponent(mat1, "", "");
 
             Entity newEntity = m_engineInstance->SpawnEntity();
             entities.push_back(newEntity);

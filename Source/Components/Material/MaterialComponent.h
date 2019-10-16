@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include <string>
 
 namespace JoeEngine {
     typedef enum JE_RENDER_LAYER : uint32_t {
@@ -31,7 +32,7 @@ namespace JoeEngine {
 
         MaterialComponent() : MaterialComponent(-1, ALL_SETTINGS, TRIANGLES, OPAQUE) {}
         MaterialComponent(int id, uint32_t matSettings, uint32_t geomType, uint32_t renderLayer) :
-                          m_shaderID(id), m_materialSettings() {}
-        ~MaterialComponent() {}
+                          m_shaderID(id), m_materialSettings(matSettings), m_geomType(geomType), m_renderLayer(renderLayer) {}
+        ~MaterialComponent() = default;
     };
 }
