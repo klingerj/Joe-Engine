@@ -41,7 +41,7 @@ namespace JoeEngine {
                 }
 
                 // Get bounding box info from MeshBuffer Manager
-                const std::vector<BoundingBoxData> boundingBoxes = m_vulkanRenderer.GetBoundingBoxData();
+                const std::vector<BoundingBoxData>& boundingBoxes = m_vulkanRenderer.GetBoundingBoxData();
 
                 std::vector<MeshComponent> meshComponentsPassedCulling;
                 meshComponentsPassedCulling.reserve(64);
@@ -160,5 +160,15 @@ namespace JoeEngine {
     MeshComponent JEEngineInstance::CreateMeshComponent(const std::string& filepath) {
         MeshComponent meshComp = m_vulkanRenderer.CreateMesh(filepath);
         return meshComp;
+    }
+
+    uint32_t JEEngineInstance::LoadTexture(const std::string& filepath) {
+        return m_vulkanRenderer.LoadTexture(filepath);
+    }
+
+    void JEEngineInstance::RegisterMaterialComponent(MaterialComponent& materialComponent) {
+        // send the mat comp to the renderer, which will create a new shader with the shader mgr
+        // that should return a handle to the shader mgr
+        //materialComponent.shaderID = that index;
     }
 }

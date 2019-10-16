@@ -82,6 +82,9 @@ namespace JoeEngine {
         // TODO: replace me with something more general? or not, as this is a built-in component type
         MeshComponent CreateMeshComponent(const std::string& filepath);
 
+        uint32_t LoadTexture(const std::string& filepath);
+        void RegisterMaterialComponent(MaterialComponent& materialComponent);
+
         template<typename T>
         void AddComponent(const Entity& entity) {
             m_componentManagers[m_componentTypeToIndex.at(typeid(T))].get()->AddNewComponent(entity.GetId());

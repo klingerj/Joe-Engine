@@ -1,20 +1,22 @@
 #include <stdexcept>
 
-#include "Texture.h"
+#include "TextureLibrary.h"
 
-//#define STB_IMAGE_IMPLEMENTATION
-//#include "stb_image.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 namespace JoeEngine {
-    /*
-    void JETexture::Cleanup(VkDevice device) {
-        vkDestroySampler(device, m_textureSampler, nullptr);
-        vkDestroyImageView(device, m_textureImageView, nullptr);
-        vkDestroyImage(device, m_textureImage, nullptr);
-        vkFreeMemory(device, m_textureImageMemory, nullptr);
+    void JETextureLibrary::Cleanup(VkDevice device) {
+        for (uint32_t i = 0; i < m_numTextures; ++i) {
+            vkDestroySampler(device, m_samplers[i], nullptr);
+            vkDestroyImageView(device, m_imageViews[i], nullptr);
+            vkDestroyImage(device, m_images[i], nullptr);
+            vkFreeMemory(device, m_deviceMemory[i], nullptr);
+        }
     }
 
-    void JETexture::CreateTextureImage(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, const std::string& filepath) {
+    void JETextureLibrary::CreateTextureImage(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool,
+                                              const JEVulkanQueue& graphicsQueue, const std::string& filepath) {
         // Load image with stb and copy into staging buffer
         int texWidth, texHeight, texChannels;
         stbi_uc* pixels = stbi_load(filepath.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -35,17 +37,17 @@ namespace JoeEngine {
 
         stbi_image_free(pixels);
 
-        CreateImage(physicalDevice, device, texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_textureImage, m_textureImageMemory);
+        CreateImage(physicalDevice, device, texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_images[m_numTextures], m_deviceMemory[m_numTextures]);
 
-        TransitionImageLayout(device, commandPool, graphicsQueue, m_textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        CopyBufferToImage(device, commandPool, graphicsQueue, stagingBuffer, m_textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-        TransitionImageLayout(device, commandPool, graphicsQueue, m_textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        TransitionImageLayout(device, commandPool, graphicsQueue, m_images[m_numTextures], VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        CopyBufferToImage(device, commandPool, graphicsQueue, stagingBuffer, m_images[m_numTextures], static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+        TransitionImageLayout(device, commandPool, graphicsQueue, m_images[m_numTextures], VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         vkDestroyBuffer(device, stagingBuffer, nullptr);
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 
-    void JETexture::CopyBufferToImage(VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) {
+    void JETextureLibrary::CopyBufferToImage(VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) {
         VkCommandBuffer commandBuffer = BeginSingleTimeCommands(device, commandPool);
 
         VkBufferImageCopy region = {};
@@ -70,11 +72,11 @@ namespace JoeEngine {
         EndSingleTimeCommands(device, commandBuffer, graphicsQueue, commandPool);
     }
 
-    void JETexture::CreateTextureImageView(VkDevice device) {
-        m_textureImageView = CreateImageView(device, m_textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+    void JETextureLibrary::CreateTextureImageView(VkDevice device) {
+        m_imageViews[m_numTextures] = CreateImageView(device, m_images[m_numTextures], VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
     }
 
-    void JETexture::CreateTextureSampler(VkDevice device) {
+    void JETextureLibrary::CreateTextureSampler(VkDevice device) {
         VkSamplerCreateInfo samplerInfo = {};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -96,8 +98,8 @@ namespace JoeEngine {
         samplerInfo.minLod = 0.0f;
         samplerInfo.maxLod = 0.0f;
 
-        if (vkCreateSampler(device, &samplerInfo, nullptr, &m_textureSampler) != VK_SUCCESS) {
+        if (vkCreateSampler(device, &samplerInfo, nullptr, &m_samplers[m_numTextures]) != VK_SUCCESS) {
             throw std::runtime_error("failed to create texture sampler!");
         }
-    }*/
+    }
 }

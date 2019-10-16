@@ -11,6 +11,7 @@
 #include "VulkanShader.h"
 #include "VulkanRenderingTypes.h"
 #include "MeshBufferManager.h"
+#include "TextureLibrary.h"
 #include "../Components/Mesh/MeshComponent.h"
 #include "../Components/Transform/TransformComponent.h"
 
@@ -100,6 +101,8 @@ namespace JoeEngine {
         void CleanupShaders();
 
         // Textures
+        JETextureLibrary m_textureLibraryGlobal;
+        
         std::vector<JETexture> m_textures;
         void CreateTextures();
         void CleanupTextures();
@@ -172,6 +175,7 @@ namespace JoeEngine {
         // Mesh Buffer Manager Functions
         const std::vector<BoundingBoxData>& GetBoundingBoxData() const;
         MeshComponent CreateMesh(const std::string& filepath);
+        uint32_t LoadTexture(const std::string& filepath);
 
         // Renderer Functions
         void DrawShadowPass(const std::vector<MeshComponent>& meshComponents, const std::vector<TransformComponent>& transformComponents,

@@ -31,6 +31,15 @@ namespace JoeEngine {
                 }
             }
             
+            uint32_t tex1 = m_engineInstance->LoadTexture(JE_TEXTURES_DIR + "ducreux.jpg");
+
+            MaterialComponent mat1;
+            mat1.m_geomType = TRIANGLES;
+            mat1.m_materialSettings = ALL_SETTINGS;
+            mat1.m_renderLayer = OPAQUE;
+            mat1.m_sourceTextures.push_back(tex1);
+            m_engineInstance->RegisterMaterialComponent(mat1);
+
             Entity newEntity = m_engineInstance->SpawnEntity();
             entities.push_back(newEntity);
             MeshComponent meshComp_plane = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "plane.obj");

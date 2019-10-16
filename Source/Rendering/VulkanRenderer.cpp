@@ -428,6 +428,8 @@ namespace JoeEngine {
             t.Cleanup(m_device);
         }
         m_textures.clear();
+
+        m_textureLibraryGlobal.Cleanup(m_device);
     }
 
     void JEVulkanRenderer::CreateShaders() {
@@ -490,6 +492,12 @@ namespace JoeEngine {
 
     MeshComponent JEVulkanRenderer::CreateMesh(const std::string& filepath) {
         return m_meshBufferManager.CreateMeshComponent(filepath);
+    }
+
+    uint32_t JEVulkanRenderer::LoadTexture(const std::string& filepath) {
+        // TODO: specify global/level/etc
+        const uint32_t textureID = m_textureLibraryGlobal.CreateTexture(m_device, m_physicalDevice, m_graphicsQueue, m_commandPool, filepath);
+        return textureID;
     }
 
     void JEVulkanRenderer::DrawBoundingBoxMesh(VkCommandBuffer commandBuffer) {
