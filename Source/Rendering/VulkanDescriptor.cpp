@@ -24,11 +24,11 @@ namespace JoeEngine {
     }
 
     void JEVulkanDescriptor::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages,
-        const std::vector<void*>& buffers, const std::vector<uint32_t>& bufferSizes) {
-        m_buffers.resize(buffers.size());
-        m_deviceMemory.resize(buffers.size());
+        const std::vector<uint32_t>& bufferSizes) {
+        m_buffers.resize(bufferSizes.size());
+        m_deviceMemory.resize(bufferSizes.size());
 
-        for (uint32_t i = 0; i < buffers.size(); ++i) {
+        for (uint32_t i = 0; i < bufferSizes.size(); ++i) {
             const VkDeviceSize bufferSize = bufferSizes[i];
             m_buffers[i].resize(numSwapChainImages);
             m_deviceMemory[i].resize(numSwapChainImages);
@@ -38,7 +38,7 @@ namespace JoeEngine {
             }
         }
     }
-
+    
     void JEVulkanDescriptor::CreateDescriptorPool(VkDevice device, uint32_t numSwapChainImages, uint32_t numSourceTextures, uint32_t numUniformBuffers) {
         std::vector<VkDescriptorPoolSize> poolSizes;
         VkDescriptorPoolSize poolSize;
@@ -100,6 +100,9 @@ namespace JoeEngine {
             for (uint32_t j = 0; j < imageViews.size(); ++j) {
                 VkDescriptorImageInfo imageInfo = {};
                 imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                if (j == 2 || j == 3) { // Depth stencil G-buffer and shadow map
+                    imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+                }
                 imageInfo.imageView = imageViews[j];
                 imageInfo.sampler = samplers[j];
                 imageInfos.push_back(imageInfo);
@@ -107,7 +110,7 @@ namespace JoeEngine {
 
             std::vector<VkWriteDescriptorSet> descriptorWrites;
             for (uint32_t j = 0; j < bufferInfos.size(); ++j) {
-                VkWriteDescriptorSet descWrite;
+                VkWriteDescriptorSet descWrite = {};
                 descWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
                 descWrite.dstSet = m_descriptorSets[i];
                 descWrite.dstBinding = j;
@@ -115,10 +118,13 @@ namespace JoeEngine {
                 descWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 descWrite.descriptorCount = 1;
                 descWrite.pBufferInfo = &bufferInfos[j];
+                descWrite.pImageInfo = nullptr;
+                descWrite.pNext = nullptr;
+                descriptorWrites.push_back(descWrite);
             }
 
             for (uint32_t j = 0; j < imageInfos.size(); ++j) {
-                VkWriteDescriptorSet descWrite;
+                VkWriteDescriptorSet descWrite = {};
                 descWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
                 descWrite.dstSet = m_descriptorSets[i];
                 descWrite.dstBinding = j + bufferInfos.size();
@@ -126,6 +132,9 @@ namespace JoeEngine {
                 descWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 descWrite.descriptorCount = 1;
                 descWrite.pImageInfo = &imageInfos[j];
+                descWrite.pBufferInfo = nullptr;
+                descWrite.pNext = nullptr;
+                descriptorWrites.push_back(descWrite);
             }
 
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);

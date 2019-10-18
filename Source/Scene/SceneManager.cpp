@@ -15,7 +15,7 @@ namespace JoeEngine {
             // TODO: this has to happen first or else bad things
             // Camera
             m_camera = JECamera(glm::vec3(0.0f, 4.0f, 12.0f), glm::vec3(0.0f, 0.0f, 0.0f), windowExtent.width / (float)windowExtent.height, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE);
-            m_shadowCamera = JECamera(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPassExtent.width / (float)shadowPassExtent.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
+            m_shadowCamera = JECamera(glm::vec3(4.0f, 4.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPassExtent.width / (float)shadowPassExtent.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
 
             std::vector<Entity> entities;
             MeshComponent meshComp_wahoo = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "wahoo.obj");
@@ -61,7 +61,7 @@ namespace JoeEngine {
             TransformComponent* trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(newEntity);
             trans->SetTranslation(glm::vec3(0.0f, -0.25f, 0.0f));
             trans->SetRotation(glm::angleAxis(glm::radians(-90.0f), glm::vec3(1, 0, 0)));
-            trans->SetScale(glm::vec3(25.0f, 25.0f, 1.0f));
+            trans->SetScale(glm::vec3(12.0f, 12.0f, 1.0f));
             m_engineInstance->AddComponent<RotatorComponent>(newEntity);
 
             RotatorComponent* rot = m_engineInstance->GetComponent<RotatorComponent, RotatorComponentManager>(newEntity);

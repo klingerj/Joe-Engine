@@ -69,7 +69,7 @@ namespace JoeEngine {
 
             for (uint32_t i = 0; i < numSourceTextures; ++i) {
                 VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
-                samplerLayoutBinding.binding = i;
+                samplerLayoutBinding.binding = i + numUniformBuffers;
                 samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 samplerLayoutBinding.descriptorCount = 1;
                 samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -132,15 +132,14 @@ namespace JoeEngine {
     public:
         JEShadowShader() = delete;
         JEShadowShader(const MaterialComponent& materialComponent, uint32_t numSourceTextures, VkDevice device, VkPhysicalDevice physicalDevice,
-            const JEVulkanSwapChain& swapChain, VkRenderPass renderPass, const std::string& vertPath, const std::string& fragPath) :
+            VkExtent2D extent, VkRenderPass renderPass, const std::string& vertPath, const std::string& fragPath) :
             JEVulkanShader(device, vertPath, fragPath) {
             auto vertShaderCode = ReadFile(m_vertPath);
             // Create shader modules
             VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
 
-            uint32_t numSwapChainImages = swapChain.GetImageViews().size();
             CreateDescriptorSetLayout(device, numSourceTextures, 0);
-            CreateGraphicsPipeline(device, vertShaderModule, VK_NULL_HANDLE, swapChain.GetExtent(), renderPass, materialComponent);
+            CreateGraphicsPipeline(device, vertShaderModule, VK_NULL_HANDLE, extent, renderPass, materialComponent);
         }
 
         void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) override;

@@ -47,7 +47,8 @@ namespace JoeEngine {
                     swapChain, renderPass, vertPath, fragPath);
                 break;
             case SHADOW:
-                newShader = new JEShadowShader(materialComponent, 0, device, physicalDevice, swapChain, renderPass, vertPath, fragPath);
+                newShader = new JEShadowShader(materialComponent, 0, device, physicalDevice, { JE_DEFAULT_SHADOW_MAP_WIDTH, JE_DEFAULT_SHADOW_MAP_HEIGHT },
+                    renderPass, vertPath, fragPath);
                 break;
             case DEFERRED_GEOM:
                 newShader = new JEDeferredGeometryShader(materialComponent, numSourceTextures, device, physicalDevice,
@@ -63,10 +64,10 @@ namespace JoeEngine {
 
         uint32_t CreateDescriptor(VkDevice device, VkPhysicalDevice physicalDevice, const JEVulkanSwapChain& swapChain,
             const MaterialComponent& materialComponent, const std::vector<VkImageView>& imageViews,
-            const std::vector<VkSampler> samplers, const std::vector<void*>& buffers, const std::vector<uint32_t>& bufferSizes) {
+            const std::vector<VkSampler> samplers, const std::vector<uint32_t>& bufferSizes) {
             const JEDeferredShader& shader = *(JEDeferredShader*)GetShaderAt(materialComponent.m_shaderID);
             m_descriptors.emplace_back(JEVulkanDescriptor(physicalDevice, device, materialComponent, swapChain.GetImageViews().size(),
-                imageViews, samplers, buffers, bufferSizes, shader.GetDescriptorSetLayout()));
+                imageViews, samplers, bufferSizes, shader.GetDescriptorSetLayout()));
             return m_numDescriptors++;
         }
 

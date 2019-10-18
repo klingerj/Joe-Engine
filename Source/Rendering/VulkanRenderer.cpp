@@ -77,12 +77,12 @@ namespace JoeEngine {
         //CreateTextures();
         // Create the shadow pass shader
         m_shadowShaderID = m_shaderManager.CreateShader(m_device, m_physicalDevice, m_vulkanSwapChain, MaterialComponent(), 0,
-            m_shadowPass.renderPass, JE_SHADER_DIR + "vert_shadow.vert", "", SHADOW);
+            m_shadowPass.renderPass, JE_SHADER_DIR + "vert_shadow.spv", "", SHADOW);
 
         // Create the deferred geometry shader
         if constexpr (isDeferred) {
             m_deferredGeometryShaderID = m_shaderManager.CreateShader(m_device, m_physicalDevice, m_vulkanSwapChain, MaterialComponent(), 0,
-                m_deferredPass.renderPass, JE_SHADER_DIR + "vert_deferred_geom.vert", JE_SHADER_DIR + "frag_deferred_geom_new.frag", DEFERRED_GEOM);
+                m_deferredPass.renderPass, JE_SHADER_DIR + "vert_deferred_geom.spv", JE_SHADER_DIR + "frag_deferred_geom_new.spv", DEFERRED_GEOM);
         }
         //CreateShaders();
 
@@ -340,7 +340,7 @@ namespace JoeEngine {
         VkCommandPoolCreateInfo poolInfo = {};
         poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
         poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-        poolInfo.flags = 0;
+        poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
         if (vkCreateCommandPool(m_device, &poolInfo, nullptr, &m_commandPool) != VK_SUCCESS) {
             throw std::runtime_error("failed to create command pool!");
@@ -473,7 +473,7 @@ namespace JoeEngine {
     }
 
     void JEVulkanRenderer::CleanupShaders() {
-        for (auto& shadowPassShader : m_shadowPassShaders) {
+        /*for (auto& shadowPassShader : m_shadowPassShaders) {
             shadowPassShader.Cleanup(m_device);
         }
         m_deferredPassGeometryShader.Cleanup(m_device);
@@ -484,7 +484,7 @@ namespace JoeEngine {
         m_shadowPassShaders.clear();
         m_postProcessingShaders.clear();
         m_flatShader.Cleanup(m_device);
-        m_forwardShader.Cleanup(m_device);
+        m_forwardShader.Cleanup(m_device);*/
     }
 
     void JEVulkanRenderer::UpdateShaderUniformBuffers(const std::vector<MaterialComponent>& materialComponents, uint32_t imageIndex) {
@@ -499,10 +499,11 @@ namespace JoeEngine {
 
             if constexpr (isDeferred) {
                 // Add camera inv view/proj matrices as uniforms
-                std::array<glm::mat4, 2> uniformInvViewProjData = { m_sceneManager->m_camera.GetInvProj(), m_sceneManager->m_camera.GetInvView() };
+                //std::array<glm::mat4, 2> uniformInvViewProjData = { m_sceneManager->m_camera.GetInvProj(), m_sceneManager->m_camera.GetInvView() };
+                std::array<glm::mat4, 2> uniformInvViewProjData = { glm::inverse(m_sceneManager->m_camera.GetProj()), glm::inverse(m_sceneManager->m_camera.GetView()) };
 
                 // Add light viewProj matrix (TODO: matrices) as uniforms
-                std::array<glm::mat4, 1> uniformLightData = { m_sceneManager->m_shadowCamera.GetViewProj() };
+                std::array<glm::mat4, 1> uniformLightData = { m_sceneManager->m_shadowCamera.GetOrthoViewProj() };
 
                 std::vector<void*> buffers;
                 std::vector<uint32_t> sizes;
@@ -567,24 +568,25 @@ namespace JoeEngine {
             materialComponent, imageViews.size(), renderPass, vertFilepath, fragFilepath, DEFERRED);
 
         // Add camera inv view/proj matrices as uniforms
-        std::array<glm::mat4, 2> uniformInvViewProjData = { m_sceneManager->m_camera.GetInvProj(), m_sceneManager->m_camera.GetInvView() };
+        std::array<glm::mat4, 2> uniformInvViewProjData = { };
 
         // Add light viewProj matrix (TODO: matrices) as uniforms
-        std::array<glm::mat4, 1> uniformLightData = { m_sceneManager->m_shadowCamera.GetViewProj() };
+        std::array<glm::mat4, 1> uniformLightData = { };
+        // Note: just need the sizes, not the data
 
-        std::vector<void*> buffers;
+        //std::vector<void*> buffers;
         std::vector<uint32_t> sizes;
 
-        buffers.push_back(uniformInvViewProjData.data());
+        /*buffers.push_back(uniformInvViewProjData.data());
         buffers.push_back(uniformLightData.data());
-        buffers.insert(buffers.end(), materialComponent.m_uniformData.begin(), materialComponent.m_uniformData.end());
+        buffers.insert(buffers.end(), materialComponent.m_uniformData.begin(), materialComponent.m_uniformData.end());*/
 
         sizes.push_back(sizeof(glm::mat4) * uniformInvViewProjData.size());
         sizes.push_back(sizeof(glm::mat4) * uniformLightData.size());
         sizes.insert(sizes.end(), materialComponent.m_uniformDataSizes.begin(), materialComponent.m_uniformDataSizes.end());
 
         materialComponent.m_descriptorID = m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain,
-            materialComponent, imageViews, samplers, buffers, sizes);
+            materialComponent, imageViews, samplers, sizes);
     }
 
     void JEVulkanRenderer::DrawBoundingBoxMesh(VkCommandBuffer commandBuffer) {
@@ -625,9 +627,9 @@ namespace JoeEngine {
     void JEVulkanRenderer::DrawShadowPass(/*std vector of JELights*/const std::vector<MeshComponent>& meshComponents,
                                                                     const std::vector<TransformComponent>& transformComponents, const JECamera& camera) {
         // Reset the command buffer, as we have decided to re-record it
-        if (vkResetCommandBuffer(m_shadowPass.commandBuffer, VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
+        /*if (vkResetCommandBuffer(m_shadowPass.commandBuffer, VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
             throw std::runtime_error("failed to reset shadow pass command buffer!");
-        }
+        }*/
         // TODO: keep local list of ShadowPassStructs. Push_back to this list during this function for each shadow
         // pass that we do, aka for each light in the vector.
         // Or, do that in a different function so that the render passes and framebuffers are all already created before this function.
@@ -683,9 +685,9 @@ namespace JoeEngine {
                                               const JECamera& camera) {
         if constexpr (isDeferred) {
             /// Construct deferred geometry render pass
-            if (vkResetCommandBuffer(m_deferredPass.commandBuffer, VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
+            /*if (vkResetCommandBuffer(m_deferredPass.commandBuffer, VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
                 throw std::runtime_error("failed to reset deferred geometry pass command buffer!");
-            }
+            }*/
 
             VkCommandBufferBeginInfo beginInfo = {};
             beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -732,9 +734,9 @@ namespace JoeEngine {
 
             // Begin command buffer
             for (uint32_t i = 0; i < m_commandBuffers.size(); ++i) {
-                if (vkResetCommandBuffer(m_commandBuffers[i], VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
+                /*if (vkResetCommandBuffer(m_commandBuffers[i], VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
                     throw std::runtime_error("failed to reset command buffer!");
-                }
+                }*/
 
                 VkCommandBufferBeginInfo beginInfo = {};
                 beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -808,11 +810,8 @@ namespace JoeEngine {
                 }
             }
         } else {
+        /*
             for (uint32_t i = 0; i < m_commandBuffers.size(); ++i) {
-                if (vkResetCommandBuffer(m_commandBuffers[i], VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
-                    throw std::runtime_error("failed to reset command buffer!");
-                }
-
                 VkCommandBufferBeginInfo beginInfo = {};
                 beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
                 beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -901,7 +900,7 @@ namespace JoeEngine {
                 if (vkEndCommandBuffer(m_commandBuffers[i]) != VK_SUCCESS) {
                     throw std::runtime_error("failed to record command buffer!");
                 }
-            }
+            }*/
         }
     }
 
@@ -916,7 +915,7 @@ namespace JoeEngine {
         depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 
         VkAttachmentReference depthAttachmentRef = {};
         depthAttachmentRef.attachment = 0;
@@ -933,17 +932,17 @@ namespace JoeEngine {
 
         dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
         dependencies[0].dstSubpass = 0;
-        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-        dependencies[0].srcAccessMask = 0;
-        dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
         dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
         dependencies[1].srcSubpass = 0;
         dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
         dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
         dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
         dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
         dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
@@ -1130,7 +1129,7 @@ namespace JoeEngine {
             attachmentDescs[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             if (i == 2) {
                 attachmentDescs[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-                attachmentDescs[i].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                attachmentDescs[i].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
             } else {
                 attachmentDescs[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
                 attachmentDescs[i].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -1494,6 +1493,7 @@ namespace JoeEngine {
             throw std::runtime_error("failed to submit command buffer!");
         }
         
+        // TODO: this limits # of frames in flight to 1
         vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
         VkPresentInfoKHR presentInfo = {};

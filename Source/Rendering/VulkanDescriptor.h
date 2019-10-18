@@ -13,10 +13,10 @@ namespace JoeEngine {
         std::vector<std::vector<VkBuffer>> m_buffers;
         std::vector<std::vector<VkDeviceMemory>> m_deviceMemory;
         
-        const VkDevice& m_device;
+        const VkDevice m_device;
 
         void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages, 
-                                  const std::vector<void*>& buffers, const std::vector<uint32_t>& bufferSizes);
+                                  const std::vector<uint32_t>& bufferSizes);
         void CreateDescriptorPool(VkDevice device, uint32_t numSwapChainImages, uint32_t numSourceTextures, uint32_t numUniformBuffers);
         void CreateDescriptorSets(VkDevice device, const MaterialComponent& materialComponent, uint32_t numSwapChainImages,
             const std::vector<VkImageView>& imageViews, const std::vector<VkSampler>& samplers, const std::vector<uint32_t>& bufferSizes,
@@ -26,10 +26,10 @@ namespace JoeEngine {
         JEVulkanDescriptor() = delete;
         JEVulkanDescriptor(VkPhysicalDevice physicalDevice, VkDevice device, const MaterialComponent& materialComponent,
             uint32_t numSwapChainImages, const std::vector<VkImageView>& imageViews, const std::vector<VkSampler>& samplers,
-            const std::vector<void*>& buffers, const std::vector<uint32_t>& bufferSizes, VkDescriptorSetLayout descSetLayout) :
+            const std::vector<uint32_t>& bufferSizes, VkDescriptorSetLayout descSetLayout) :
             m_device(device) {
-            CreateDescriptorPool(device, numSwapChainImages, imageViews.size(), buffers.size());
-            CreateUniformBuffers(physicalDevice, device, numSwapChainImages, buffers, bufferSizes);
+            CreateDescriptorPool(device, numSwapChainImages, imageViews.size(), bufferSizes.size());
+            CreateUniformBuffers(physicalDevice, device, numSwapChainImages, bufferSizes);
             CreateDescriptorSets(device, materialComponent, numSwapChainImages, imageViews, samplers, bufferSizes, descSetLayout);
         }
         ~JEVulkanDescriptor() {}

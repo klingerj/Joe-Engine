@@ -91,13 +91,13 @@ namespace JoeEngine {
 
         // Shaders
         // TODO: Move this to a shader manager
-        std::vector<JEVulkanShadowPassShader> m_shadowPassShaders;
-        JEVulkanDeferredPassGeometryShader m_deferredPassGeometryShader;
-        JEVulkanDeferredPassLightingShader m_deferredPassLightingShader; // TODO: change me to a list?
+        //std::vector<JEVulkanShadowPassShader> m_shadowPassShaders;
+        //JEVulkanDeferredPassGeometryShader m_deferredPassGeometryShader;
+        //JEVulkanDeferredPassLightingShader m_deferredPassLightingShader; // TODO: change me to a list?
         //std::vector<JEVulkanMeshShader> m_meshShaders; // TODO: add this to VulkanShader.h and re-implement
         std::vector<JEVulkanPostProcessShader> m_postProcessingShaders;
-        JEVulkanFlatShader m_flatShader;
-        JEVulkanForwardShader m_forwardShader;
+        //JEVulkanFlatShader m_flatShader;
+        //JEVulkanForwardShader m_forwardShader;
         void CreateShaders();
         void CleanupShaders();
         JEShaderManager m_shaderManager;

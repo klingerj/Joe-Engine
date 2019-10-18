@@ -25,6 +25,7 @@ void main() {
     vec3 albedoColor = texture(albedoMap, fragUV).xyz;
     vec3 gBuffer_Color = texture(gBufferColor, fragUV).xyz;
     vec3 gBuffer_Normal = texture(gBufferNormal, fragUV).xyz * 2 - 1;
+    //outColor = vec4(gBuffer_Normal, 1.0); return;
 
     // Get world space position from fragment position and depth
     float depth = texture(gBufferDepth, fragUV).r;
@@ -32,6 +33,7 @@ void main() {
     vec4 viewPos = ubo_viewProj_inv.invProj * vec4(ndcPos, 1.0);
     viewPos /= viewPos.w;
     vec3 worldPos = (ubo_viewProj_inv.invView * viewPos).xyz;
+    //outColor = vec4(vec3(depth), 1); return;
     //outColor = vec4(worldPos, 1); return;
 
     // Shadow mapping
