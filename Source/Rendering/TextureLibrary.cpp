@@ -2,11 +2,11 @@
 
 #include "TextureLibrary.h"
 
-//#define STB_IMAGE_IMPLEMENTATION
-//#include "stb_image.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 namespace JoeEngine {
-    /*void JETextureLibrary::Cleanup(VkDevice device) {
+    void JETextureLibrary::Cleanup(VkDevice device) {
         for (uint32_t i = 0; i < m_numTextures; ++i) {
             vkDestroySampler(device, m_samplers[i], nullptr);
             vkDestroyImageView(device, m_imageViews[i], nullptr);
@@ -101,5 +101,5 @@ namespace JoeEngine {
         if (vkCreateSampler(device, &samplerInfo, nullptr, &m_samplers[m_numTextures]) != VK_SUCCESS) {
             throw std::runtime_error("failed to create texture sampler!");
         }
-    }*/
+    }
 }

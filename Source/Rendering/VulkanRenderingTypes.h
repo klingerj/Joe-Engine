@@ -5,6 +5,8 @@
 
 #include "vulkan/vulkan.h"
 
+#include "../Utils/Common.h"
+
 namespace JoeEngine {
     // Rendering-related structs
 

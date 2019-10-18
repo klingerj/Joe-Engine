@@ -71,9 +71,11 @@ namespace JoeEngine {
                 const std::vector<BoundingBoxData>& boundingBoxes = m_vulkanRenderer.GetBoundingBoxData();
 
                 std::vector<MeshComponent> meshComponentsPassedCulling;
-                meshComponentsPassedCulling.reserve(64);
-                std::vector<TransformComponent> transformComponentsPassedCulling;
-                transformComponentsPassedCulling.reserve(64);
+                std::vector<MaterialComponent> materialComponentsPassedCulling;
+                std::vector<glm::mat4> transformsPassedCulling;
+                meshComponentsPassedCulling.reserve(256);
+                materialComponentsPassedCulling.reserve(256);
+                transformsPassedCulling.reserve(256);
 
                 {
                     //ScopedTimer<float> timer("Frustum Culling");
@@ -88,19 +90,23 @@ namespace JoeEngine {
                         const TransformComponent& transformComp = transformComponents.GetData()[i];
                         if (m_sceneManager.m_camera.Cull(meshComp, transformComp, boundingBoxes[meshComp.GetVertexHandle()])) {
                             meshComponentsPassedCulling.emplace_back(meshComp);
-                            transformComponentsPassedCulling.emplace_back(transformComp);
+                            transformsPassedCulling.emplace_back(transformComp.GetTransform());
+                            materialComponentsPassedCulling.emplace_back(materialComponents.GetData()[i]);
                         }
                     }
                 }
 
+                // TODO: sort by render layer, material (shader index and source textures), and mesh
+                // the renderer will attempt to render them as instanced geometry and will minimize pipeline/descriptor binding
+
                 {
                     //ScopedTimer<float> timer("Deferred Geom/Lighting/Post Passes Command Buffer Recording");
-                    m_vulkanRenderer.DrawMeshComponents(meshComponentsPassedCulling, transformComponentsPassedCulling, m_sceneManager.m_camera);
+                    m_vulkanRenderer.DrawMeshComponents(meshComponentsPassedCulling, materialComponentsPassedCulling, transformsPassedCulling, m_sceneManager.m_camera);
                 }
                 
                 {
                     //ScopedTimer<float> timer("GPU workload submission");
-                    m_vulkanRenderer.SubmitFrame();
+                    m_vulkanRenderer.SubmitFrame(materialComponentsPassedCulling);
                 }
 
                 // TODO: clean this up?
@@ -197,6 +203,6 @@ namespace JoeEngine {
                                                      const std::string& vertFilepath, const std::string& fragFilepath) {
         // send the mat comp to the renderer, which will create a new shader with the shader mgr
         // that should return a handle to the shader mgr
-        materialComponent.m_shaderID = m_vulkanRenderer.CreateShader(vertFilepath, fragFilepath);
+        m_vulkanRenderer.CreateShader(materialComponent, vertFilepath, fragFilepath);
     }
 }

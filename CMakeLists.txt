@@ -54,6 +54,8 @@ set(SOURCE_LIST
     "Source/Rendering/VulkanShader.h"
     "Source/Rendering/ShaderManager.cpp"
     "Source/Rendering/ShaderManager.h"
+    "Source/Rendering/VulkanDescriptor.cpp"
+    "Source/Rendering/VulkanDescriptor.h"
     "Source/Rendering/VulkanSwapChain.cpp"
     "Source/Rendering/VulkanSwapChain.h"
     "Source/Rendering/VulkanWindow.cpp"

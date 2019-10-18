@@ -36,7 +36,7 @@ namespace JoeEngine {
 
     public:
 
-        JETextureLibrary() = default;
+        JETextureLibrary() : m_numTextures(0) {}
 
 
         ~JETextureLibrary() = default;
@@ -44,6 +44,10 @@ namespace JoeEngine {
 
         uint32_t CreateTexture(VkDevice device, VkPhysicalDevice physicalDevice, const JEVulkanQueue& graphicsQueue,
             VkCommandPool commandPool, const std::string& filepath) {
+            m_images.push_back(VK_NULL_HANDLE);
+            m_deviceMemory.push_back(VK_NULL_HANDLE);
+            m_imageViews.push_back(VK_NULL_HANDLE);
+            m_samplers.push_back(VK_NULL_HANDLE);
             CreateTextureImage(physicalDevice, device, commandPool, graphicsQueue, filepath);
             CreateTextureImageView(device);
             CreateTextureSampler(device);

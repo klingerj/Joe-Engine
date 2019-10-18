@@ -11,6 +11,7 @@
 #include "VulkanShader.h"
 #include "VulkanRenderingTypes.h"
 #include "MeshBufferManager.h"
+#include "ShaderManager.h"
 #include "TextureLibrary.h"
 #include "../Components/Mesh/MeshComponent.h"
 #include "../Components/Transform/TransformComponent.h"
@@ -99,13 +100,17 @@ namespace JoeEngine {
         JEVulkanForwardShader m_forwardShader;
         void CreateShaders();
         void CleanupShaders();
+        JEShaderManager m_shaderManager;
+        uint32_t m_shadowShaderID;
+        uint32_t m_deferredGeometryShaderID;
+        std::array<glm::mat4, 2> m_uniformInvViewProjData;
 
         // Textures
-        //JETextureLibrary m_textureLibraryGlobal;
+        JETextureLibrary m_textureLibraryGlobal;
         
-        std::vector<JETexture> m_textures;
-        void CreateTextures();
-        void CleanupTextures();
+        //std::vector<JETexture> m_textures;
+        //void CreateTextures();
+        //void CleanupTextures();
 
         // Helpers for offscreen rendering
         void CreateFramebufferAttachment(JEFramebufferAttachment& depth, VkExtent2D extent, VkImageUsageFlagBits usageBits, VkFormat format);
@@ -153,7 +158,7 @@ namespace JoeEngine {
         void DrawScreenSpaceTriMesh(VkCommandBuffer commandBuffer);
         void DrawBoundingBoxMesh(VkCommandBuffer commandBuffer);
 
-        void UpdateShaderUniformBuffers(uint32_t imageIndex);
+        void UpdateShaderUniformBuffers(const std::vector<MaterialComponent>& materialComponents, uint32_t imageIndex);
 
     public:
         JEVulkanRenderer() : m_width(JE_DEFAULT_SCREEN_WIDTH), m_height(JE_DEFAULT_SCREEN_HEIGHT), m_MAX_FRAMES_IN_FLIGHT(JE_DEFAULT_MAX_FRAMES_IN_FLIGHT),
@@ -170,17 +175,18 @@ namespace JoeEngine {
         void FramebufferResized() { m_didFramebufferResize = true; }
 
         // Submit work to GPU
-        void SubmitFrame();
+        void SubmitFrame(const std::vector<MaterialComponent>& materialComponents);
 
         // Mesh Buffer Manager Functions
         const std::vector<BoundingBoxData>& GetBoundingBoxData() const;
         MeshComponent CreateMesh(const std::string& filepath);
         uint32_t CreateTexture(const std::string& filepath);
-        uint32_t CreateShader(const std::string& vertFilepath, const std::string& fragFilepath);
+        void CreateShader(MaterialComponent& materialComponent, const std::string& vertFilepath, const std::string& fragFilepath);
 
         // Renderer Functions
         void DrawShadowPass(const std::vector<MeshComponent>& meshComponents, const std::vector<TransformComponent>& transformComponents, const JECamera& camera);
-        void DrawMeshComponents(const std::vector<MeshComponent>& meshComponents, const std::vector<TransformComponent>& transformComponents, const JECamera& camera);
+        void DrawMeshComponents(const std::vector<MeshComponent>& meshComponents, const std::vector<MaterialComponent>& materialComponents,
+                                const std::vector<glm::mat4>& transformComponents, const JECamera& camera);
 
         void WaitForIdleDevice() {
             vkDeviceWaitIdle(m_device);
