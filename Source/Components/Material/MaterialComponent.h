@@ -25,19 +25,29 @@ namespace JoeEngine {
 
     class MaterialComponent {
     public:
-        int m_shaderID;
-        int m_descriptorID;
+        // Characteristics
         uint32_t m_materialSettings;
         uint32_t m_geomType;
         uint32_t m_renderLayer;
-        std::vector<int> m_sourceTextures;
+        
+        // Material IDs
+        uint32_t m_shaderID;
+        uint32_t m_descriptorID;
+
+        // Textures
+        uint32_t m_texAlbedo;
+        uint32_t m_texRoughness;
+        uint32_t m_texMetallic;
+        uint32_t m_texNormal;
+
+        // Uniforms
         std::vector<void*> m_uniformData;
         std::vector<uint32_t> m_uniformDataSizes;
 
-        MaterialComponent() : MaterialComponent(-1, -1, ALL_SETTINGS, TRIANGLES, OPAQUE) {}
-        MaterialComponent(int shaderID, int descID, uint32_t matSettings, uint32_t geomType, uint32_t renderLayer) :
-                          m_shaderID(shaderID), m_descriptorID(descID), m_materialSettings(matSettings),
-                          m_geomType(geomType), m_renderLayer(renderLayer) {}
+        MaterialComponent() : MaterialComponent(ALL_SETTINGS, TRIANGLES, OPAQUE) {}
+        MaterialComponent(uint32_t matSettings, uint32_t geomType, uint32_t renderLayer) :
+            m_materialSettings(matSettings), m_geomType(geomType), m_renderLayer(renderLayer),
+            m_shaderID(0), m_descriptorID(0), m_texAlbedo(0), m_texRoughness(0), m_texMetallic(0), m_texNormal(0) {}
         ~MaterialComponent() = default;
     };
 }

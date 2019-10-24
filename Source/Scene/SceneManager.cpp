@@ -22,13 +22,27 @@ namespace JoeEngine {
             MeshComponent meshComp_sphere = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "sphere.obj");
 
             uint32_t tex1 = m_engineInstance->LoadTexture(JE_TEXTURES_DIR + "ducreux.jpg");
+            uint32_t tex2 = m_engineInstance->LoadTexture(JE_TEXTURES_DIR + "Metal_Plate_022a_Base_Color.jpg");
+            uint32_t tex3 = m_engineInstance->LoadTexture(JE_TEXTURES_DIR + "Metal_Plate_022a_Roughness.jpg");
+            uint32_t tex4 = m_engineInstance->LoadTexture(JE_TEXTURES_DIR + "Metal_Plate_022a_Metallic.jpg");
+            uint32_t tex5 = m_engineInstance->LoadTexture(JE_TEXTURES_DIR + "Metal_Plate_022a_Normal.jpg");
 
-            MaterialComponent mat1;
-            mat1.m_geomType = TRIANGLES;
-            mat1.m_materialSettings = ALL_SETTINGS;
-            mat1.m_renderLayer = OPAQUE;
-            mat1.m_sourceTextures.push_back(tex1);
-            m_engineInstance->RegisterMaterialComponent(mat1, JE_SHADER_DIR + "vert_deferred_lighting.spv", JE_SHADER_DIR + "frag_deferred_lighting_new.spv");
+            MaterialComponent pbrMetalPlate;
+            pbrMetalPlate.m_geomType = TRIANGLES;
+            pbrMetalPlate.m_materialSettings = ALL_SETTINGS;
+            pbrMetalPlate.m_renderLayer = OPAQUE;
+            pbrMetalPlate.m_texAlbedo = tex2;
+            pbrMetalPlate.m_texRoughness = tex3;
+            pbrMetalPlate.m_texMetallic = tex4;
+            pbrMetalPlate.m_texNormal = tex5;
+            m_engineInstance->CreateShader(pbrMetalPlate, JE_SHADER_DIR + "vert_deferred_lighting.spv", JE_SHADER_DIR + "frag_deferred_lighting_new.spv");
+            m_engineInstance->CreateDescriptor(pbrMetalPlate);
+            
+            MaterialComponent ducreauxLambert;
+            ducreauxLambert.m_geomType = pbrMetalPlate.m_geomType;
+            ducreauxLambert.m_materialSettings = pbrMetalPlate.m_materialSettings;
+            ducreauxLambert.m_renderLayer = pbrMetalPlate.m_renderLayer;
+            ducreauxLambert.m_texAlbedo = tex1;
 
             for (int i = 0; i < 64; ++i) {
                 for (int j = 0; j < 64; ++j) {
@@ -36,7 +50,7 @@ namespace JoeEngine {
                     entities.push_back(newEntity);
                     m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, i % 2 == 0 ? meshComp_wahoo : meshComp_sphere);
                     
-                    m_engineInstance->SetComponent<JEMaterialComponentManager>(newEntity, mat1);
+                    m_engineInstance->SetComponent<JEMaterialComponentManager>(newEntity, pbrMetalPlate);
 
                     TransformComponent* trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(newEntity);
                     trans->SetTranslation(glm::vec3(i - 32, 0, j - 32) * 0.1f);
@@ -56,7 +70,7 @@ namespace JoeEngine {
             MeshComponent meshComp_plane = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "plane.obj");
             m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_plane);
 
-            m_engineInstance->SetComponent<JEMaterialComponentManager>(newEntity, mat1);
+            m_engineInstance->SetComponent<JEMaterialComponentManager>(newEntity, pbrMetalPlate);
 
             TransformComponent* trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(newEntity);
             trans->SetTranslation(glm::vec3(0.0f, -0.25f, 0.0f));

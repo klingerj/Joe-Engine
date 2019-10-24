@@ -199,10 +199,12 @@ namespace JoeEngine {
         return m_vulkanRenderer.CreateTexture(filepath);
     }
 
-    void JEEngineInstance::RegisterMaterialComponent(MaterialComponent& materialComponent,
+    void JEEngineInstance::CreateShader(MaterialComponent& materialComponent,
                                                      const std::string& vertFilepath, const std::string& fragFilepath) {
-        // send the mat comp to the renderer, which will create a new shader with the shader mgr
-        // that should return a handle to the shader mgr
         m_vulkanRenderer.CreateShader(materialComponent, vertFilepath, fragFilepath);
+    }
+
+    void JEEngineInstance::CreateDescriptor(MaterialComponent& materialComponent) {
+        m_vulkanRenderer.CreateDescriptor(materialComponent);
     }
 }

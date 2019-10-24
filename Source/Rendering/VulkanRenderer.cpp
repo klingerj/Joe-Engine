@@ -74,17 +74,27 @@ namespace JoeEngine {
         // Create the swap chain framebuffers
         CreateSwapChainFramebuffers();
 
-        //CreateTextures();
         // Create the shadow pass shader
         m_shadowShaderID = m_shaderManager.CreateShader(m_device, m_physicalDevice, m_vulkanSwapChain, MaterialComponent(), 0,
             m_shadowPass.renderPass, JE_SHADER_DIR + "vert_shadow.spv", "", SHADOW);
 
         // Create the deferred geometry shader
         if constexpr (isDeferred) {
-            m_deferredGeometryShaderID = m_shaderManager.CreateShader(m_device, m_physicalDevice, m_vulkanSwapChain, MaterialComponent(), 0,
+            MaterialComponent temp;
+            // TODO: deal with this hard-coded number
+            m_deferredGeometryShaderID = m_shaderManager.CreateShader(m_device, m_physicalDevice, m_vulkanSwapChain, temp, 4,
                 m_deferredPass.renderPass, JE_SHADER_DIR + "vert_deferred_geom.spv", JE_SHADER_DIR + "frag_deferred_geom_new.spv", DEFERRED_GEOM);
+            
+            // TODO: hard-coded number
+            CreateShader(temp, JE_SHADER_DIR + "vert_deferred_lighting.spv", JE_SHADER_DIR + "frag_deferred_lighting_new.spv");
+            m_deferredLightingShaderID = temp.m_shaderID;
+            m_deferredLightingDescriptorID = m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain, temp,
+                { m_deferredPass.color.imageView, m_deferredPass.normal.imageView, m_deferredPass.depth.imageView, m_shadowPass.depth.imageView },
+                { m_deferredPass.sampler, m_deferredPass.sampler, m_deferredPass.sampler, m_shadowPass.depthSampler },
+                { sizeof(glm::mat4) * 2, sizeof(glm::mat4) });
         }
-        //CreateShaders();
+
+        m_textureLibraryGlobal.CreateTexture(m_device, m_physicalDevice, m_graphicsQueue, m_commandPool, JE_TEXTURES_DIR + "fallback.png");
 
         // Command buffers
         CreateShadowCommandBuffer();
@@ -485,6 +495,7 @@ namespace JoeEngine {
         m_postProcessingShaders.clear();
         m_flatShader.Cleanup(m_device);
         m_forwardShader.Cleanup(m_device);*/
+        m_shaderManager.Cleanup();
     }
 
     void JEVulkanRenderer::UpdateShaderUniformBuffers(const std::vector<MaterialComponent>& materialComponents, uint32_t imageIndex) {
@@ -537,7 +548,7 @@ namespace JoeEngine {
     }
 
     void JEVulkanRenderer::CreateShader(MaterialComponent& materialComponent, const std::string& vertFilepath,
-                                            const std::string& fragFilepath) {
+        const std::string& fragFilepath) {
         std::vector<VkImageView> imageViews;
         std::vector<VkSampler> samplers;
         if constexpr (isDeferred) {
@@ -548,15 +559,10 @@ namespace JoeEngine {
             samplers.push_back(m_deferredPass.sampler);
             samplers.push_back(m_deferredPass.sampler);
         }
-
+        
         // Shadow map(s)
         imageViews.push_back(m_shadowPass.depth.imageView);
         samplers.push_back(m_shadowPass.depthSampler);
-
-        for (uint8_t i = 0; i < materialComponent.m_sourceTextures.size(); ++i) {
-            imageViews.push_back(m_textureLibraryGlobal.GetImageViewAt(i));
-            samplers.push_back(m_textureLibraryGlobal.GetSamplerAt(i));
-        }
 
         VkRenderPass renderPass;
         if constexpr (isDeferred) {
@@ -566,6 +572,29 @@ namespace JoeEngine {
         }
         materialComponent.m_shaderID = m_shaderManager.CreateShader(m_device, m_physicalDevice, m_vulkanSwapChain,
             materialComponent, imageViews.size(), renderPass, vertFilepath, fragFilepath, DEFERRED);
+    }
+
+    void JEVulkanRenderer::CreateDescriptor(MaterialComponent& materialComponent) {
+        std::vector<VkImageView> imageViews;
+        imageViews.reserve(4);
+        std::vector<VkSampler> samplers;
+        samplers.reserve(4);
+        
+        // TODO: need to pass in the type of shader here. otherwise we can't use this function for both deferred lighting
+        // and deferred geometry passes.
+        // It'll be ugly temporarily with switch statements, but uh, we need it
+        // Also, VulkanDescriptor.h's CreateDescriptor currently assumes a JEDeferredShader. That should also take in the 
+        // shader type
+
+        // Source textures
+        imageViews.push_back(m_textureLibraryGlobal.GetImageViewAt(materialComponent.m_texAlbedo));
+        imageViews.push_back(m_textureLibraryGlobal.GetImageViewAt(materialComponent.m_texRoughness));
+        imageViews.push_back(m_textureLibraryGlobal.GetImageViewAt(materialComponent.m_texMetallic));
+        imageViews.push_back(m_textureLibraryGlobal.GetImageViewAt(materialComponent.m_texNormal));
+        samplers.push_back(m_textureLibraryGlobal.GetSamplerAt(materialComponent.m_texAlbedo));
+        samplers.push_back(m_textureLibraryGlobal.GetSamplerAt(materialComponent.m_texRoughness));
+        samplers.push_back(m_textureLibraryGlobal.GetSamplerAt(materialComponent.m_texMetallic));
+        samplers.push_back(m_textureLibraryGlobal.GetSamplerAt(materialComponent.m_texNormal));
 
         // Add camera inv view/proj matrices as uniforms
         std::array<glm::mat4, 2> uniformInvViewProjData = { };
@@ -574,12 +603,7 @@ namespace JoeEngine {
         std::array<glm::mat4, 1> uniformLightData = { };
         // Note: just need the sizes, not the data
 
-        //std::vector<void*> buffers;
         std::vector<uint32_t> sizes;
-
-        /*buffers.push_back(uniformInvViewProjData.data());
-        buffers.push_back(uniformLightData.data());
-        buffers.insert(buffers.end(), materialComponent.m_uniformData.begin(), materialComponent.m_uniformData.end());*/
 
         sizes.push_back(sizeof(glm::mat4) * uniformInvViewProjData.size());
         sizes.push_back(sizeof(glm::mat4) * uniformLightData.size());
@@ -685,10 +709,6 @@ namespace JoeEngine {
                                               const JECamera& camera) {
         if constexpr (isDeferred) {
             /// Construct deferred geometry render pass
-            /*if (vkResetCommandBuffer(m_deferredPass.commandBuffer, VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
-                throw std::runtime_error("failed to reset deferred geometry pass command buffer!");
-            }*/
-
             VkCommandBufferBeginInfo beginInfo = {};
             beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
             beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -717,6 +737,8 @@ namespace JoeEngine {
 
             JEDeferredGeometryShader* deferredGeomShader = (JEDeferredGeometryShader*)m_shaderManager.GetShaderAt(m_deferredGeometryShaderID);
             vkCmdBindPipeline(m_deferredPass.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, deferredGeomShader->GetPipeline());
+            // TODO: fix me, need image index and the right material component index
+            m_shaderManager.GetDescriptorAt(materialComponents[0].m_descriptorID).BindDescriptorSets(m_deferredPass.commandBuffer, deferredGeomShader->GetPipelineLayout(), 0);
             deferredGeomShader->BindPushConstants_ViewProj(m_deferredPass.commandBuffer, camera.GetViewProj());
 
             for (uint32_t i = 0; i < meshComponents.size(); ++i) {
@@ -734,10 +756,6 @@ namespace JoeEngine {
 
             // Begin command buffer
             for (uint32_t i = 0; i < m_commandBuffers.size(); ++i) {
-                /*if (vkResetCommandBuffer(m_commandBuffers[i], VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
-                    throw std::runtime_error("failed to reset command buffer!");
-                }*/
-
                 VkCommandBufferBeginInfo beginInfo = {};
                 beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
                 beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -766,12 +784,10 @@ namespace JoeEngine {
 
                 vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-
-                //vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_deferredPassLightingShader.GetPipeline());
-                //m_deferredPassLightingShader.BindDescriptorSets(m_commandBuffers[i], i);
                 JEDeferredShader* deferredShader = (JEDeferredShader*)m_shaderManager.GetShaderAt(materialComponents[0].m_shaderID);
                 vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, deferredShader->GetPipeline());
-                m_shaderManager.GetDescriptorAt(materialComponents[0].m_descriptorID).BindDescriptorSets(m_commandBuffers[i], deferredShader->GetPipelineLayout(), i);
+                //m_shaderManager.GetDescriptorAt(materialComponents[0].m_descriptorID).BindDescriptorSets(m_commandBuffers[i], deferredShader->GetPipelineLayout(), i);
+                m_shaderManager.GetDescriptorAt(m_deferredLightingDescriptorID).BindDescriptorSets(m_commandBuffers[i], deferredShader->GetPipelineLayout(), i);
 
                 DrawScreenSpaceTriMesh(m_commandBuffers[i]);
 
@@ -1559,7 +1575,6 @@ namespace JoeEngine {
         vkDestroyImageView(m_device, m_forwardPass.depth.imageView, nullptr);
         vkDestroyRenderPass(m_device, m_forwardPass.renderPass, nullptr);
         vkDestroyFramebuffer(m_device, m_forwardPass.framebuffer, nullptr);
-        //vkFreeCommandBuffers(m_device, m_commandPool, 1, &m_forwardPass.commandBuffer);
         vkDestroySampler(m_device, m_forwardPass.sampler, nullptr);
 
         // Post Processing
@@ -1624,6 +1639,7 @@ namespace JoeEngine {
 
         CreateShaders();
         m_sceneManager->RecreateResources({ m_width, m_height });
+        // TODO: recreate shaders
         CreateShadowCommandBuffer();
         CreateDeferredPassGeometryCommandBuffer();
         CreateDeferredLightingAndPostProcessingCommandBuffer();

@@ -103,6 +103,9 @@ namespace JoeEngine {
         JEShaderManager m_shaderManager;
         uint32_t m_shadowShaderID;
         uint32_t m_deferredGeometryShaderID;
+        // TODO: support multiple or customizable lighting models
+        uint32_t m_deferredLightingShaderID;
+        uint32_t m_deferredLightingDescriptorID;
         std::array<glm::mat4, 2> m_uniformInvViewProjData;
 
         // Textures
@@ -182,6 +185,7 @@ namespace JoeEngine {
         MeshComponent CreateMesh(const std::string& filepath);
         uint32_t CreateTexture(const std::string& filepath);
         void CreateShader(MaterialComponent& materialComponent, const std::string& vertFilepath, const std::string& fragFilepath);
+        void CreateDescriptor(MaterialComponent& materialComponent);
 
         // Renderer Functions
         void DrawShadowPass(const std::vector<MeshComponent>& meshComponents, const std::vector<TransformComponent>& transformComponents, const JECamera& camera);

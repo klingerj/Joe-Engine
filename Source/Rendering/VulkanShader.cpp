@@ -160,7 +160,8 @@ namespace JoeEngine {
         colorBlending.blendConstants[3] = 0.0f;
 
         std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments;
-        for (uint8_t i = 0; i < materialComponent.m_sourceTextures.size(); ++i) {
+        // TODO: get rid of the hard-coded 4?
+        for (uint8_t i = 0; i < 4; ++i) {
             VkPipelineColorBlendAttachmentState colorBlendAttachment;
             colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
             colorBlendAttachment.blendEnable = VK_FALSE;

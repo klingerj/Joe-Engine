@@ -153,9 +153,9 @@ namespace JoeEngine {
 
     public:
         JEDeferredGeometryShader() = delete;
-        JEDeferredGeometryShader(const MaterialComponent& materialComponent, uint32_t numSourceTextures, VkDevice device, VkPhysicalDevice physicalDevice,
-            const JEVulkanSwapChain& swapChain, VkRenderPass renderPass, const std::string& vertPath, const std::string& fragPath) :
-            JEVulkanShader(device, vertPath, fragPath) {
+        JEDeferredGeometryShader(const MaterialComponent& materialComponent, uint32_t numSourceTextures, uint32_t numUniformBuffers,
+            VkDevice device, VkPhysicalDevice physicalDevice, const JEVulkanSwapChain& swapChain, VkRenderPass renderPass,
+            const std::string& vertPath, const std::string& fragPath) : JEVulkanShader(device, vertPath, fragPath) {
             auto vertShaderCode = ReadFile(m_vertPath);
             auto fragShaderCode = ReadFile(m_fragPath);
             // Create shader modules
@@ -163,7 +163,7 @@ namespace JoeEngine {
             VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
 
             uint32_t numSwapChainImages = swapChain.GetImageViews().size();
-            CreateDescriptorSetLayout(device, numSourceTextures, 0);
+            CreateDescriptorSetLayout(device, numSourceTextures, numUniformBuffers);
             CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain.GetExtent(), renderPass, materialComponent);
         }
 

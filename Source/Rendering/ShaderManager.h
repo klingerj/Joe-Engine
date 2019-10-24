@@ -37,13 +37,14 @@ namespace JoeEngine {
         uint32_t CreateShader(VkDevice device, VkPhysicalDevice physicalDevice, const JEVulkanSwapChain& swapChain,
             const MaterialComponent& materialComponent, uint32_t numSourceTextures, VkRenderPass renderPass,
             const std::string& vertPath, const std::string& fragPath, PipelineType type) {
-            JEShader* newShader;
+            JEShader* newShader = nullptr;
             switch (type) {
             case FORWARD:
                 break;
             case DEFERRED:
-                // TODO: make this +2 less bad
-                newShader = new JEDeferredShader(materialComponent, numSourceTextures, materialComponent.m_uniformData.size() + 2, device, physicalDevice,
+                // TODO: make these hard-coded constants less bad
+                // TODO: custom allocator?
+                newShader = new JEDeferredShader(materialComponent, 4, materialComponent.m_uniformData.size() + 2, device, physicalDevice,
                     swapChain, renderPass, vertPath, fragPath);
                 break;
             case SHADOW:
@@ -51,7 +52,7 @@ namespace JoeEngine {
                     renderPass, vertPath, fragPath);
                 break;
             case DEFERRED_GEOM:
-                newShader = new JEDeferredGeometryShader(materialComponent, numSourceTextures, device, physicalDevice,
+                newShader = new JEDeferredGeometryShader(materialComponent, numSourceTextures, materialComponent.m_uniformData.size(), device, physicalDevice,
                     swapChain, renderPass, vertPath, fragPath);
                 break;
             default:
@@ -65,6 +66,9 @@ namespace JoeEngine {
         uint32_t CreateDescriptor(VkDevice device, VkPhysicalDevice physicalDevice, const JEVulkanSwapChain& swapChain,
             const MaterialComponent& materialComponent, const std::vector<VkImageView>& imageViews,
             const std::vector<VkSampler> samplers, const std::vector<uint32_t>& bufferSizes) {
+
+            // TODO: change this static cast to at least depend on whether or not the renderer is deferred or not
+            // maybe just pass in the shader itself. Template the function? is this bad design?
             const JEDeferredShader& shader = *(JEDeferredShader*)GetShaderAt(materialComponent.m_shaderID);
             m_descriptors.emplace_back(JEVulkanDescriptor(physicalDevice, device, materialComponent, swapChain.GetImageViews().size(),
                 imageViews, samplers, bufferSizes, shader.GetDescriptorSetLayout()));
