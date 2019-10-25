@@ -51,7 +51,7 @@ namespace JoeEngine {
         VkPipeline m_graphicsPipeline = VK_NULL_HANDLE;
         VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
         VkDescriptorSetLayout m_descriptorSetLayout = VK_NULL_HANDLE;
-        const VkDevice& m_device;
+        const VkDevice m_device;
 
         // Creation functions
         virtual void CreateDescriptorSetLayout(VkDevice device, uint32_t numSourceTextures, uint32_t numUniformBuffers) {
@@ -106,9 +106,6 @@ namespace JoeEngine {
             }
         }
 
-        virtual void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) {}
-        virtual void BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat) {}
-
         virtual void UpdateUniformBuffers(VkDevice device, uint32_t currentImage) override {}
 
         // Getters
@@ -142,8 +139,8 @@ namespace JoeEngine {
             CreateGraphicsPipeline(device, vertShaderModule, VK_NULL_HANDLE, extent, renderPass, materialComponent);
         }
 
-        void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) override;
-        void BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat) override;
+        void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) const;
+        void BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat) const;
     };
 
     class JEDeferredGeometryShader : public JEVulkanShader {
@@ -167,8 +164,8 @@ namespace JoeEngine {
             CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain.GetExtent(), renderPass, materialComponent);
         }
 
-        void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) override;
-        void BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat) override;
+        void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) const;
+        void BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat) const;
     };
 
     //JEDeferredShader - deferred lighting variant
@@ -192,11 +189,8 @@ namespace JoeEngine {
             CreateDescriptorSetLayout(device, numSourceTextures, numUniformBuffers);
             CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain.GetExtent(), renderPass, materialComponent);
         }
-
-        void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) override;
-        void BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat) override;
     };
-
+    // *************************** end new shader style
     // Forward shader
 
     class JEVulkanForwardShader {

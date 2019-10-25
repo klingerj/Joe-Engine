@@ -10,6 +10,13 @@
 namespace JoeEngine {
     // Rendering-related structs
 
+    typedef enum JE_PIPELINE_TYPE : uint8_t {
+        FORWARD,
+        DEFERRED,
+        SHADOW,
+        DEFERRED_GEOM
+    } PipelineType;
+
     // Generic Framebuffer attachment
     typedef struct je_framebuffer_attachment_t {
         VkImage image;

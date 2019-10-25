@@ -23,5 +23,5 @@ void main() {
     
     // TODO: actual normal mapping
     vec3 fakeNormal = 0.5 * (normal_tan + fragNor);
-    gbuffers[1] = vec4(fakeNormal * 0.5 + 0.5, metallic);
+    gbuffers[1] = vec4(fragNor * 0.5 + 0.5, metallic);
 }

@@ -23,7 +23,7 @@ namespace JoeEngine {
                 // Update components
                 for (int i = 0; i < m_componentManagers.size(); ++i) {
                     {
-                        //ScopedTimer<float> timer("Component Manager " + std::to_string(i));
+                        ScopedTimer<float> timer("Component Manager " + std::to_string(i));
                         m_componentManagers[i]->Update(this);
                     }
                 }
@@ -63,7 +63,7 @@ namespace JoeEngine {
                 }
 
                 {
-                    //ScopedTimer<float> timer("Shadow Pass Command Buffer Recording");
+                    ScopedTimer<float> timer("Shadow Pass Command Buffer Recording");
                     m_vulkanRenderer.DrawShadowPass(meshComponentsSorted, transformComponentsSorted, m_sceneManager.m_shadowCamera);
                 }
 
@@ -78,7 +78,7 @@ namespace JoeEngine {
                 transformsPassedCulling.reserve(256);
 
                 {
-                    //ScopedTimer<float> timer("Frustum Culling");
+                    ScopedTimer<float> timer("Frustum Culling");
 
                     // TODO: multi-thread this
                     for (uint32_t i = 0; i < meshComponents.Size(); ++i) {
@@ -100,12 +100,12 @@ namespace JoeEngine {
                 // the renderer will attempt to render them as instanced geometry and will minimize pipeline/descriptor binding
 
                 {
-                    //ScopedTimer<float> timer("Deferred Geom/Lighting/Post Passes Command Buffer Recording");
+                    ScopedTimer<float> timer("Deferred Geom/Lighting/Post Passes Command Buffer Recording");
                     m_vulkanRenderer.DrawMeshComponents(meshComponentsPassedCulling, materialComponentsPassedCulling, transformsPassedCulling, m_sceneManager.m_camera);
                 }
                 
                 {
-                    //ScopedTimer<float> timer("GPU workload submission");
+                    ScopedTimer<float> timer("GPU workload submission");
                     m_vulkanRenderer.SubmitFrame(materialComponentsPassedCulling);
                 }
 

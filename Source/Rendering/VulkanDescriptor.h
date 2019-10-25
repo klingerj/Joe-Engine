@@ -18,19 +18,19 @@ namespace JoeEngine {
         void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages, 
                                   const std::vector<uint32_t>& bufferSizes);
         void CreateDescriptorPool(VkDevice device, uint32_t numSwapChainImages, uint32_t numSourceTextures, uint32_t numUniformBuffers);
-        void CreateDescriptorSets(VkDevice device, const MaterialComponent& materialComponent, uint32_t numSwapChainImages,
+        void CreateDescriptorSets(VkDevice device, uint32_t numSwapChainImages,
             const std::vector<VkImageView>& imageViews, const std::vector<VkSampler>& samplers, const std::vector<uint32_t>& bufferSizes,
-            VkDescriptorSetLayout descSetLayout);
+            VkDescriptorSetLayout descSetLayout, PipelineType type);
 
     public:
         JEVulkanDescriptor() = delete;
-        JEVulkanDescriptor(VkPhysicalDevice physicalDevice, VkDevice device, const MaterialComponent& materialComponent,
-            uint32_t numSwapChainImages, const std::vector<VkImageView>& imageViews, const std::vector<VkSampler>& samplers,
-            const std::vector<uint32_t>& bufferSizes, VkDescriptorSetLayout descSetLayout) :
+        JEVulkanDescriptor(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages,
+            const std::vector<VkImageView>& imageViews, const std::vector<VkSampler>& samplers,
+            const std::vector<uint32_t>& bufferSizes, VkDescriptorSetLayout descSetLayout, PipelineType type) :
             m_device(device) {
             CreateDescriptorPool(device, numSwapChainImages, imageViews.size(), bufferSizes.size());
             CreateUniformBuffers(physicalDevice, device, numSwapChainImages, bufferSizes);
-            CreateDescriptorSets(device, materialComponent, numSwapChainImages, imageViews, samplers, bufferSizes, descSetLayout);
+            CreateDescriptorSets(device, numSwapChainImages, imageViews, samplers, bufferSizes, descSetLayout, type);
         }
         ~JEVulkanDescriptor() {}
 

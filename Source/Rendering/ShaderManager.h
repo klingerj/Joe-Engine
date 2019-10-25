@@ -8,13 +8,6 @@
 #include "VulkanSwapChain.h"
 
 namespace JoeEngine {
-    typedef enum JE_PIPELINE_TYPE : uint8_t {
-        FORWARD,
-        DEFERRED,
-        SHADOW,
-        DEFERRED_GEOM
-    } PipelineType;
-
     class JEShaderManager {
     private:
 
@@ -64,14 +57,10 @@ namespace JoeEngine {
         }
 
         uint32_t CreateDescriptor(VkDevice device, VkPhysicalDevice physicalDevice, const JEVulkanSwapChain& swapChain,
-            const MaterialComponent& materialComponent, const std::vector<VkImageView>& imageViews,
-            const std::vector<VkSampler> samplers, const std::vector<uint32_t>& bufferSizes) {
-
-            // TODO: change this static cast to at least depend on whether or not the renderer is deferred or not
-            // maybe just pass in the shader itself. Template the function? is this bad design?
-            const JEDeferredShader& shader = *(JEDeferredShader*)GetShaderAt(materialComponent.m_shaderID);
-            m_descriptors.emplace_back(JEVulkanDescriptor(physicalDevice, device, materialComponent, swapChain.GetImageViews().size(),
-                imageViews, samplers, bufferSizes, shader.GetDescriptorSetLayout()));
+            const std::vector<VkImageView>& imageViews, const std::vector<VkSampler> samplers,
+            const std::vector<uint32_t>& bufferSizes, const JEShader* shader, PipelineType type) {
+            m_descriptors.emplace_back(JEVulkanDescriptor(physicalDevice, device, swapChain.GetImageViews().size(),
+                imageViews, samplers, bufferSizes, ((JEVulkanShader*)shader)->GetDescriptorSetLayout(), type));
             return m_numDescriptors++;
         }
 

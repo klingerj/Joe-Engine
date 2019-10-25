@@ -242,11 +242,11 @@ namespace JoeEngine {
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
     }
 
-    void JEShadowShader::BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) {
+    void JEShadowShader::BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) const {
         vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(JE_PushConst_ViewProj), &viewProj[0][0]);
     }
 
-    void JEShadowShader::BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat) {
+    void JEShadowShader::BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat) const {
         vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof(JE_PushConst_ViewProj), sizeof(JE_PushConst_ModelMat), &modelMat[0][0]);
     }
 
@@ -464,11 +464,11 @@ namespace JoeEngine {
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
     }
 
-    void JEDeferredGeometryShader::BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) {
+    void JEDeferredGeometryShader::BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) const {
         vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(JE_PushConst_ViewProj), &viewProj[0][0]);
     }
 
-    void JEDeferredGeometryShader::BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat) {
+    void JEDeferredGeometryShader::BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat) const {
         vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof(JE_PushConst_ViewProj), sizeof(JE_PushConst_ModelMat), &modelMat[0][0]);
     }
 
@@ -671,14 +671,6 @@ namespace JoeEngine {
 
         vkDestroyShaderModule(device, fragShaderModule, nullptr);
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
-    }
-
-    void JEDeferredShader::BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) {
-        vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(JE_PushConst_ViewProj), &viewProj[0][0]);
-    }
-
-    void JEDeferredShader::BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat) {
-        vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof(JE_PushConst_ViewProj), sizeof(JE_PushConst_ModelMat), &modelMat[0][0]);
     }
 
     // Forward Shader

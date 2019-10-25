@@ -43,6 +43,11 @@ namespace JoeEngine {
             ducreauxLambert.m_materialSettings = pbrMetalPlate.m_materialSettings;
             ducreauxLambert.m_renderLayer = pbrMetalPlate.m_renderLayer;
             ducreauxLambert.m_texAlbedo = tex1;
+            ducreauxLambert.m_texRoughness = tex3;
+            ducreauxLambert.m_texMetallic = tex4;
+            ducreauxLambert.m_texNormal = tex5;
+            ducreauxLambert.m_shaderID = pbrMetalPlate.m_shaderID;
+            m_engineInstance->CreateDescriptor(ducreauxLambert);
 
             for (int i = 0; i < 64; ++i) {
                 for (int j = 0; j < 64; ++j) {
@@ -50,7 +55,7 @@ namespace JoeEngine {
                     entities.push_back(newEntity);
                     m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, i % 2 == 0 ? meshComp_wahoo : meshComp_sphere);
                     
-                    m_engineInstance->SetComponent<JEMaterialComponentManager>(newEntity, pbrMetalPlate);
+                    m_engineInstance->SetComponent<JEMaterialComponentManager>(newEntity, i % 2 == 0 ?  pbrMetalPlate : ducreauxLambert);
 
                     TransformComponent* trans = m_engineInstance->GetComponent<TransformComponent, JETransformComponentManager>(newEntity);
                     trans->SetTranslation(glm::vec3(i - 32, 0, j - 32) * 0.1f);

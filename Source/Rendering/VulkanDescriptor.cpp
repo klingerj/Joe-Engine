@@ -68,11 +68,9 @@ namespace JoeEngine {
         }
     }
 
-    void JEVulkanDescriptor::CreateDescriptorSets(VkDevice device, const MaterialComponent& materialComponent, uint32_t numSwapChainImages,
+    void JEVulkanDescriptor::CreateDescriptorSets(VkDevice device, uint32_t numSwapChainImages,
         const std::vector<VkImageView>& imageViews, const std::vector<VkSampler>& samplers, const std::vector<uint32_t>& bufferSizes,
-        VkDescriptorSetLayout descSetLayout) {
-        // TODO: we will have multiple shadow pass and g-buffer pass image views eventually
-        // Maybe we call this multiple times, one per swap chain image index. Need to move the allocation code, maybe to descriptor pool creation function above?
+        VkDescriptorSetLayout descSetLayout, PipelineType type) {
         std::vector<VkDescriptorSetLayout> layouts(numSwapChainImages, descSetLayout);
 
         VkDescriptorSetAllocateInfo allocInfo = {};
@@ -100,9 +98,9 @@ namespace JoeEngine {
             for (uint32_t j = 0; j < imageViews.size(); ++j) {
                 VkDescriptorImageInfo imageInfo = {};
                 imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                /*if (j == 2 || j == 3) { // Depth stencil G-buffer and shadow map
+                if (type == DEFERRED && (j == 2 || j == 3)) { // Depth stencil G-buffer and shadow map
                     imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-                }*/
+                }
                 imageInfo.imageView = imageViews[j];
                 imageInfo.sampler = samplers[j];
                 imageInfos.push_back(imageInfo);
