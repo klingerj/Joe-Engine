@@ -50,40 +50,56 @@ namespace JoeEngine {
     protected:
         VkPipeline m_graphicsPipeline = VK_NULL_HANDLE;
         VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
-        VkDescriptorSetLayout m_descriptorSetLayout = VK_NULL_HANDLE;
+        std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts;
         const VkDevice m_device;
 
         // Creation functions
-        virtual void CreateDescriptorSetLayout(VkDevice device, uint32_t numSourceTextures, uint32_t numUniformBuffers) {
-            std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings;
+        virtual void CreateDescriptorSetLayouts(VkDevice device, uint32_t numSourceTextures, uint32_t numUniformBuffers, uint32_t numStorageBuffers) {
+            for (uint32_t s = 0; s < m_descriptorSetLayouts.size(); ++s) {
+                std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings;
 
-            for (uint32_t i = 0; i < numUniformBuffers; ++i) {
-                VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
-                samplerLayoutBinding.binding = i;
-                samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                samplerLayoutBinding.descriptorCount = 1;
-                samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                samplerLayoutBinding.pImmutableSamplers = nullptr;
-                setLayoutBindings.push_back(samplerLayoutBinding);
-            }
+                if (s == 0) {
+                    for (uint32_t i = 0; i < numUniformBuffers; ++i) {
+                        VkDescriptorSetLayoutBinding layoutBinding = {};
+                        layoutBinding.binding = i;
+                        layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                        layoutBinding.descriptorCount = 1;
+                        layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                        layoutBinding.pImmutableSamplers = nullptr;
+                        setLayoutBindings.push_back(layoutBinding);
+                    }
 
-            for (uint32_t i = 0; i < numSourceTextures; ++i) {
-                VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
-                samplerLayoutBinding.binding = i + numUniformBuffers;
-                samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                samplerLayoutBinding.descriptorCount = 1;
-                samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                samplerLayoutBinding.pImmutableSamplers = nullptr;
-                setLayoutBindings.push_back(samplerLayoutBinding);
-            }
+                    for (uint32_t i = 0; i < numSourceTextures; ++i) {
+                        VkDescriptorSetLayoutBinding layoutBinding = {};
+                        layoutBinding.binding = i + numUniformBuffers;
+                        layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                        layoutBinding.descriptorCount = 1;
+                        layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                        layoutBinding.pImmutableSamplers = nullptr;
+                        setLayoutBindings.push_back(layoutBinding);
+                    }
+                } else {
+                    for (uint32_t i = 0; i < numStorageBuffers; ++i) {
+                        VkDescriptorSetLayoutBinding layoutBinding = {};
+                        layoutBinding.binding = i;
+                        layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                        layoutBinding.descriptorCount = 1;
+                        layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+                        layoutBinding.pImmutableSamplers = nullptr;
+                        setLayoutBindings.push_back(layoutBinding);
+                    }
+                }
 
-            VkDescriptorSetLayoutCreateInfo layoutInfo = {};
-            layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            layoutInfo.bindingCount = static_cast<uint32_t>(setLayoutBindings.size());
-            layoutInfo.pBindings = setLayoutBindings.data();
+                if (setLayoutBindings.size() > 0) {
+                    VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+                    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+                    layoutInfo.bindingCount = static_cast<uint32_t>(setLayoutBindings.size());
+                    layoutInfo.pBindings = setLayoutBindings.data();
 
-            if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS) {
-                throw std::runtime_error("failed to create descriptor set layout!");
+                    if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &m_descriptorSetLayouts[s]) != VK_SUCCESS) {
+                        throw std::runtime_error("failed to create descriptor set layout!");
+                    }
+                }
             }
         }
         virtual void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
@@ -91,7 +107,9 @@ namespace JoeEngine {
 
     public:
         JEVulkanShader(VkDevice device, const std::string& vertPath, const std::string& fragPath) :
-            JEShader(vertPath, fragPath), m_device(device) {}
+            JEShader(vertPath, fragPath), m_device(device) {
+            m_descriptorSetLayouts = std::vector<VkDescriptorSetLayout>(2, VK_NULL_HANDLE);
+        }
         virtual ~JEVulkanShader() {}
 
         void Cleanup() override {
@@ -101,8 +119,10 @@ namespace JoeEngine {
             if (m_graphicsPipeline != VK_NULL_HANDLE) {
                 vkDestroyPipeline(m_device, m_graphicsPipeline, nullptr);
             }
-            if (m_descriptorSetLayout != VK_NULL_HANDLE) {
-                vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
+            for (uint32_t i = 0; i < m_descriptorSetLayouts.size(); ++i) {
+                if (m_descriptorSetLayouts[i] != VK_NULL_HANDLE) {
+                    vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayouts[i], nullptr);
+                }
             }
         }
 
@@ -115,8 +135,9 @@ namespace JoeEngine {
         VkPipelineLayout GetPipelineLayout() const {
             return m_pipelineLayout;
         }
-        VkDescriptorSetLayout GetDescriptorSetLayout() const {
-            return m_descriptorSetLayout;
+        VkDescriptorSetLayout GetDescriptorSetLayout(uint32_t index) const {
+            // TODO: error check?
+            return m_descriptorSetLayouts[index];
         }
     };
 
@@ -135,12 +156,12 @@ namespace JoeEngine {
             // Create shader modules
             VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
 
-            CreateDescriptorSetLayout(device, numSourceTextures, 0);
+            CreateDescriptorSetLayouts(device, numSourceTextures, 0, 1);
             CreateGraphicsPipeline(device, vertShaderModule, VK_NULL_HANDLE, extent, renderPass, materialComponent);
         }
 
         void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) const;
-        void BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat) const;
+        void BindPushConstants_InstancedData(VkCommandBuffer commandBuffer, const std::array<uint32_t, 4>& instancedData) const;
     };
 
     class JEDeferredGeometryShader : public JEVulkanShader {
@@ -160,15 +181,15 @@ namespace JoeEngine {
             VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
 
             uint32_t numSwapChainImages = swapChain.GetImageViews().size();
-            CreateDescriptorSetLayout(device, numSourceTextures, numUniformBuffers);
+            CreateDescriptorSetLayouts(device, numSourceTextures, numUniformBuffers, 1);
             CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain.GetExtent(), renderPass, materialComponent);
         }
 
         void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) const;
-        void BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat) const;
+        void BindPushConstants_InstancedData(VkCommandBuffer commandBuffer, const std::array<uint32_t, 4>& instancedData) const;
     };
 
-    //JEDeferredShader - deferred lighting variant
+    // JEDeferredShader - deferred lighting variant
     class JEDeferredShader : public JEVulkanShader {
     private:
         void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
@@ -186,10 +207,35 @@ namespace JoeEngine {
             VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
 
             uint32_t numSwapChainImages = swapChain.GetImageViews().size();
-            CreateDescriptorSetLayout(device, numSourceTextures, numUniformBuffers);
+            m_descriptorSetLayouts = std::vector<VkDescriptorSetLayout>(1, VK_NULL_HANDLE);
+            CreateDescriptorSetLayouts(device, numSourceTextures, numUniformBuffers, 0);
             CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain.GetExtent(), renderPass, materialComponent);
         }
     };
+
+    // JEForwardShader - forward shadiung
+    class JEForwardShader : public JEVulkanShader {
+    private:
+        void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
+            VkExtent2D frameExtent, VkRenderPass renderPass, const MaterialComponent& materialComponent) override;
+
+    public:
+        JEForwardShader() = delete;
+        JEForwardShader(const MaterialComponent& materialComponent, uint32_t numSourceTextures, uint32_t numUniformBuffers, VkDevice device, VkPhysicalDevice physicalDevice,
+            const JEVulkanSwapChain& swapChain, VkRenderPass renderPass, const std::string& vertPath, const std::string& fragPath) :
+            JEVulkanShader(device, vertPath, fragPath) {
+            auto vertShaderCode = ReadFile(m_vertPath);
+            auto fragShaderCode = ReadFile(m_fragPath);
+            // Create shader modules
+            VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
+            VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
+
+            uint32_t numSwapChainImages = swapChain.GetImageViews().size();
+            CreateDescriptorSetLayouts(device, numSourceTextures, numUniformBuffers, 0);
+            CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain.GetExtent(), renderPass, materialComponent);
+        }
+    };
+
     // *************************** end new shader style
     // Forward shader
 

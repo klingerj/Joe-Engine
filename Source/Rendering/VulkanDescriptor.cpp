@@ -6,18 +6,18 @@ namespace JoeEngine {
             vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
         }
 
-        for (uint32_t i = 0; i < m_buffers.size(); ++i) {
-            for (uint32_t j = 0; j < m_buffers[i].size(); ++j) {
-                if (m_buffers[i][j] != VK_NULL_HANDLE) {
-                    vkDestroyBuffer(m_device, m_buffers[i][j], nullptr);
+        for (uint32_t i = 0; i < m_uniformBuffers.size(); ++i) {
+            for (uint32_t j = 0; j < m_uniformBuffers[i].size(); ++j) {
+                if (m_uniformBuffers[i][j] != VK_NULL_HANDLE) {
+                    vkDestroyBuffer(m_device, m_uniformBuffers[i][j], nullptr);
                 }
             }
         }
 
-        for (uint32_t i = 0; i < m_deviceMemory.size(); ++i) {
-            for (uint32_t j = 0; j < m_deviceMemory[i].size(); ++j) {
-                if (m_deviceMemory[i][j] != VK_NULL_HANDLE) {
-                    vkFreeMemory(m_device, m_deviceMemory[i][j], nullptr);
+        for (uint32_t i = 0; i < m_uniformDeviceMemory.size(); ++i) {
+            for (uint32_t j = 0; j < m_uniformDeviceMemory[i].size(); ++j) {
+                if (m_uniformDeviceMemory[i][j] != VK_NULL_HANDLE) {
+                    vkFreeMemory(m_device, m_uniformDeviceMemory[i][j], nullptr);
                 }
             }
         }
@@ -25,23 +25,47 @@ namespace JoeEngine {
 
     void JEVulkanDescriptor::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages,
         const std::vector<uint32_t>& bufferSizes) {
-        m_buffers.resize(bufferSizes.size());
-        m_deviceMemory.resize(bufferSizes.size());
+        m_uniformBuffers.resize(bufferSizes.size());
+        m_uniformDeviceMemory.resize(bufferSizes.size());
 
         for (uint32_t i = 0; i < bufferSizes.size(); ++i) {
             const VkDeviceSize bufferSize = bufferSizes[i];
-            m_buffers[i].resize(numSwapChainImages);
-            m_deviceMemory[i].resize(numSwapChainImages);
+            m_uniformBuffers[i].resize(numSwapChainImages);
+            m_uniformDeviceMemory[i].resize(numSwapChainImages);
             for (uint32_t j = 0; j < numSwapChainImages; ++j) {
                 CreateBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                             m_buffers[i][j], m_deviceMemory[i][j]);
+                             m_uniformBuffers[i][j], m_uniformDeviceMemory[i][j]);
             }
         }
     }
     
-    void JEVulkanDescriptor::CreateDescriptorPool(VkDevice device, uint32_t numSwapChainImages, uint32_t numSourceTextures, uint32_t numUniformBuffers) {
+    void JEVulkanDescriptor::CreateSSBOBuffers(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages,
+        const std::vector<uint32_t>& ssboSizes) {
+        m_ssboBuffers.resize(ssboSizes.size());
+        m_ssboDeviceMemory.resize(ssboSizes.size());
+
+        for (uint32_t i = 0; i < ssboSizes.size(); ++i) {
+            const VkDeviceSize bufferSize = ssboSizes[i];
+            m_ssboBuffers[i].resize(numSwapChainImages);
+            m_ssboDeviceMemory[i].resize(numSwapChainImages);
+            for (uint32_t j = 0; j < numSwapChainImages; ++j) {
+                CreateBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                    m_ssboBuffers[i][j], m_ssboDeviceMemory[i][j]);
+            }
+        }
+    }
+
+    void JEVulkanDescriptor::CreateDescriptorPool(VkDevice device, uint32_t numSwapChainImages, uint32_t numSourceTextures,
+        uint32_t numUniformBuffers, uint32_t numSSBOBuffers) {
         std::vector<VkDescriptorPoolSize> poolSizes;
         VkDescriptorPoolSize poolSize;
+
+        // SSBOs
+        poolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        poolSize.descriptorCount = static_cast<uint32_t>(numSwapChainImages);
+        for (uint32_t i = 0; i < numSSBOBuffers; ++i) {
+            poolSizes.push_back(poolSize);
+        }
 
         // Uniform buffers
         poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -70,7 +94,7 @@ namespace JoeEngine {
 
     void JEVulkanDescriptor::CreateDescriptorSets(VkDevice device, uint32_t numSwapChainImages,
         const std::vector<VkImageView>& imageViews, const std::vector<VkSampler>& samplers, const std::vector<uint32_t>& bufferSizes,
-        VkDescriptorSetLayout descSetLayout, PipelineType type) {
+        const std::vector<uint32_t>& ssboSizes, VkDescriptorSetLayout descSetLayout, PipelineType type) {
         std::vector<VkDescriptorSetLayout> layouts(numSwapChainImages, descSetLayout);
 
         VkDescriptorSetAllocateInfo allocInfo = {};
@@ -85,13 +109,22 @@ namespace JoeEngine {
         }
 
         for (uint32_t i = 0; i < numSwapChainImages; ++i) {
-            std::vector<VkDescriptorBufferInfo> bufferInfos;
+            std::vector<VkDescriptorBufferInfo> storageBufferInfos;
+            for (uint32_t j = 0; j < ssboSizes.size(); ++j) {
+                VkDescriptorBufferInfo bufferInfo = {};
+                bufferInfo.buffer = m_ssboBuffers[j][i];
+                bufferInfo.offset = 0;
+                bufferInfo.range = ssboSizes[j];
+                storageBufferInfos.push_back(bufferInfo);
+            }
+
+            std::vector<VkDescriptorBufferInfo> uniformBufferInfos;
             for (uint32_t j = 0; j < bufferSizes.size(); ++j) {
                 VkDescriptorBufferInfo bufferInfo = {};
-                bufferInfo.buffer = m_buffers[j][i];
+                bufferInfo.buffer = m_uniformBuffers[j][i];
                 bufferInfo.offset = 0;
                 bufferInfo.range = bufferSizes[j];
-                bufferInfos.push_back(bufferInfo);
+                uniformBufferInfos.push_back(bufferInfo);
             }
 
             std::vector<VkDescriptorImageInfo> imageInfos;
@@ -107,15 +140,29 @@ namespace JoeEngine {
             }
 
             std::vector<VkWriteDescriptorSet> descriptorWrites;
-            for (uint32_t j = 0; j < bufferInfos.size(); ++j) {
+            for (uint32_t j = 0; j < storageBufferInfos.size(); ++j) {
                 VkWriteDescriptorSet descWrite = {};
                 descWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
                 descWrite.dstSet = m_descriptorSets[i];
                 descWrite.dstBinding = j;
                 descWrite.dstArrayElement = 0;
+                descWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                descWrite.descriptorCount = 1;
+                descWrite.pBufferInfo = &storageBufferInfos[j];
+                descWrite.pImageInfo = nullptr;
+                descWrite.pNext = nullptr;
+                descriptorWrites.push_back(descWrite);
+            }
+
+            for (uint32_t j = 0; j < uniformBufferInfos.size(); ++j) {
+                VkWriteDescriptorSet descWrite = {};
+                descWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                descWrite.dstSet = m_descriptorSets[i];
+                descWrite.dstBinding = j + storageBufferInfos.size();
+                descWrite.dstArrayElement = 0;
                 descWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 descWrite.descriptorCount = 1;
-                descWrite.pBufferInfo = &bufferInfos[j];
+                descWrite.pBufferInfo = &uniformBufferInfos[j];
                 descWrite.pImageInfo = nullptr;
                 descWrite.pNext = nullptr;
                 descriptorWrites.push_back(descWrite);
@@ -125,7 +172,7 @@ namespace JoeEngine {
                 VkWriteDescriptorSet descWrite = {};
                 descWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
                 descWrite.dstSet = m_descriptorSets[i];
-                descWrite.dstBinding = j + bufferInfos.size();
+                descWrite.dstBinding = j + storageBufferInfos.size() + uniformBufferInfos.size();
                 descWrite.dstArrayElement = 0;
                 descWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 descWrite.descriptorCount = 1;
@@ -139,12 +186,22 @@ namespace JoeEngine {
         }
     }
 
-    void JEVulkanDescriptor::UpdateDescriptorSets(uint32_t imageIndex, const std::vector<void*>& buffers, const std::vector<uint32_t>& bufferSizes) {
-        for (uint32_t i = 0; i < m_buffers.size(); ++i) {
+    void JEVulkanDescriptor::UpdateDescriptorSets(uint32_t imageIndex, const std::vector<const void*>& buffers, const std::vector<uint32_t>& bufferSizes,
+        const std::vector<const void*>& ssboBuffers, const std::vector<uint32_t>& ssboSizes) {
+        // Uniform buffers
+        for (uint32_t i = 0; i < m_uniformBuffers.size(); ++i) {
             void* data;
-            vkMapMemory(m_device, m_deviceMemory[i][imageIndex], 0, bufferSizes[i], 0, &data); // TODO: debug bad ptr error here
+            vkMapMemory(m_device, m_uniformDeviceMemory[i][imageIndex], 0, bufferSizes[i], 0, &data);
             memcpy(data, buffers[i], bufferSizes[i]);
-            vkUnmapMemory(m_device, m_deviceMemory[i][imageIndex]);
+            vkUnmapMemory(m_device, m_uniformDeviceMemory[i][imageIndex]);
+        }
+
+        // SSBOs
+        for (uint32_t i = 0; i < m_ssboBuffers.size(); ++i) {
+            void* data;
+            vkMapMemory(m_device, m_ssboDeviceMemory[i][imageIndex], 0, ssboSizes[i], 0, &data);
+            memcpy(data, ssboBuffers[i], ssboSizes[i]);
+            vkUnmapMemory(m_device, m_ssboDeviceMemory[i][imageIndex]);
         }
     }
 }

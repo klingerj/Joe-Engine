@@ -38,28 +38,40 @@ namespace JoeEngine {
                 // TODO: eventually get list of lights and pass those instead
 
                 // TODO: scan/sort all material components so we only pass those that cast shadows to the shadow pass
-                const std::vector<MaterialComponent>& materialComponentsVector = materialComponents.GetData();
+                const std::vector<MaterialComponent> materialComponentsVector = std::vector(materialComponents.begin(), materialComponents.end());
                 std::vector<std::pair<MaterialComponent, uint32_t>> indices;
-                for (uint32_t i = 0; i < materialComponents.Size(); ++i) {
+                for (uint32_t i = 0; i < materialComponentsVector.size(); ++i) {
                     indices.emplace_back(std::pair<MaterialComponent, uint32_t>(materialComponentsVector[i], i));
                 }
 
+                // Sort by material settings - only send shadow-casting geometry to the shadow pass
                 std::sort(std::begin(indices), std::end(indices),
-                    [](const std::pair<MaterialComponent, uint32_t>& a, const std::pair<MaterialComponent, uint32_t>& b) -> bool {
+                    [](const std::pair<MaterialComponent, uint32_t>& a, const std::pair<MaterialComponent, uint32_t>& b) {
                     return (a.first.m_materialSettings & CASTS_SHADOWS) > (b.first.m_materialSettings & CASTS_SHADOWS);
                 });
-                
-                std::vector<MeshComponent>      meshComponentsSorted;
-                std::vector<MaterialComponent>  materialComponentsSorted;
-                std::vector<TransformComponent> transformComponentsSorted;
 
-                for (uint32_t i = 0; i < indices.size(); ++i) {
+                uint32_t i = 0;
+                for (i = 0; i < indices.size(); ++i) {
                     if (!(indices[i].first.m_materialSettings & CASTS_SHADOWS)) {
                         break;
                     }
-                    materialComponentsSorted.emplace_back(indices[i].first);
-                    meshComponentsSorted.emplace_back(meshComponents.GetData()[indices[i].second]);
-                    transformComponentsSorted.emplace_back(transformComponents.GetData()[indices[i].second]);
+                }
+                
+                std::vector<MeshComponent>      meshComponentsSorted;
+                std::vector<MaterialComponent>  materialComponentsSorted;
+                std::vector<glm::mat4> transformComponentsSorted;
+                meshComponentsSorted.reserve(i);
+                materialComponentsSorted.reserve(i);
+                transformComponentsSorted.reserve(i);
+
+                std::sort(indices.begin(), indices.begin() + i,
+                    [&](const std::pair<MaterialComponent, uint32_t>& a, const std::pair<MaterialComponent, uint32_t>& b) -> bool {
+                    return (meshComponents[a.second].GetVertexHandle()) < (meshComponents[b.second].GetVertexHandle());
+                });
+
+                for (uint32_t j = 0; j < i; ++j) {
+                    meshComponentsSorted.emplace_back(meshComponents.GetData()[indices[j].second]);
+                    transformComponentsSorted.emplace_back(transformComponents.GetData()[indices[j].second].GetTransform());
                 }
 
                 {
@@ -96,17 +108,107 @@ namespace JoeEngine {
                     }
                 }
 
-                // TODO: sort by render layer, material (shader index and source textures), and mesh
+                // TODO: sort materials by render layer, material (shader index and source textures), and mesh
                 // the renderer will attempt to render them as instanced geometry and will minimize pipeline/descriptor binding
+                // Sort all components by material properties and by mesh for efficient descriptor set binding and instanced rendering
+                indices.clear();
+                materialComponentsSorted.clear();
+                meshComponentsSorted.clear();
+                transformComponentsSorted.clear();
+                for (uint32_t i = 0; i < materialComponentsPassedCulling.size(); ++i) {
+                    indices.emplace_back(std::pair<MaterialComponent, uint32_t>(materialComponentsPassedCulling[i], i));
+                }
+
+                // 1. Sort by render layer
+                std::sort(std::begin(indices), std::end(indices),
+                    [](const std::pair<MaterialComponent, uint32_t>& a, const std::pair<MaterialComponent, uint32_t>& b) {
+                    return (a.first.m_renderLayer) < (b.first.m_renderLayer);
+                });
+
+                // 2. Sort by shader index
+                uint32_t idx = 0;
+                uint32_t currSortIdx = 0;
+                while (idx <= indices.size()) {
+                    if (idx == indices.size()) {
+                        std::sort(indices.begin() + currSortIdx, indices.begin() + idx,
+                            [](const std::pair<MaterialComponent, uint32_t>& a, const std::pair<MaterialComponent, uint32_t>& b) {
+                            return (a.first.m_shaderID) < (b.first.m_shaderID);
+                        });
+                        break;
+                    }
+
+                    // Detect a change in the sorted materials
+                    if (indices[idx].first.m_renderLayer != indices[currSortIdx].first.m_renderLayer) {
+                        std::sort(indices.begin() + currSortIdx, indices.begin() + idx,
+                            [](const std::pair<MaterialComponent, uint32_t>& a, const std::pair<MaterialComponent, uint32_t>& b) {
+                            return (a.first.m_shaderID) < (b.first.m_shaderID);
+                        });
+                        currSortIdx = idx;
+                    }
+                    ++idx;
+                }
+
+                // 3. Sort by descriptor index
+                idx = 0;
+                currSortIdx = 0;
+                while (idx <= indices.size()) {
+                    if (idx == indices.size()) {
+                        std::sort(indices.begin() + currSortIdx, indices.begin() + idx,
+                            [](const std::pair<MaterialComponent, uint32_t>& a, const std::pair<MaterialComponent, uint32_t>& b) {
+                            return (a.first.m_descriptorID) < (b.first.m_descriptorID);
+                        });
+                        break;
+                    }
+
+                    // Detect a change in the sorted materials
+                    if (indices[idx].first.m_shaderID != indices[currSortIdx].first.m_shaderID) {
+                        std::sort(indices.begin() + currSortIdx, indices.begin() + idx,
+                            [](const std::pair<MaterialComponent, uint32_t>& a, const std::pair<MaterialComponent, uint32_t>& b) {
+                            return (a.first.m_descriptorID) < (b.first.m_descriptorID);
+                        });
+                        currSortIdx = idx;
+                    }
+                    ++idx;
+                }
+
+                // 4. Sort by mesh component (needed for instanced rendering)
+                // TODO: find out how to sort the material components by mesh component contents
+                idx = 0;
+                currSortIdx = 0;
+                while (idx <= indices.size()) {
+                    if (idx == indices.size()) {
+                        std::sort(indices.begin() + currSortIdx, indices.begin() + idx,
+                            [&](const std::pair<MaterialComponent, uint32_t>& a, const std::pair<MaterialComponent, uint32_t>& b) -> bool {
+                            return (meshComponentsPassedCulling[a.second].GetVertexHandle()) < (meshComponentsPassedCulling[b.second].GetVertexHandle());
+                        });
+                        break;
+                    }
+
+                    // Detect a change in the sorted materials
+                    if (indices[idx].first.m_descriptorID != indices[currSortIdx].first.m_descriptorID) {
+                        std::sort(indices.begin() + currSortIdx, indices.begin() + idx,
+                            [&](const std::pair<MaterialComponent, uint32_t>& a, const std::pair<MaterialComponent, uint32_t>& b) -> bool {
+                            return (meshComponentsPassedCulling[a.second].GetVertexHandle()) < (meshComponentsPassedCulling[b.second].GetVertexHandle());
+                        });
+                        currSortIdx = idx;
+                    }
+                    ++idx;
+                }
+
+                for (uint32_t i = 0; i < indices.size(); ++i) {
+                    materialComponentsSorted.emplace_back(indices[i].first);
+                    meshComponentsSorted.emplace_back(meshComponentsPassedCulling[indices[i].second]);
+                    transformComponentsSorted.emplace_back(transformsPassedCulling[indices[i].second]);
+                }
 
                 {
                     ScopedTimer<float> timer("Deferred Geom/Lighting/Post Passes Command Buffer Recording");
-                    m_vulkanRenderer.DrawMeshComponents(meshComponentsPassedCulling, materialComponentsPassedCulling, transformsPassedCulling, m_sceneManager.m_camera);
+                    m_vulkanRenderer.DrawMeshComponents(meshComponentsSorted, materialComponentsSorted, transformComponentsSorted, m_sceneManager.m_camera);
                 }
                 
                 {
                     ScopedTimer<float> timer("GPU workload submission");
-                    m_vulkanRenderer.SubmitFrame(materialComponentsPassedCulling);
+                    m_vulkanRenderer.SubmitFrame(materialComponentsSorted, transformComponentsSorted);
                 }
 
                 // TODO: clean this up?

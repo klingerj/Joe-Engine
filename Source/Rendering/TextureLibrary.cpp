@@ -37,6 +37,7 @@ namespace JoeEngine {
 
         stbi_image_free(pixels);
 
+        // TODO: choose image format - user may want to add grayscale images
         CreateImage(physicalDevice, device, texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_images[m_numTextures], m_deviceMemory[m_numTextures]);
 
         TransitionImageLayout(device, commandPool, graphicsQueue, m_images[m_numTextures], VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
