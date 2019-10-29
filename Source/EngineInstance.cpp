@@ -35,6 +35,11 @@ namespace JoeEngine {
                 const PackedArray<MaterialComponent>&  materialComponents  = GetComponentList<MaterialComponent, JEMaterialComponentManager>();
                 const PackedArray<TransformComponent>& transformComponents = GetComponentList<TransformComponent, JETransformComponentManager>();
 
+                std::vector<glm::mat4> transformComponentsVector;
+                /*for (uint32_t i = 0; i < transformComponents.Size(); ++i) {
+                    transformComponentsVector.emplace_back(transformComponents[i].GetTransform());
+                }*/
+
                 // TODO: eventually get list of lights and pass those instead
 
                 // TODO: scan/sort all material components so we only pass those that cast shadows to the shadow pass
@@ -50,33 +55,34 @@ namespace JoeEngine {
                     return (a.first.m_materialSettings & CASTS_SHADOWS) > (b.first.m_materialSettings & CASTS_SHADOWS);
                 });
 
-                uint32_t i = 0;
-                for (i = 0; i < indices.size(); ++i) {
-                    if (!(indices[i].first.m_materialSettings & CASTS_SHADOWS)) {
+                uint32_t k = 0;
+                for (k = 0; k < indices.size(); ++k) {
+                    if (!(indices[k].first.m_materialSettings & CASTS_SHADOWS)) {
                         break;
                     }
                 }
                 
-                std::vector<MeshComponent>      meshComponentsSorted;
-                std::vector<MaterialComponent>  materialComponentsSorted;
-                std::vector<glm::mat4> transformComponentsSorted;
-                meshComponentsSorted.reserve(i);
-                materialComponentsSorted.reserve(i);
-                transformComponentsSorted.reserve(i);
+                std::vector<MeshComponent>      meshComponentsSorted_shadow;
+                std::vector<MaterialComponent>  materialComponentsSorted_shadow;
+                std::vector<glm::mat4> transformComponentsSorted_shadow;
+                meshComponentsSorted_shadow.reserve(k);
+                materialComponentsSorted_shadow.reserve(k);
+                transformComponentsSorted_shadow.reserve(k);
 
-                std::sort(indices.begin(), indices.begin() + i,
+                std::sort(indices.begin(), indices.begin() + k,
                     [&](const std::pair<MaterialComponent, uint32_t>& a, const std::pair<MaterialComponent, uint32_t>& b) -> bool {
                     return (meshComponents[a.second].GetVertexHandle()) < (meshComponents[b.second].GetVertexHandle());
                 });
 
-                for (uint32_t j = 0; j < i; ++j) {
-                    meshComponentsSorted.emplace_back(meshComponents.GetData()[indices[j].second]);
-                    transformComponentsSorted.emplace_back(transformComponents.GetData()[indices[j].second].GetTransform());
+                for (uint32_t j = 0; j < k; ++j) {
+                    meshComponentsSorted_shadow.emplace_back(meshComponents.GetData()[indices[j].second]);
+                    transformComponentsSorted_shadow.emplace_back(transformComponents.GetData()[indices[j].second].GetTransform());
+                    transformComponentsVector.emplace_back(transformComponents.GetData()[indices[j].second].GetTransform());
                 }
 
                 {
                     ScopedTimer<float> timer("Shadow Pass Command Buffer Recording");
-                    m_vulkanRenderer.DrawShadowPass(meshComponentsSorted, transformComponentsSorted, m_sceneManager.m_shadowCamera);
+                    m_vulkanRenderer.DrawShadowPass(meshComponentsSorted_shadow, m_sceneManager.m_shadowCamera);
                 }
 
                 // Get bounding box info from MeshBuffer Manager
@@ -112,9 +118,9 @@ namespace JoeEngine {
                 // the renderer will attempt to render them as instanced geometry and will minimize pipeline/descriptor binding
                 // Sort all components by material properties and by mesh for efficient descriptor set binding and instanced rendering
                 indices.clear();
-                materialComponentsSorted.clear();
-                meshComponentsSorted.clear();
-                transformComponentsSorted.clear();
+                std::vector<MeshComponent>      meshComponentsSorted;
+                std::vector<MaterialComponent>  materialComponentsSorted;
+                std::vector<glm::mat4> transformComponentsSorted;
                 for (uint32_t i = 0; i < materialComponentsPassedCulling.size(); ++i) {
                     indices.emplace_back(std::pair<MaterialComponent, uint32_t>(materialComponentsPassedCulling[i], i));
                 }
@@ -172,7 +178,6 @@ namespace JoeEngine {
                 }
 
                 // 4. Sort by mesh component (needed for instanced rendering)
-                // TODO: find out how to sort the material components by mesh component contents
                 idx = 0;
                 currSortIdx = 0;
                 while (idx <= indices.size()) {
@@ -203,12 +208,12 @@ namespace JoeEngine {
 
                 {
                     ScopedTimer<float> timer("Deferred Geom/Lighting/Post Passes Command Buffer Recording");
-                    m_vulkanRenderer.DrawMeshComponents(meshComponentsSorted, materialComponentsSorted, transformComponentsSorted, m_sceneManager.m_camera);
+                    m_vulkanRenderer.DrawMeshComponents(meshComponentsSorted, materialComponentsSorted, m_sceneManager.m_camera);
                 }
                 
                 {
                     ScopedTimer<float> timer("GPU workload submission");
-                    m_vulkanRenderer.SubmitFrame(materialComponentsSorted, transformComponentsSorted);
+                    m_vulkanRenderer.SubmitFrame(materialComponentsSorted, transformComponentsSorted_shadow, transformComponentsSorted);
                 }
 
                 // TODO: clean this up?

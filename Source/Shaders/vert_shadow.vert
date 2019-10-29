@@ -6,7 +6,7 @@ layout (push_constant) uniform PushConstant {
 } pushConstants;
 
 layout(set = 0, binding = 0, std430) readonly buffer ssboModelMatrices {
-  mat4 modelMatrices[];  
+  mat4 modelMatrices[];
 } ssboModelMatrix;
 
 layout(location = 0) in vec3 inPosition;

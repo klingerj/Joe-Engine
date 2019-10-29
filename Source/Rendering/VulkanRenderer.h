@@ -162,12 +162,12 @@ namespace JoeEngine {
         void CreateDeferredLightingAndPostProcessingCommandBuffer();
 
         void DrawMesh(VkCommandBuffer commandBuffer, const MeshComponent& meshComponent);
-        void DrawMeshInstanced(VkCommandBuffer commandBuffer, uint32_t startIdx, uint32_t endIdx,
-            const MeshComponent& meshComponent);
+        void DrawMeshInstanced(VkCommandBuffer commandBuffer, uint32_t endIdx, const MeshComponent& meshComponent);
         void DrawScreenSpaceTriMesh(VkCommandBuffer commandBuffer);
         void DrawBoundingBoxMesh(VkCommandBuffer commandBuffer);
 
-        void UpdateShaderBuffers(const std::vector<MaterialComponent>& materialComponents, const std::vector<glm::mat4>& transforms, uint32_t imageIndex);
+        void UpdateShaderBuffers(const std::vector<MaterialComponent>& materialComponents,
+            const std::vector<glm::mat4>& transforms, const std::vector<glm::mat4>& transformsSorted, uint32_t imageIndex);
 
     public:
         JEVulkanRenderer() : m_width(JE_DEFAULT_SCREEN_WIDTH), m_height(JE_DEFAULT_SCREEN_HEIGHT), m_MAX_FRAMES_IN_FLIGHT(JE_DEFAULT_MAX_FRAMES_IN_FLIGHT),
@@ -184,7 +184,8 @@ namespace JoeEngine {
         void FramebufferResized() { m_didFramebufferResize = true; }
 
         // Submit work to GPU
-        void SubmitFrame(const std::vector<MaterialComponent>& materialComponents, const std::vector<glm::mat4>& transforms);
+        void SubmitFrame(const std::vector<MaterialComponent>& materialComponents,
+            const std::vector<glm::mat4>& transforms, const std::vector<glm::mat4>& transformsSorted);
 
         // Mesh Buffer Manager Functions
         const std::vector<BoundingBoxData>& GetBoundingBoxData() const;
@@ -194,9 +195,9 @@ namespace JoeEngine {
         void CreateDescriptor(MaterialComponent& materialComponent);
 
         // Renderer Functions
-        void DrawShadowPass(const std::vector<MeshComponent>& meshComponents, const std::vector<glm::mat4>& transformComponents, const JECamera& camera);
+        void DrawShadowPass(const std::vector<MeshComponent>& meshComponents, const JECamera& camera);
         void DrawMeshComponents(const std::vector<MeshComponent>& meshComponents, const std::vector<MaterialComponent>& materialComponents,
-                                const std::vector<glm::mat4>& transformComponents, const JECamera& camera);
+                                const JECamera& camera);
 
         void WaitForIdleDevice() {
             vkDeviceWaitIdle(m_device);

@@ -21,6 +21,22 @@ namespace JoeEngine {
                 }
             }
         }
+
+        for (uint32_t i = 0; i < m_ssboBuffers.size(); ++i) {
+            for (uint32_t j = 0; j < m_ssboBuffers[i].size(); ++j) {
+                if (m_ssboBuffers[i][j] != VK_NULL_HANDLE) {
+                    vkDestroyBuffer(m_device, m_ssboBuffers[i][j], nullptr);
+                }
+            }
+        }
+
+        for (uint32_t i = 0; i < m_ssboDeviceMemory.size(); ++i) {
+            for (uint32_t j = 0; j < m_ssboDeviceMemory[i].size(); ++j) {
+                if (m_ssboDeviceMemory[i][j] != VK_NULL_HANDLE) {
+                    vkFreeMemory(m_device, m_ssboDeviceMemory[i][j], nullptr);
+                }
+            }
+        }
     }
 
     void JEVulkanDescriptor::CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages,

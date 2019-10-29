@@ -494,30 +494,18 @@ namespace JoeEngine {
     }*/
 
     void JEVulkanRenderer::CleanupShaders() {
-        /*for (auto& shadowPassShader : m_shadowPassShaders) {
-            shadowPassShader.Cleanup(m_device);
-        }
-        m_deferredPassGeometryShader.Cleanup(m_device);
-        m_deferredPassLightingShader.Cleanup(m_device);
-        for (auto& postProcessingShader : m_postProcessingShaders) {
-            postProcessingShader.Cleanup(m_device);
-        }
-        m_shadowPassShaders.clear();
-        m_postProcessingShaders.clear();
-        m_flatShader.Cleanup(m_device);
-        m_forwardShader.Cleanup(m_device);*/
         m_shaderManager.Cleanup();
     }
 
     void JEVulkanRenderer::UpdateShaderBuffers(const std::vector<MaterialComponent>& materialComponents,
-        const std::vector<glm::mat4>& transforms, uint32_t imageIndex) {
+        const std::vector<glm::mat4>& transforms, const std::vector<glm::mat4>& transformsSorted, uint32_t imageIndex) {
         
         m_shaderManager.UpdateBuffers(m_shadowModelMatrixDescriptorID, imageIndex, {}, {},
             { transforms.data() }, { (uint32_t)(transforms.size() * sizeof(glm::mat4)) });
         m_shaderManager.UpdateBuffers(m_deferredGeometryModelMatrixDescriptorID, imageIndex, {}, {},
-            { transforms.data() }, { (uint32_t)(transforms.size() * sizeof(glm::mat4)) });
+            { transformsSorted.data() }, { (uint32_t)(transformsSorted.size() * sizeof(glm::mat4)) });
         m_shaderManager.UpdateBuffers(m_forwardModelMatrixDescriptorID, imageIndex, {}, {},
-            { transforms.data() }, { (uint32_t)(transforms.size() * sizeof(glm::mat4)) });
+            { transformsSorted.data() }, { (uint32_t)(transformsSorted.size() * sizeof(glm::mat4)) });
 
         if constexpr (isDeferred) {
             // Add camera inv view/proj matrices as uniforms
@@ -706,8 +694,7 @@ namespace JoeEngine {
         vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_meshBufferManager.GetIndexListAt(idxHandle).size()), 1, 0, 0, 0);
     }
 
-    void JEVulkanRenderer::DrawMeshInstanced(VkCommandBuffer commandBuffer, uint32_t startIdx, uint32_t numInstances,
-        const MeshComponent& meshComponent) {
+    void JEVulkanRenderer::DrawMeshInstanced(VkCommandBuffer commandBuffer, uint32_t numInstances, const MeshComponent& meshComponent) {
        if (meshComponent.GetVertexHandle() == -1 || meshComponent.GetIndexHandle() == -1) {
             return;
         }
@@ -721,8 +708,7 @@ namespace JoeEngine {
         vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_meshBufferManager.GetIndexListAt(idxHandle).size()), numInstances, 0, 0, 0);
     }
 
-    void JEVulkanRenderer::DrawShadowPass(/*std vector of JELights*/const std::vector<MeshComponent>& meshComponents,
-                                                                    const std::vector<glm::mat4>& transformComponents, const JECamera& camera) {
+    void JEVulkanRenderer::DrawShadowPass(/*std vector of JELights*/const std::vector<MeshComponent>& meshComponents, const JECamera& camera) {
         // Reset the command buffer, as we have decided to re-record it
         /*if (vkResetCommandBuffer(m_shadowPass.commandBuffer, VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM) != VK_SUCCESS) {
             throw std::runtime_error("failed to reset shadow pass command buffer!");
@@ -768,7 +754,7 @@ namespace JoeEngine {
         while (idx <= meshComponents.size()) {
             if (idx == meshComponents.size()) {
                 shadowShader->BindPushConstants_InstancedData(m_shadowPass.commandBuffer, {currStartIdx, 0, 0, 0});
-                DrawMeshInstanced(m_shadowPass.commandBuffer, currStartIdx, idx - currStartIdx, currMesh);
+                DrawMeshInstanced(m_shadowPass.commandBuffer, idx - currStartIdx, currMesh);
                 break;
             }
             if (meshComponents[idx].GetVertexHandle() == currMesh) {
@@ -776,7 +762,7 @@ namespace JoeEngine {
             } else {
                 // Draw instanced mesh using curr material resources
                 shadowShader->BindPushConstants_InstancedData(m_shadowPass.commandBuffer, {currStartIdx, 0, 0, 0 });
-                DrawMeshInstanced(m_shadowPass.commandBuffer, currStartIdx, idx - currStartIdx, currMesh);
+                DrawMeshInstanced(m_shadowPass.commandBuffer, idx - currStartIdx, currMesh);
                 
                 currMesh = meshComponents[idx].GetVertexHandle();
                 currStartIdx = idx;
@@ -792,7 +778,6 @@ namespace JoeEngine {
 
     void JEVulkanRenderer::DrawMeshComponents(const std::vector<MeshComponent>& meshComponents,
                                               const std::vector<MaterialComponent>& materialComponents,
-                                              const std::vector<glm::mat4>& transformComponents,
                                               const JECamera& camera) {
         if constexpr (isDeferred) {
             /// Construct deferred geometry render pass
@@ -838,7 +823,7 @@ namespace JoeEngine {
             while (idx <= materialComponents.size() && !done) {
                 if (idx == materialComponents.size()) {
                     deferredGeomShader->BindPushConstants_InstancedData(m_deferredPass.commandBuffer, {currStartIdx, 0, 0, 0});
-                    DrawMeshInstanced(m_deferredPass.commandBuffer, currStartIdx, idx - currStartIdx, currMesh);
+                    DrawMeshInstanced(m_deferredPass.commandBuffer, idx - currStartIdx, currMesh);
                     break;
                 }
                 if (materialComponents[idx].m_renderLayer == OPAQUE &&
@@ -848,7 +833,7 @@ namespace JoeEngine {
                 } else {
                     // Draw instanced mesh using curr material resources
                     deferredGeomShader->BindPushConstants_InstancedData(m_deferredPass.commandBuffer, {currStartIdx, 0, 0, 0});
-                    DrawMeshInstanced(m_deferredPass.commandBuffer, currStartIdx, idx - currStartIdx, currMesh);
+                    DrawMeshInstanced(m_deferredPass.commandBuffer, idx - currStartIdx, currMesh);
 
                     if (materialComponents[idx].m_renderLayer != OPAQUE) {
                         done = true;
@@ -1579,7 +1564,7 @@ namespace JoeEngine {
     }
 
     void JEVulkanRenderer::SubmitFrame(const std::vector<MaterialComponent>& materialComponents,
-        const std::vector<glm::mat4>& transforms) {
+        const std::vector<glm::mat4>& transforms, const std::vector<glm::mat4>& transformsSorted) {
         uint32_t imageIndex;
         VkResult result = vkAcquireNextImageKHR(m_device, m_vulkanSwapChain.GetSwapChain(), std::numeric_limits<uint64_t>::max(), m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &imageIndex);
 
@@ -1590,7 +1575,7 @@ namespace JoeEngine {
             throw std::runtime_error("failed to acquire swap chain image!");
         }
 
-        UpdateShaderBuffers(materialComponents, transforms, imageIndex);
+        UpdateShaderBuffers(materialComponents, transforms, transformsSorted, imageIndex);
 
         // Submit shadow pass command buffer
 
