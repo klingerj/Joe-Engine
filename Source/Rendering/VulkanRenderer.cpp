@@ -573,7 +573,7 @@ namespace JoeEngine {
         PipelineType type;
         if constexpr (isDeferred) {
             if (materialComponent.m_renderLayer == TRANSLUCENT) {
-                renderPass = m_forwardPass.renderPass;
+                renderPass = m_renderPass_deferredLighting; // m_forwardPass.renderPass;
                 type = FORWARD;
             } else {
                 renderPass = m_renderPass_deferredLighting;
@@ -818,9 +818,8 @@ namespace JoeEngine {
             uint32_t currDescriptorID = materialComponents[0].m_descriptorID;
             m_shaderManager.GetDescriptorAt(currDescriptorID).BindDescriptorSets(m_deferredPass.commandBuffer, deferredGeomShader->GetPipelineLayout(), 0, 0);
             int currMesh = meshComponents[currStartIdx].GetVertexHandle();
-            bool done = false;
             
-            while (idx <= materialComponents.size() && !done) {
+            while (idx <= materialComponents.size()) {
                 if (idx == materialComponents.size()) {
                     deferredGeomShader->BindPushConstants_InstancedData(m_deferredPass.commandBuffer, {currStartIdx, 0, 0, 0});
                     DrawMeshInstanced(m_deferredPass.commandBuffer, idx - currStartIdx, currMesh);
@@ -836,25 +835,18 @@ namespace JoeEngine {
                     DrawMeshInstanced(m_deferredPass.commandBuffer, idx - currStartIdx, currMesh);
 
                     if (materialComponents[idx].m_renderLayer != OPAQUE) {
-                        done = true;
+                        break;
                     }
                     if (materialComponents[idx].m_descriptorID != currDescriptorID) {
                         m_shaderManager.GetDescriptorAt(materialComponents[idx].m_descriptorID).BindDescriptorSets(m_deferredPass.commandBuffer, deferredGeomShader->GetPipelineLayout(), 0, 0);
+                        currDescriptorID = materialComponents[idx].m_descriptorID;
                     }
                     if (meshComponents[idx].GetVertexHandle() != currMesh) {
                         currMesh = meshComponents[idx].GetVertexHandle();
-                        currStartIdx = idx;
                     }
+                    currStartIdx = idx;
                 }
             }
-
-
-            /*for (uint32_t i = 0; i < meshComponents.size(); ++i) {
-                //deferredGeomShader->BindPushConstants_ModelMatrix(m_deferredPass.commandBuffer, transformComponents[i]);
-                // TODO: fix the zero
-                m_shaderManager.GetDescriptorAt(materialComponents[i].m_descriptorID).BindDescriptorSets(m_deferredPass.commandBuffer, deferredGeomShader->GetPipelineLayout(), 0);
-                DrawMesh(m_deferredPass.commandBuffer, meshComponents[i]);
-            }*/
 
             vkCmdEndRenderPass(m_deferredPass.commandBuffer);
 
@@ -900,16 +892,63 @@ namespace JoeEngine {
 
                 DrawScreenSpaceTriMesh(m_commandBuffers[i]);
 
+                // Draw transluscent geometry using forward rendering
+                uint32_t materialIdx = idx;
+                if (materialIdx < materialComponents.size()) {
+                    currStartIdx = materialIdx;
+                    ++materialIdx;
+                    currDescriptorID = materialComponents[currStartIdx].m_descriptorID;
+                    uint32_t currShaderID = materialComponents[currStartIdx].m_shaderID;
+                    JEForwardShader* forwardShader = (JEForwardShader*)m_shaderManager.GetShaderAt(currShaderID);
+                    vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, forwardShader->GetPipeline());
+                    m_shaderManager.GetDescriptorAt(currDescriptorID).BindDescriptorSets(m_commandBuffers[i], forwardShader->GetPipelineLayout(), 0, i);
+                    forwardShader->BindPushConstants_ViewProj(m_commandBuffers[i], camera.GetViewProj());
+                    m_shaderManager.GetDescriptorAt(m_forwardModelMatrixDescriptorID).BindDescriptorSets(m_commandBuffers[i], forwardShader->GetPipelineLayout(), 1, i);
+                    int currMesh = meshComponents[currStartIdx].GetVertexHandle();
+                    
+                    while (materialIdx <= materialComponents.size()) {
+                        if (materialIdx == materialComponents.size()) {
+                            forwardShader->BindPushConstants_InstancedData(m_commandBuffers[i], { currStartIdx, 0, 0, 0 });
+                            DrawMeshInstanced(m_commandBuffers[i], materialIdx - currStartIdx, currMesh);
+                            break;
+                        }
+                        if (materialComponents[materialIdx].m_shaderID == currShaderID &&
+                            materialComponents[materialIdx].m_descriptorID == currDescriptorID &&
+                            meshComponents[materialIdx].GetVertexHandle() == currMesh) {
+                            ++materialIdx;
+                        } else {
+                            // Draw instanced mesh using curr material resources
+                            forwardShader->BindPushConstants_InstancedData(m_commandBuffers[i], { currStartIdx, 0, 0, 0 });
+                            DrawMeshInstanced(m_commandBuffers[i], materialIdx - currStartIdx, currMesh);
+
+                            if (materialComponents[materialIdx].m_shaderID != currShaderID) {
+                                currShaderID = materialComponents[materialIdx].m_shaderID;
+                                forwardShader = (JEForwardShader*)m_shaderManager.GetShaderAt(currShaderID);
+                                vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, forwardShader->GetPipeline());
+                                m_shaderManager.GetDescriptorAt(m_forwardModelMatrixDescriptorID).BindDescriptorSets(m_commandBuffers[i], forwardShader->GetPipelineLayout(), 1, i);
+                            }
+                            if (materialComponents[materialIdx].m_descriptorID != currDescriptorID) {
+                                currDescriptorID = materialComponents[materialIdx].m_descriptorID;
+                                m_shaderManager.GetDescriptorAt(currDescriptorID).BindDescriptorSets(m_commandBuffers[i], forwardShader->GetPipelineLayout(), 0, i);
+                            }
+                            if (meshComponents[materialIdx].GetVertexHandle() != currMesh) {
+                                currMesh = meshComponents[materialIdx].GetVertexHandle();
+                            }
+                            currStartIdx = materialIdx;
+                        }
+                    }
+                }
+
                 vkCmdEndRenderPass(m_commandBuffers[i]);
 
                 // Begin translucent drawing
-                renderPassInfo = {};
+                /*renderPassInfo = {};
                 renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
                 renderPassInfo.renderArea.offset = { 0, 0 };
                 renderPassInfo.renderArea.extent = { m_width, m_height };
-                std::array<VkClearValue, 1> clearValuesForward = {};
+                std::array<VkClearValue, 2> clearValuesForward = {};
                 clearValuesForward[0].color = { 0.0f };
-                clearValuesForward[0].depthStencil = { 1.0f, 0 };
+                clearValuesForward[1].depthStencil = { 1.0f, 0 };
                 renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValuesForward.size());
                 renderPassInfo.pClearValues = clearValuesForward.data();
 
@@ -919,7 +958,7 @@ namespace JoeEngine {
                 } else {
                     renderPassInfo.framebuffer = m_swapChainFramebuffers[i];
                 }
-                /*vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+                vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
                 // TODO: draw translucent geometry here
                 // for each translucent material (they're sorted), bind descr set, bind push constants, call draws
 

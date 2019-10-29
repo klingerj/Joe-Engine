@@ -231,9 +231,12 @@ namespace JoeEngine {
             VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
 
             uint32_t numSwapChainImages = swapChain.GetImageViews().size();
-            CreateDescriptorSetLayouts(device, numSourceTextures, numUniformBuffers, 0);
+            CreateDescriptorSetLayouts(device, numSourceTextures, numUniformBuffers, 1);
             CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain.GetExtent(), renderPass, materialComponent);
         }
+
+        void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) const;
+        void BindPushConstants_InstancedData(VkCommandBuffer commandBuffer, const std::array<uint32_t, 4>& instancedData) const;
     };
 
     // *************************** end new shader style

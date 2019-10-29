@@ -125,7 +125,7 @@ namespace JoeEngine {
                     if (i == 0) {
                         if (j <= 2) {
                             m_engineInstance->SetComponent<JEMaterialComponentManager>(newEntity, mat_translucent_forward);
-                        } else if (j == 3) {
+                        } else if (j <= 4) {
                             m_engineInstance->SetComponent<JEMaterialComponentManager>(newEntity, mat_translucent_forward2);
                         }
                     } else if (i == 1) {

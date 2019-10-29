@@ -147,7 +147,8 @@ namespace JoeEngine {
             for (uint32_t j = 0; j < imageViews.size(); ++j) {
                 VkDescriptorImageInfo imageInfo = {};
                 imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                if (type == DEFERRED && (j == 2 || j == 3)) { // Depth stencil G-buffer and shadow map
+                if ((type == DEFERRED && (j == 2 || j == 3)) ||
+                    (type == FORWARD && (j == 4))) { // Depth stencil G-buffer, shadow map
                     imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
                 }
                 imageInfo.imageView = imageViews[j];

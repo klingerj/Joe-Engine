@@ -23,7 +23,7 @@ namespace JoeEngine {
                 // Update components
                 for (int i = 0; i < m_componentManagers.size(); ++i) {
                     {
-                        ScopedTimer<float> timer("Component Manager " + std::to_string(i));
+                        //ScopedTimer<float> timer("Component Manager " + std::to_string(i));
                         m_componentManagers[i]->Update(this);
                     }
                 }
@@ -34,11 +34,6 @@ namespace JoeEngine {
                 const PackedArray<MeshComponent>&      meshComponents      = GetComponentList<MeshComponent, JEMeshComponentManager>();
                 const PackedArray<MaterialComponent>&  materialComponents  = GetComponentList<MaterialComponent, JEMaterialComponentManager>();
                 const PackedArray<TransformComponent>& transformComponents = GetComponentList<TransformComponent, JETransformComponentManager>();
-
-                std::vector<glm::mat4> transformComponentsVector;
-                /*for (uint32_t i = 0; i < transformComponents.Size(); ++i) {
-                    transformComponentsVector.emplace_back(transformComponents[i].GetTransform());
-                }*/
 
                 // TODO: eventually get list of lights and pass those instead
 
@@ -77,11 +72,10 @@ namespace JoeEngine {
                 for (uint32_t j = 0; j < k; ++j) {
                     meshComponentsSorted_shadow.emplace_back(meshComponents.GetData()[indices[j].second]);
                     transformComponentsSorted_shadow.emplace_back(transformComponents.GetData()[indices[j].second].GetTransform());
-                    transformComponentsVector.emplace_back(transformComponents.GetData()[indices[j].second].GetTransform());
                 }
 
                 {
-                    ScopedTimer<float> timer("Shadow Pass Command Buffer Recording");
+                    //ScopedTimer<float> timer("Shadow Pass Command Buffer Recording");
                     m_vulkanRenderer.DrawShadowPass(meshComponentsSorted_shadow, m_sceneManager.m_shadowCamera);
                 }
 
@@ -96,7 +90,7 @@ namespace JoeEngine {
                 transformsPassedCulling.reserve(256);
 
                 {
-                    ScopedTimer<float> timer("Frustum Culling");
+                    //ScopedTimer<float> timer("Frustum Culling");
 
                     // TODO: multi-thread this
                     for (uint32_t i = 0; i < meshComponents.Size(); ++i) {
@@ -207,12 +201,12 @@ namespace JoeEngine {
                 }
 
                 {
-                    ScopedTimer<float> timer("Deferred Geom/Lighting/Post Passes Command Buffer Recording");
+                    //ScopedTimer<float> timer("Deferred Geom/Lighting/Post Passes Command Buffer Recording");
                     m_vulkanRenderer.DrawMeshComponents(meshComponentsSorted, materialComponentsSorted, m_sceneManager.m_camera);
                 }
                 
                 {
-                    ScopedTimer<float> timer("GPU workload submission");
+                    //ScopedTimer<float> timer("GPU workload submission");
                     m_vulkanRenderer.SubmitFrame(materialComponentsSorted, transformComponentsSorted_shadow, transformComponentsSorted);
                 }
 

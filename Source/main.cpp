@@ -6,7 +6,7 @@ int RunApp() {
     try {
         JoeEngine::JEEngineInstance app = JoeEngine::JEEngineInstance();
         app.RegisterComponentManager<RotatorComponent>(new RotatorComponentManager());
-        app.LoadScene(1);
+        app.LoadScene(0);
         app.Run();
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
