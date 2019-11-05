@@ -28,16 +28,21 @@ namespace JoeEngine {
         void CreateDescriptorPool(VkDevice device, uint32_t numSwapChainImages, uint32_t numSourceTextures,
             uint32_t numUniformBuffers, uint32_t numSSBOBuffers);
         void CreateDescriptorSets(VkDevice device, uint32_t numSwapChainImages,
-            const std::vector<VkImageView>& imageViews, const std::vector<VkSampler>& samplers, const std::vector<uint32_t>& bufferSizes,
+            const std::vector<std::vector<VkImageView>>& imageViews, const std::vector<VkSampler>& samplers, const std::vector<uint32_t>& bufferSizes,
             const std::vector<uint32_t>& ssboSizes, VkDescriptorSetLayout descSetLayout, PipelineType type);
 
     public:
         JEVulkanDescriptor() = delete;
         JEVulkanDescriptor(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages,
-            const std::vector<VkImageView>& imageViews, const std::vector<VkSampler>& samplers,
+            const std::vector<std::vector<VkImageView>>& imageViews, const std::vector<VkSampler>& samplers,
             const std::vector<uint32_t>& bufferSizes, const std::vector<uint32_t>& ssboSizes, VkDescriptorSetLayout descSetLayout, PipelineType type) :
             m_device(device) {
-            CreateDescriptorPool(device, numSwapChainImages, imageViews.size(), bufferSizes.size(), ssboSizes.size());
+            if (imageViews.size() == 0) {
+                CreateDescriptorPool(device, numSwapChainImages, 0, bufferSizes.size(), ssboSizes.size());
+            } else {
+                CreateDescriptorPool(device, numSwapChainImages, imageViews[0].size(), bufferSizes.size(), ssboSizes.size());
+            }
+            
             CreateUniformBuffers(physicalDevice, device, numSwapChainImages, bufferSizes);
             CreateSSBOBuffers(physicalDevice, device, numSwapChainImages, ssboSizes);
             CreateDescriptorSets(device, numSwapChainImages, imageViews, samplers, bufferSizes, ssboSizes, descSetLayout, type);

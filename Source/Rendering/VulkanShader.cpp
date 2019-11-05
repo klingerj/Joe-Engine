@@ -848,6 +848,7 @@ namespace JoeEngine {
 
 
     // Forward Shader
+    /*
 
     void JEVulkanForwardShader::Cleanup(VkDevice device) {
         vkDestroyPipelineLayout(device, m_pipelineLayout, nullptr);
@@ -2504,4 +2505,5 @@ namespace JoeEngine {
     void JEVulkanDeferredPassLightingShader::BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t descriptorSetIndex) {
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSets[descriptorSetIndex], 0, nullptr);
     }
+    */
 }

@@ -213,7 +213,7 @@ namespace JoeEngine {
         }
     };
 
-    // JEForwardShader - forward shadiung
+    // JEForwardShader - forward shading
     class JEForwardShader : public JEVulkanShader {
     private:
         void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
@@ -240,6 +240,8 @@ namespace JoeEngine {
     };
 
     // *************************** end new shader style
+
+    /*
     // Forward shader
 
     class JEVulkanForwardShader {
@@ -404,13 +406,6 @@ namespace JoeEngine {
         VkDescriptorSetLayout m_descriptorSetLayout;
         VkDescriptorSet m_descriptorSet;
 
-        // Buffers
-        /*VkBuffer m_uniformBuffers_ViewProj;
-        VkDeviceMemory m_uniformBuffersMemory_ViewProj;
-        JE_PushConst_ModelMat m_ubo_ModelMat;
-        VkBuffer m_uniformBuffers_Model;
-        VkDeviceMemory m_uniformBuffersMemory_Model;*/
-
         // Creation functions
         void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkExtent2D extent, VkRenderPass renderPass);
         void CreateDescriptorPool(VkDevice device);
@@ -561,4 +556,5 @@ namespace JoeEngine {
             return m_graphicsPipeline;
         }
     };
+    */
 }

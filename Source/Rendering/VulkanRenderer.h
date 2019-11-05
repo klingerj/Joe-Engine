@@ -35,8 +35,11 @@ namespace JoeEngine {
         uint32_t m_width;
         uint32_t m_height;
 
+        // Renderer settings
         bool m_useDeferred;
         bool m_enableOIT;
+
+        uint32_t m_currSwapChainImageIndex;
 
         // References to other systems
         JEEngineInstance* m_engineInstance;
@@ -98,7 +101,7 @@ namespace JoeEngine {
         //JEVulkanDeferredPassGeometryShader m_deferredPassGeometryShader;
         //JEVulkanDeferredPassLightingShader m_deferredPassLightingShader; // TODO: change me to a list?
         //std::vector<JEVulkanMeshShader> m_meshShaders; // TODO: add this to VulkanShader.h and re-implement
-        std::vector<JEVulkanPostProcessShader> m_postProcessingShaders;
+        //std::vector<JEVulkanPostProcessShader> m_postProcessingShaders;
         //JEVulkanFlatShader m_flatShader;
         //JEVulkanForwardShader m_forwardShader;
         void CleanupShaders();
@@ -129,9 +132,9 @@ namespace JoeEngine {
         // Shadow pass
         JEOffscreenShadowPass m_shadowPass;
         void CreateShadowPassResources();
-        void CreateShadowRenderPass();
-        void CreateShadowFramebuffer();
-        void CreateShadowCommandBuffer();
+        void CreateShadowPassRenderPass();
+        void CreateShadowPassFramebuffer(uint32_t index);
+        void CreateShadowPassCommandBuffer(uint32_t index);
 
         // Forward Rendering
         JEForwardPass m_forwardPass;
@@ -144,8 +147,8 @@ namespace JoeEngine {
         JEOffscreenDeferredPass m_deferredPass;
         void CreateDeferredPassGeometryResources();
         void CreateDeferredPassGeometryRenderPass();
-        void CreateDeferredPassGeometryFramebuffer();
-        void CreateDeferredPassGeometryCommandBuffer();
+        void CreateDeferredPassGeometryFramebuffer(uint32_t index);
+        void CreateDeferredPassGeometryCommandBuffer(uint32_t index);
 
         // Deferred Rendering - lighting pass (only render offscreen if there is at least one post process)
         JEFramebufferAttachment m_framebufferAttachment_deferredLighting;
@@ -174,7 +177,7 @@ namespace JoeEngine {
 
     public:
         JEVulkanRenderer() : m_width(JE_DEFAULT_SCREEN_WIDTH), m_height(JE_DEFAULT_SCREEN_HEIGHT), m_MAX_FRAMES_IN_FLIGHT(JE_DEFAULT_MAX_FRAMES_IN_FLIGHT),
-            m_useDeferred(false), m_enableOIT(false), m_engineInstance(nullptr), m_sceneManager(nullptr), m_didFramebufferResize(false), m_currentFrame(0) {}
+            m_useDeferred(false), m_enableOIT(false), m_currSwapChainImageIndex(0), m_engineInstance(nullptr), m_sceneManager(nullptr), m_didFramebufferResize(false), m_currentFrame(0) {}
         ~JEVulkanRenderer() {}
 
         // Vulkan setup
@@ -185,6 +188,8 @@ namespace JoeEngine {
         void Cleanup();
 
         void FramebufferResized() { m_didFramebufferResize = true; }
+
+        void StartFrame();
 
         // Submit work to GPU
         void SubmitFrame(const std::vector<MaterialComponent>& materialComponents,

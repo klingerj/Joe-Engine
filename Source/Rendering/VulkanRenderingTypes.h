@@ -19,9 +19,9 @@ namespace JoeEngine {
 
     // Generic Framebuffer attachment
     typedef struct je_framebuffer_attachment_t {
-        VkImage image;
-        VkDeviceMemory deviceMemory;
-        VkImageView imageView;
+        VkImage image = VK_NULL_HANDLE;
+        VkDeviceMemory deviceMemory = VK_NULL_HANDLE;
+        VkImageView imageView = VK_NULL_HANDLE;
     } JEFramebufferAttachment;
 
     typedef struct je_offscreen_forward_pass_t {
@@ -38,25 +38,25 @@ namespace JoeEngine {
     // Render pass information for a shadow pass (depth-only)
     typedef struct je_offscreen_shadow_pass_t {
         uint32_t width = JE_DEFAULT_SHADOW_MAP_WIDTH, height = JE_DEFAULT_SHADOW_MAP_HEIGHT;
-        VkFramebuffer framebuffer;
-        JEFramebufferAttachment depth;
+        std::vector<VkFramebuffer> framebuffers;
+        std::vector<JEFramebufferAttachment> depths;
         VkRenderPass renderPass;
         VkSampler depthSampler;
-        VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
-        VkSemaphore semaphore = VK_NULL_HANDLE; // Semaphore used to synchronize between this and the next render pass
+        std::vector<VkCommandBuffer> commandBuffers;
+        std::vector<VkSemaphore> semaphores; // Semaphore used to synchronize between this and the next render pass
     } JEOffscreenShadowPass;
 
     // Render pass information for a deferred rendering pass (multiple g-buffers)
     typedef struct je_offscreen_deferred_pass_t {
         uint32_t width = JE_DEFAULT_SCREEN_WIDTH, height = JE_DEFAULT_SCREEN_HEIGHT;
-        VkFramebuffer framebuffer;
-        JEFramebufferAttachment color;
-        JEFramebufferAttachment normal;
-        JEFramebufferAttachment depth;
+        std::vector<VkFramebuffer> framebuffers;
+        std::vector<JEFramebufferAttachment> colors;
+        std::vector<JEFramebufferAttachment> normals;
+        std::vector<JEFramebufferAttachment> depths;
         VkRenderPass renderPass;
         VkSampler sampler;
-        VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
-        VkSemaphore semaphore = VK_NULL_HANDLE; // Semaphore used to synchronize between this and the next render pass
+        std::vector<VkCommandBuffer> commandBuffers;
+        std::vector<VkSemaphore> semaphores; // Semaphore used to synchronize between this and the next render pass
     } JEOffscreenDeferredPass;
 
     // Render pass information for a post processing pass

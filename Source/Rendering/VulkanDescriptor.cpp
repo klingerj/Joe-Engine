@@ -109,7 +109,7 @@ namespace JoeEngine {
     }
 
     void JEVulkanDescriptor::CreateDescriptorSets(VkDevice device, uint32_t numSwapChainImages,
-        const std::vector<VkImageView>& imageViews, const std::vector<VkSampler>& samplers, const std::vector<uint32_t>& bufferSizes,
+        const std::vector<std::vector<VkImageView>>& imageViews, const std::vector<VkSampler>& samplers, const std::vector<uint32_t>& bufferSizes,
         const std::vector<uint32_t>& ssboSizes, VkDescriptorSetLayout descSetLayout, PipelineType type) {
         std::vector<VkDescriptorSetLayout> layouts(numSwapChainImages, descSetLayout);
 
@@ -144,16 +144,18 @@ namespace JoeEngine {
             }
 
             std::vector<VkDescriptorImageInfo> imageInfos;
-            for (uint32_t j = 0; j < imageViews.size(); ++j) {
-                VkDescriptorImageInfo imageInfo = {};
-                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                if ((type == DEFERRED && (j == 2 || j == 3)) ||
-                    (type == FORWARD && (j == 4))) { // Depth stencil G-buffer, shadow map
-                    imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+            if (imageViews.size() > 0) {
+                for (uint32_t j = 0; j < imageViews[0].size(); ++j) {
+                    VkDescriptorImageInfo imageInfo = {};
+                    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                    if ((type == DEFERRED && (j == 2 || j == 3)) ||
+                        (type == FORWARD && (j == 4))) { // Depth stencil G-buffer, shadow map
+                        imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+                    }
+                    imageInfo.imageView = imageViews[i][j];
+                    imageInfo.sampler = samplers[j];
+                    imageInfos.push_back(imageInfo);
                 }
-                imageInfo.imageView = imageViews[j];
-                imageInfo.sampler = samplers[j];
-                imageInfos.push_back(imageInfo);
             }
 
             std::vector<VkWriteDescriptorSet> descriptorWrites;

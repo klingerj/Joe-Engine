@@ -74,6 +74,8 @@ namespace JoeEngine {
                     transformComponentsSorted_shadow.emplace_back(transformComponents.GetData()[indices[j].second].GetTransform());
                 }
 
+                m_vulkanRenderer.StartFrame();
+
                 {
                     //ScopedTimer<float> timer("Shadow Pass Command Buffer Recording");
                     m_vulkanRenderer.DrawShadowPass(meshComponentsSorted_shadow, m_sceneManager.m_shadowCamera);

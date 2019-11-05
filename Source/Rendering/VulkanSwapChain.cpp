@@ -1,7 +1,7 @@
-#include "VulkanSwapChain.h"
-
 #include <set>
 #include <algorithm>
+
+#include "VulkanSwapChain.h"
 
 namespace JoeEngine {
     bool JEVulkanSwapChain::CheckDeviceExtensionSupport(VkPhysicalDevice physicalDevice) const {
@@ -98,7 +98,7 @@ namespace JoeEngine {
         VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
         VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities, vulkanWindow.GetWindow());
 
-        uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+        uint32_t imageCount = JE_DEFAULT_MAX_FRAMES_IN_FLIGHT + 1; //swapChainSupport.capabilities.minImageCount + 1);
         if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
             imageCount = swapChainSupport.capabilities.maxImageCount;
         }

@@ -69,7 +69,7 @@ namespace JoeEngine {
         }
 
         uint32_t CreateDescriptor(VkDevice device, VkPhysicalDevice physicalDevice, const JEVulkanSwapChain& swapChain,
-            const std::vector<VkImageView>& imageViews, const std::vector<VkSampler> samplers,
+            const std::vector<std::vector<VkImageView>>& imageViews, const std::vector<VkSampler>& samplers,
             const std::vector<uint32_t>& bufferSizes, const std::vector<uint32_t>& ssboSizes, VkDescriptorSetLayout layout,
             PipelineType type) {
             m_descriptors.emplace_back(JEVulkanDescriptor(physicalDevice, device, swapChain.GetImageViews().size(),
