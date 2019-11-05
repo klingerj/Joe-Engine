@@ -92,7 +92,7 @@ namespace JoeEngine {
         }
     }
 
-    void JEVulkanSwapChain::Create(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanWindow& vulkanWindow, int width, int height) {
+    void JEVulkanSwapChain::Create(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanWindow& vulkanWindow, uint32_t width, uint32_t height) {
         SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(physicalDevice, vulkanWindow.GetSurface());
         VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
         VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
@@ -143,10 +143,10 @@ namespace JoeEngine {
         m_swapChainImageFormat = surfaceFormat.format;
         m_swapChainExtent = extent;
 
-        CreateImageViews(physicalDevice, device, vulkanWindow.GetSurface(), width, height);
+        CreateImageViews(physicalDevice, device, vulkanWindow.GetSurface());
     }
 
-    void JEVulkanSwapChain::CreateImageViews(VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface, int width, int height) {
+    void JEVulkanSwapChain::CreateImageViews(VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface) {
         m_swapChainImageViews.resize(m_swapChainImages.size());
 
         for (uint32_t i = 0; i < m_swapChainImages.size(); ++i) {

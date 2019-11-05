@@ -35,6 +35,9 @@ namespace JoeEngine {
         uint32_t m_width;
         uint32_t m_height;
 
+        bool m_useDeferred;
+        bool m_enableOIT;
+
         // References to other systems
         JEEngineInstance* m_engineInstance;
         JESceneManager* m_sceneManager;
@@ -171,11 +174,11 @@ namespace JoeEngine {
 
     public:
         JEVulkanRenderer() : m_width(JE_DEFAULT_SCREEN_WIDTH), m_height(JE_DEFAULT_SCREEN_HEIGHT), m_MAX_FRAMES_IN_FLIGHT(JE_DEFAULT_MAX_FRAMES_IN_FLIGHT),
-                             m_currentFrame(0), m_didFramebufferResize(false), m_engineInstance(nullptr), m_sceneManager(nullptr) {}
+            m_useDeferred(false), m_enableOIT(false), m_engineInstance(nullptr), m_sceneManager(nullptr), m_didFramebufferResize(false), m_currentFrame(0) {}
         ~JEVulkanRenderer() {}
 
         // Vulkan setup
-        void Initialize(JESceneManager* sceneManager, JEEngineInstance* engineInstance);
+        void Initialize(RendererSettings rendererSettings, JESceneManager* sceneManager, JEEngineInstance* engineInstance);
         void RegisterCallbacks(JEIOHandler* ioHandler);
 
         // Vulkan cleanup

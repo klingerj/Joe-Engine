@@ -1,5 +1,6 @@
 #include <map>
 #include <vector>
+#include <iostream>
 
 #include "JoeEngineConfig.h"
 #include "../EngineInstance.h"
@@ -13,11 +14,10 @@ namespace JoeEngine {
         auto& renderer = reinterpret_cast<JEEngineInstance*>(glfwGetWindowUserPointer(window))->GetRenderSubsystem();
         renderer.FramebufferResized();
     }
-    
-    static constexpr bool isDeferred = true;
 
-
-    void JEVulkanRenderer::Initialize(JESceneManager* sceneManager, JEEngineInstance* engineInstance) {
+    void JEVulkanRenderer::Initialize(RendererSettings rendererSettings, JESceneManager* sceneManager, JEEngineInstance* engineInstance) {
+        m_useDeferred = rendererSettings & RendererSettings::EnableDeferred;
+        m_enableOIT = rendererSettings & RendererSettings::EnableOIT;
 
         m_engineInstance = engineInstance;
         m_sceneManager = sceneManager;
@@ -90,7 +90,7 @@ namespace JoeEngine {
         // is just a single ssbo for the model matrices.
 
         // Create the deferred geometry shader
-        if constexpr (isDeferred) {
+        if (m_useDeferred) {
             MaterialComponent temp;
             // TODO: deal with this hard-coded number
             m_deferredGeometryShaderID = m_shaderManager.CreateShader(m_device, m_physicalDevice, m_vulkanSwapChain, temp, 4,
@@ -355,17 +355,6 @@ namespace JoeEngine {
 
             VkFramebufferCreateInfo framebufferInfo = {};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-
-            if constexpr (isDeferred) {
-                VkImageView attachment = swapChainImageViews[i];
-                framebufferInfo.attachmentCount = 1;
-                framebufferInfo.pAttachments = &attachment;
-            } else {
-                std::array<VkImageView, 2> attachments = { swapChainImageViews[i], m_forwardPass.depth.imageView };
-                framebufferInfo.attachmentCount = attachments.size();
-                framebufferInfo.pAttachments = attachments.data();
-            }
-
             framebufferInfo.width = extent.width;
             framebufferInfo.height = extent.height;
             framebufferInfo.layers = 1;
@@ -373,15 +362,27 @@ namespace JoeEngine {
             if (m_postProcessingPasses.size() > 0) {
                 framebufferInfo.renderPass = m_postProcessingPasses[m_postProcessingPasses.size() - 1].renderPass;
             } else {
-                if constexpr (isDeferred) {
+                if (m_useDeferred) {
                     framebufferInfo.renderPass = m_renderPass_deferredLighting;
                 } else {
                     framebufferInfo.renderPass = m_forwardPass.renderPass;
                 }
             }
 
-            if (vkCreateFramebuffer(m_device, &framebufferInfo, nullptr, &m_swapChainFramebuffers[i]) != VK_SUCCESS) {
-                throw std::runtime_error("failed to create framebuffer!");
+            if (m_useDeferred) {
+                std::array<VkImageView, 1> attachments = { swapChainImageViews[i] };
+                framebufferInfo.attachmentCount = attachments.size();
+                framebufferInfo.pAttachments = attachments.data();
+                if (vkCreateFramebuffer(m_device, &framebufferInfo, nullptr, &m_swapChainFramebuffers[i]) != VK_SUCCESS) {
+                    throw std::runtime_error("failed to create framebuffer!");
+                }
+            } else {
+                std::array<VkImageView, 2> attachments = { swapChainImageViews[i], m_forwardPass.depth.imageView };
+                framebufferInfo.attachmentCount = attachments.size();
+                framebufferInfo.pAttachments = attachments.data();
+                if (vkCreateFramebuffer(m_device, &framebufferInfo, nullptr, &m_swapChainFramebuffers[i]) != VK_SUCCESS) {
+                    throw std::runtime_error("failed to create framebuffer!");
+                }
             }
         }
     }
@@ -507,7 +508,7 @@ namespace JoeEngine {
         m_shaderManager.UpdateBuffers(m_forwardModelMatrixDescriptorID, imageIndex, {}, {},
             { transformsSorted.data() }, { (uint32_t)(transformsSorted.size() * sizeof(glm::mat4)) });
 
-        if constexpr (isDeferred) {
+        if (m_useDeferred) {
             // Add camera inv view/proj matrices as uniforms
             //std::array<glm::mat4, 2> uniformInvViewProjData = { m_sceneManager->m_camera.GetInvProj(), m_sceneManager->m_camera.GetInvView() };
             const std::array<glm::mat4, 2> uniformInvViewProjData = { glm::inverse(m_sceneManager->m_camera.GetProj()), glm::inverse(m_sceneManager->m_camera.GetView()) };
@@ -532,7 +533,7 @@ namespace JoeEngine {
         for (uint32_t i = 0; i < materialComponents.size(); ++i) {
             // TODO: Don't do this for every material, ignore duplicates
 
-            if constexpr (isDeferred) {// Add light viewProj matrix (TODO: matrices) as uniforms
+            if (m_useDeferred) {// Add light viewProj matrix (TODO: matrices) as uniforms
                 const std::array<glm::mat4, 1> uniformLightData = { m_sceneManager->m_shadowCamera.GetOrthoViewProj() };
 
                 std::vector<const void*> buffers;
@@ -571,7 +572,7 @@ namespace JoeEngine {
 
         VkRenderPass renderPass;
         PipelineType type;
-        if constexpr (isDeferred) {
+        if (m_useDeferred) {
             if (materialComponent.m_renderLayer == TRANSLUCENT) {
                 renderPass = m_renderPass_deferredLighting; // m_forwardPass.renderPass;
                 type = FORWARD;
@@ -642,7 +643,7 @@ namespace JoeEngine {
         }
 
         uint32_t descrID = 0;
-        if constexpr (isDeferred) {
+        if (m_useDeferred) {
             if (materialComponent.m_renderLayer == TRANSLUCENT) {
                 descrID = m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain,
                     imageViews, samplers, uniformBufferSizes, {},
@@ -779,7 +780,7 @@ namespace JoeEngine {
     void JEVulkanRenderer::DrawMeshComponents(const std::vector<MeshComponent>& meshComponents,
                                               const std::vector<MaterialComponent>& materialComponents,
                                               const JECamera& camera) {
-        if constexpr (isDeferred) {
+        if (m_useDeferred) {
             /// Construct deferred geometry render pass
             VkCommandBufferBeginInfo beginInfo = {};
             beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -940,32 +941,6 @@ namespace JoeEngine {
                 }
 
                 vkCmdEndRenderPass(m_commandBuffers[i]);
-
-                // Begin translucent drawing
-                /*renderPassInfo = {};
-                renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-                renderPassInfo.renderArea.offset = { 0, 0 };
-                renderPassInfo.renderArea.extent = { m_width, m_height };
-                std::array<VkClearValue, 2> clearValuesForward = {};
-                clearValuesForward[0].color = { 0.0f };
-                clearValuesForward[1].depthStencil = { 1.0f, 0 };
-                renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValuesForward.size());
-                renderPassInfo.pClearValues = clearValuesForward.data();
-
-                renderPassInfo.renderPass = m_forwardPass.renderPass;
-                if (m_postProcessingPasses.size() > 0) {
-                    renderPassInfo.framebuffer = m_forwardPass.framebuffer;
-                } else {
-                    renderPassInfo.framebuffer = m_swapChainFramebuffers[i];
-                }
-                vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-                // TODO: draw translucent geometry here
-                // for each translucent material (they're sorted), bind descr set, bind push constants, call draws
-
-                //uint32_t startIdx;
-
-
-                vkCmdEndRenderPass(m_commandBuffers[i]);*/
 
                 // Loop over each post processing pass
                 for (uint32_t p = 0; p < m_postProcessingPasses.size(); ++p) {
@@ -1637,7 +1612,7 @@ namespace JoeEngine {
             throw std::runtime_error("failed to submit shadow pass command buffer!");
         }
 
-        if constexpr (isDeferred) {
+        if (m_useDeferred) {
             // Submit deferred render pass with g-buffers
             VkSubmitInfo submitInfo_deferred_gBuffers = {};
             submitInfo_deferred_gBuffers.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1665,7 +1640,7 @@ namespace JoeEngine {
         submitInfo.pNext = nullptr;
         submitInfo.waitSemaphoreCount = 1;
 
-        if constexpr (isDeferred) {
+        if (m_useDeferred) {
             submitInfo.pWaitSemaphores = &m_deferredPass.semaphore;
         } else {
             submitInfo.pWaitSemaphores = &m_shadowPass.semaphore;

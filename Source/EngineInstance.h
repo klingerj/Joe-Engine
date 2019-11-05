@@ -32,7 +32,7 @@ namespace JoeEngine {
         std::unordered_map<std::type_index, uint32_t> m_componentTypeToIndex;
         
         // Startup/shutdown
-        void InitializeEngine();
+        void InitializeEngine(RendererSettings rendererSettings);
         void StopEngine();
 
         template <typename T, typename U>
@@ -43,15 +43,10 @@ namespace JoeEngine {
         std::vector<Entity> m_destroyedEntities;
         void DestroyEntities();
 
-        /*template <typename T, typename U>
-        const std::unique_ptr<U> GetComponentManager() const {
-            return static_cast<std::unique_ptr<U>>(m_componentManagers[m_componentTypeToIndex.at(typeid(T))]);
-            //return m_componentManagers[m_componentTypeToIndex.find(typeid(T))]];
-        }*/
-
     public:
-        JEEngineInstance() {
-            InitializeEngine();
+        JEEngineInstance() : JEEngineInstance(RendererSettings::Default) {}
+        JEEngineInstance(RendererSettings rendererSettings) {
+            InitializeEngine(rendererSettings);
         }
         ~JEEngineInstance() {}
 

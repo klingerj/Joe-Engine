@@ -232,7 +232,7 @@ namespace JoeEngine {
         StopEngine();
     }
 
-    void JEEngineInstance::InitializeEngine() {
+    void JEEngineInstance::InitializeEngine(RendererSettings rendererSettings) {
         {
             ScopedTimer<float> timer("Initialize Joe Engine");
             // Init list of component managers
@@ -243,7 +243,7 @@ namespace JoeEngine {
 
             //m_physicsManager.Initialize(meshDataManager);
             m_sceneManager.Initialize(this);
-            m_vulkanRenderer.Initialize(&m_sceneManager, this);
+            m_vulkanRenderer.Initialize(rendererSettings, &m_sceneManager, this);
 
             GLFWwindow* window = m_vulkanRenderer.GetGLFWWindow();
             m_ioHandler.Initialize(window);
