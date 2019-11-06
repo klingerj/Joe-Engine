@@ -822,36 +822,40 @@ namespace JoeEngine {
             // for every opaque material component, bind its descriptor each time it changes
             uint32_t idx = 1;
             uint32_t currStartIdx = 0;
-            uint32_t currDescriptorID = materialComponents[0].m_descriptorID;
-            m_shaderManager.GetDescriptorAt(currDescriptorID).BindDescriptorSets(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], deferredGeomShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
-            int currMesh = meshComponents[currStartIdx].GetVertexHandle();
-            
-            while (idx <= materialComponents.size()) {
-                if (idx == materialComponents.size()) {
-                    deferredGeomShader->BindPushConstants_InstancedData(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], {currStartIdx, 0, 0, 0});
-                    DrawMeshInstanced(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, currMesh);
-                    break;
-                }
-                if (materialComponents[idx].m_renderLayer < TRANSLUCENT &&
-                    materialComponents[idx].m_descriptorID == currDescriptorID &&
-                    meshComponents[idx].GetVertexHandle() == currMesh) {
-                    ++idx;
-                } else {
-                    // Draw instanced mesh using curr material resources
-                    deferredGeomShader->BindPushConstants_InstancedData(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], {currStartIdx, 0, 0, 0});
-                    DrawMeshInstanced(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, currMesh);
+            uint32_t currDescriptorID = 0;
 
-                    if (materialComponents[idx].m_renderLayer >= TRANSLUCENT) {
+            if (materialComponents.size() > 0) {
+                currDescriptorID = materialComponents[0].m_descriptorID;
+                m_shaderManager.GetDescriptorAt(currDescriptorID).BindDescriptorSets(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], deferredGeomShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
+                int currMesh = meshComponents[currStartIdx].GetVertexHandle();
+
+                while (idx <= materialComponents.size()) {
+                    if (idx == materialComponents.size()) {
+                        deferredGeomShader->BindPushConstants_InstancedData(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
+                        DrawMeshInstanced(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, currMesh);
                         break;
                     }
-                    if (materialComponents[idx].m_descriptorID != currDescriptorID) {
-                        m_shaderManager.GetDescriptorAt(materialComponents[idx].m_descriptorID).BindDescriptorSets(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], deferredGeomShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
-                        currDescriptorID = materialComponents[idx].m_descriptorID;
+                    if (materialComponents[idx].m_renderLayer < TRANSLUCENT &&
+                        materialComponents[idx].m_descriptorID == currDescriptorID &&
+                        meshComponents[idx].GetVertexHandle() == currMesh) {
+                        ++idx;
+                    } else {
+                        // Draw instanced mesh using curr material resources
+                        deferredGeomShader->BindPushConstants_InstancedData(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
+                        DrawMeshInstanced(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, currMesh);
+
+                        if (materialComponents[idx].m_renderLayer >= TRANSLUCENT) {
+                            break;
+                        }
+                        if (materialComponents[idx].m_descriptorID != currDescriptorID) {
+                            m_shaderManager.GetDescriptorAt(materialComponents[idx].m_descriptorID).BindDescriptorSets(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], deferredGeomShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
+                            currDescriptorID = materialComponents[idx].m_descriptorID;
+                        }
+                        if (meshComponents[idx].GetVertexHandle() != currMesh) {
+                            currMesh = meshComponents[idx].GetVertexHandle();
+                        }
+                        currStartIdx = idx;
                     }
-                    if (meshComponents[idx].GetVertexHandle() != currMesh) {
-                        currMesh = meshComponents[idx].GetVertexHandle();
-                    }
-                    currStartIdx = idx;
                 }
             }
 
@@ -893,55 +897,62 @@ namespace JoeEngine {
 
             vkCmdBeginRenderPass(m_commandBuffers[m_currSwapChainImageIndex], &renderPassInfoDeferred, VK_SUBPASS_CONTENTS_INLINE);
 
-            JEDeferredShader* deferredShader = (JEDeferredShader*)m_shaderManager.GetShaderAt(materialComponents[0].m_shaderID);
-            vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, deferredShader->GetPipeline());
-            m_shaderManager.GetDescriptorAt(m_deferredLightingDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], deferredShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
+            if (materialComponents.size() > 0) {
+                // TODO: make this less hard coded
+                JEDeferredShader* deferredShader = (JEDeferredShader*)m_shaderManager.GetShaderAt(materialComponents[0].m_shaderID);
+                vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, deferredShader->GetPipeline());
+                if (materialComponents[0].m_materialSettings & RECEIVES_SHADOWS) {
+                    m_shaderManager.GetDescriptorAt(m_deferredLightingDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], deferredShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
+                } else {
+                    m_shaderManager.GetDescriptorAt(m_deferredLightingNoShadowsDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], deferredShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
+                }
 
-            DrawScreenSpaceTriMesh(m_commandBuffers[m_currSwapChainImageIndex]);
+                DrawScreenSpaceTriMesh(m_commandBuffers[m_currSwapChainImageIndex]);
 
-            // Draw transluscent geometry using forward rendering
-            uint32_t materialIdx = idx;
-            if (materialIdx < materialComponents.size()) {
-                currStartIdx = materialIdx;
-                ++materialIdx;
-                currDescriptorID = materialComponents[currStartIdx].m_descriptorID;
-                uint32_t currShaderID = materialComponents[currStartIdx].m_shaderID;
-                JEForwardShader* forwardShader = (JEForwardShader*)m_shaderManager.GetShaderAt(currShaderID);
-                vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, forwardShader->GetPipeline());
-                m_shaderManager.GetDescriptorAt(currDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
-                forwardShader->BindPushConstants_ViewProj(m_commandBuffers[m_currSwapChainImageIndex], camera.GetViewProj());
-                m_shaderManager.GetDescriptorAt(m_forwardModelMatrixDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 1, m_currSwapChainImageIndex);
-                int currMesh = meshComponents[currStartIdx].GetVertexHandle();
+                // Draw transluscent geometry using forward rendering
+                uint32_t materialIdx = idx;
+                if (materialIdx < materialComponents.size()) {
+                    currStartIdx = materialIdx;
+                    ++materialIdx;
+                    currDescriptorID = materialComponents[currStartIdx].m_descriptorID;
+                    uint32_t currShaderID = materialComponents[currStartIdx].m_shaderID;
+                    JEForwardShader* forwardShader = (JEForwardShader*)m_shaderManager.GetShaderAt(currShaderID);
+                    vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, forwardShader->GetPipeline());
+                    m_shaderManager.GetDescriptorAt(currDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
+                    forwardShader->BindPushConstants_ViewProj(m_commandBuffers[m_currSwapChainImageIndex], camera.GetViewProj());
+                    m_shaderManager.GetDescriptorAt(m_forwardModelMatrixDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 1, m_currSwapChainImageIndex);
+                    int currMesh = meshComponents[currStartIdx].GetVertexHandle();
 
-                while (materialIdx <= materialComponents.size()) {
-                    if (materialIdx == materialComponents.size()) {
-                        forwardShader->BindPushConstants_InstancedData(m_commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
-                        DrawMeshInstanced(m_commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, currMesh);
-                        break;
-                    }
-                    if (materialComponents[materialIdx].m_shaderID == currShaderID &&
-                        materialComponents[materialIdx].m_descriptorID == currDescriptorID &&
-                        meshComponents[materialIdx].GetVertexHandle() == currMesh) {
-                        ++materialIdx;
-                    } else {
-                        // Draw instanced mesh using curr material resources
-                        forwardShader->BindPushConstants_InstancedData(m_commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
-                        DrawMeshInstanced(m_commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, currMesh);
-
-                        if (materialComponents[materialIdx].m_shaderID != currShaderID) {
-                            currShaderID = materialComponents[materialIdx].m_shaderID;
-                            forwardShader = (JEForwardShader*)m_shaderManager.GetShaderAt(currShaderID);
-                            vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, forwardShader->GetPipeline());
-                            m_shaderManager.GetDescriptorAt(m_forwardModelMatrixDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 1, m_currSwapChainImageIndex);
+                    while (materialIdx <= materialComponents.size()) {
+                        if (materialIdx == materialComponents.size()) {
+                            forwardShader->BindPushConstants_InstancedData(m_commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
+                            DrawMeshInstanced(m_commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, currMesh);
+                            break;
                         }
-                        if (materialComponents[materialIdx].m_descriptorID != currDescriptorID) {
-                            currDescriptorID = materialComponents[materialIdx].m_descriptorID;
-                            m_shaderManager.GetDescriptorAt(currDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
+                        if (materialComponents[materialIdx].m_shaderID == currShaderID &&
+                            materialComponents[materialIdx].m_descriptorID == currDescriptorID &&
+                            meshComponents[materialIdx].GetVertexHandle() == currMesh) {
+                            ++materialIdx;
+                        } else {
+                            // Draw instanced mesh using curr material resources
+                            forwardShader->BindPushConstants_InstancedData(m_commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
+                            DrawMeshInstanced(m_commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, currMesh);
+
+                            if (materialComponents[materialIdx].m_shaderID != currShaderID) {
+                                currShaderID = materialComponents[materialIdx].m_shaderID;
+                                forwardShader = (JEForwardShader*)m_shaderManager.GetShaderAt(currShaderID);
+                                vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, forwardShader->GetPipeline());
+                                m_shaderManager.GetDescriptorAt(m_forwardModelMatrixDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 1, m_currSwapChainImageIndex);
+                            }
+                            if (materialComponents[materialIdx].m_descriptorID != currDescriptorID) {
+                                currDescriptorID = materialComponents[materialIdx].m_descriptorID;
+                                m_shaderManager.GetDescriptorAt(currDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
+                            }
+                            if (meshComponents[materialIdx].GetVertexHandle() != currMesh) {
+                                currMesh = meshComponents[materialIdx].GetVertexHandle();
+                            }
+                            currStartIdx = materialIdx;
                         }
-                        if (meshComponents[materialIdx].GetVertexHandle() != currMesh) {
-                            currMesh = meshComponents[materialIdx].GetVertexHandle();
-                        }
-                        currStartIdx = materialIdx;
                     }
                 }
             }
