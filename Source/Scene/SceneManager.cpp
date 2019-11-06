@@ -68,15 +68,15 @@ namespace JoeEngine {
 
             MaterialComponent mat_translucent_forward;
             mat_translucent_forward.m_geomType = TRIANGLES;
-            mat_translucent_forward.m_materialSettings = ALL_SETTINGS;
+            mat_translucent_forward.m_materialSettings = CASTS_SHADOWS;
             mat_translucent_forward.m_renderLayer = TRANSLUCENT;
             mat_translucent_forward.m_texAlbedo = tex6;
-            m_engineInstance->CreateShader(mat_translucent_forward, JE_SHADER_DIR + "vert_forward.spv", JE_SHADER_DIR + "frag_forward_new.spv");
+            m_engineInstance->CreateShader(mat_translucent_forward, JE_SHADER_DIR + "vert_forward.spv", JE_SHADER_DIR + "frag_forward_new_no_shadows.spv");
             m_engineInstance->CreateDescriptor(mat_translucent_forward);
 
             MaterialComponent mat_translucent_forward2;
             mat_translucent_forward2.m_geomType = TRIANGLES;
-            mat_translucent_forward2.m_materialSettings = ALL_SETTINGS;
+            mat_translucent_forward2.m_materialSettings = CASTS_SHADOWS;
             mat_translucent_forward2.m_renderLayer = TRANSLUCENT;
             mat_translucent_forward2.m_texAlbedo = tex7;
             mat_translucent_forward2.m_shaderID = mat_translucent_forward.m_shaderID;
@@ -84,7 +84,7 @@ namespace JoeEngine {
 
             MaterialComponent mat_translucent_forward3;
             mat_translucent_forward3.m_geomType = TRIANGLES;
-            mat_translucent_forward3.m_materialSettings = ALL_SETTINGS;
+            mat_translucent_forward3.m_materialSettings = CASTS_SHADOWS;
             mat_translucent_forward3.m_renderLayer = TRANSLUCENT;
             mat_translucent_forward3.m_texAlbedo = tex8;
             mat_translucent_forward3.m_shaderID = mat_translucent_forward.m_shaderID;

@@ -387,7 +387,7 @@ namespace JoeEngine {
             }
 
             if (m_useDeferred) {
-                std::array<VkImageView, 1> attachments = { swapChainImageViews[i] };
+                std::array<VkImageView, 2> attachments = { swapChainImageViews[i], m_deferredPass.depths[i].imageView };
                 framebufferInfo.attachmentCount = attachments.size();
                 framebufferInfo.pAttachments = attachments.data();
                 if (vkCreateFramebuffer(m_device, &framebufferInfo, nullptr, &m_swapChainFramebuffers[i]) != VK_SUCCESS) {
@@ -630,7 +630,7 @@ namespace JoeEngine {
 
             if (materialComponent.m_renderLayer == TRANSLUCENT) {
                 // Using forward shader
-                if (materialComponent.m_materialSettings & CASTS_SHADOWS) {
+                if (materialComponent.m_materialSettings & RECEIVES_SHADOWS) {
                     tempImageViews.push_back(m_shadowPass.depths[i].imageView);
                 }
             }
@@ -642,13 +642,13 @@ namespace JoeEngine {
         samplers.push_back(m_textureLibraryGlobal.GetSamplerAt(materialComponent.m_texMetallic));
         samplers.push_back(m_textureLibraryGlobal.GetSamplerAt(materialComponent.m_texNormal));
         if (materialComponent.m_renderLayer == TRANSLUCENT) {
-            if (materialComponent.m_materialSettings & CASTS_SHADOWS) {
+            if (materialComponent.m_materialSettings & RECEIVES_SHADOWS) {
                 samplers.push_back(m_shadowPass.depthSampler);
             }
         }
 
         std::vector<uint32_t> uniformBufferSizes;
-        if (materialComponent.m_materialSettings & CASTS_SHADOWS) {
+        if (materialComponent.m_materialSettings & RECEIVES_SHADOWS) {
             uniformBufferSizes.push_back(sizeof(glm::mat4));
         }
 
@@ -864,122 +864,121 @@ namespace JoeEngine {
             /// Construct deferred lighting and post processing passes
 
             // Begin command buffer
-            //for (uint32_t i = 0; i < m_commandBuffers.size(); ++i) {
-                VkCommandBufferBeginInfo beginInfoDeferred = {};
-                beginInfoDeferred.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-                beginInfoDeferred.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-                beginInfoDeferred.pInheritanceInfo = nullptr;
+            VkCommandBufferBeginInfo beginInfoDeferred = {};
+            beginInfoDeferred.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            beginInfoDeferred.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+            beginInfoDeferred.pInheritanceInfo = nullptr;
 
-                if (vkBeginCommandBuffer(m_commandBuffers[m_currSwapChainImageIndex], &beginInfoDeferred) != VK_SUCCESS) {
-                    throw std::runtime_error("failed to begin recording command buffer!");
-                }
+            if (vkBeginCommandBuffer(m_commandBuffers[m_currSwapChainImageIndex], &beginInfoDeferred) != VK_SUCCESS) {
+                throw std::runtime_error("failed to begin recording command buffer!");
+            }
 
-                // Begin render pass
-                VkRenderPassBeginInfo renderPassInfoDeferred = {};
-                renderPassInfoDeferred.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-                renderPassInfoDeferred.renderPass = m_renderPass_deferredLighting;
-                if (m_postProcessingPasses.size() > 0) {
-                    renderPassInfoDeferred.framebuffer = m_framebuffer_deferredLighting;
-                } else {
-                    renderPassInfoDeferred.framebuffer = m_swapChainFramebuffers[m_currSwapChainImageIndex];
-                }
-                renderPassInfoDeferred.renderArea.offset = { 0, 0 };
-                renderPassInfoDeferred.renderArea.extent = { m_width, m_height };
+            // Begin render pass
+            VkRenderPassBeginInfo renderPassInfoDeferred = {};
+            renderPassInfoDeferred.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            renderPassInfoDeferred.renderPass = m_renderPass_deferredLighting;
+            if (m_postProcessingPasses.size() > 0) {
+                renderPassInfoDeferred.framebuffer = m_framebuffer_deferredLighting;
+            } else {
+                renderPassInfoDeferred.framebuffer = m_swapChainFramebuffers[m_currSwapChainImageIndex];
+            }
+            renderPassInfoDeferred.renderArea.offset = { 0, 0 };
+            renderPassInfoDeferred.renderArea.extent = { m_width, m_height };
 
-                std::array<VkClearValue, 1> clearValuesDeferred = {};
-                clearValuesDeferred[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-                renderPassInfoDeferred.clearValueCount = static_cast<uint32_t>(clearValuesDeferred.size());
-                renderPassInfoDeferred.pClearValues = clearValuesDeferred.data();
+            std::array<VkClearValue, 2> clearValuesDeferred = {};
+            clearValuesDeferred[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+            clearValuesDeferred[1].depthStencil = { 1.0f, 0 };
+            renderPassInfoDeferred.clearValueCount = static_cast<uint32_t>(clearValuesDeferred.size());
+            renderPassInfoDeferred.pClearValues = clearValuesDeferred.data();
 
-                vkCmdBeginRenderPass(m_commandBuffers[m_currSwapChainImageIndex], &renderPassInfoDeferred, VK_SUBPASS_CONTENTS_INLINE);
+            vkCmdBeginRenderPass(m_commandBuffers[m_currSwapChainImageIndex], &renderPassInfoDeferred, VK_SUBPASS_CONTENTS_INLINE);
 
-                JEDeferredShader* deferredShader = (JEDeferredShader*)m_shaderManager.GetShaderAt(materialComponents[0].m_shaderID);
-                vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, deferredShader->GetPipeline());
-                m_shaderManager.GetDescriptorAt(m_deferredLightingDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], deferredShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
+            JEDeferredShader* deferredShader = (JEDeferredShader*)m_shaderManager.GetShaderAt(materialComponents[0].m_shaderID);
+            vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, deferredShader->GetPipeline());
+            m_shaderManager.GetDescriptorAt(m_deferredLightingDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], deferredShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
 
-                DrawScreenSpaceTriMesh(m_commandBuffers[m_currSwapChainImageIndex]);
+            DrawScreenSpaceTriMesh(m_commandBuffers[m_currSwapChainImageIndex]);
 
-                // Draw transluscent geometry using forward rendering
-                uint32_t materialIdx = idx;
-                if (materialIdx < materialComponents.size()) {
-                    currStartIdx = materialIdx;
-                    ++materialIdx;
-                    currDescriptorID = materialComponents[currStartIdx].m_descriptorID;
-                    uint32_t currShaderID = materialComponents[currStartIdx].m_shaderID;
-                    JEForwardShader* forwardShader = (JEForwardShader*)m_shaderManager.GetShaderAt(currShaderID);
-                    vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, forwardShader->GetPipeline());
-                    m_shaderManager.GetDescriptorAt(currDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
-                    forwardShader->BindPushConstants_ViewProj(m_commandBuffers[m_currSwapChainImageIndex], camera.GetViewProj());
-                    m_shaderManager.GetDescriptorAt(m_forwardModelMatrixDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 1, m_currSwapChainImageIndex);
-                    int currMesh = meshComponents[currStartIdx].GetVertexHandle();
+            // Draw transluscent geometry using forward rendering
+            uint32_t materialIdx = idx;
+            if (materialIdx < materialComponents.size()) {
+                currStartIdx = materialIdx;
+                ++materialIdx;
+                currDescriptorID = materialComponents[currStartIdx].m_descriptorID;
+                uint32_t currShaderID = materialComponents[currStartIdx].m_shaderID;
+                JEForwardShader* forwardShader = (JEForwardShader*)m_shaderManager.GetShaderAt(currShaderID);
+                vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, forwardShader->GetPipeline());
+                m_shaderManager.GetDescriptorAt(currDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
+                forwardShader->BindPushConstants_ViewProj(m_commandBuffers[m_currSwapChainImageIndex], camera.GetViewProj());
+                m_shaderManager.GetDescriptorAt(m_forwardModelMatrixDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 1, m_currSwapChainImageIndex);
+                int currMesh = meshComponents[currStartIdx].GetVertexHandle();
 
-                    while (materialIdx <= materialComponents.size()) {
-                        if (materialIdx == materialComponents.size()) {
-                            forwardShader->BindPushConstants_InstancedData(m_commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
-                            DrawMeshInstanced(m_commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, currMesh);
-                            break;
-                        }
-                        if (materialComponents[materialIdx].m_shaderID == currShaderID &&
-                            materialComponents[materialIdx].m_descriptorID == currDescriptorID &&
-                            meshComponents[materialIdx].GetVertexHandle() == currMesh) {
-                            ++materialIdx;
-                        } else {
-                            // Draw instanced mesh using curr material resources
-                            forwardShader->BindPushConstants_InstancedData(m_commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
-                            DrawMeshInstanced(m_commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, currMesh);
-
-                            if (materialComponents[materialIdx].m_shaderID != currShaderID) {
-                                currShaderID = materialComponents[materialIdx].m_shaderID;
-                                forwardShader = (JEForwardShader*)m_shaderManager.GetShaderAt(currShaderID);
-                                vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, forwardShader->GetPipeline());
-                                m_shaderManager.GetDescriptorAt(m_forwardModelMatrixDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 1, m_currSwapChainImageIndex);
-                            }
-                            if (materialComponents[materialIdx].m_descriptorID != currDescriptorID) {
-                                currDescriptorID = materialComponents[materialIdx].m_descriptorID;
-                                m_shaderManager.GetDescriptorAt(currDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
-                            }
-                            if (meshComponents[materialIdx].GetVertexHandle() != currMesh) {
-                                currMesh = meshComponents[materialIdx].GetVertexHandle();
-                            }
-                            currStartIdx = materialIdx;
-                        }
+                while (materialIdx <= materialComponents.size()) {
+                    if (materialIdx == materialComponents.size()) {
+                        forwardShader->BindPushConstants_InstancedData(m_commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
+                        DrawMeshInstanced(m_commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, currMesh);
+                        break;
                     }
-                    //}
-                }
-
-                vkCmdEndRenderPass(m_commandBuffers[m_currSwapChainImageIndex]);
-
-                // Loop over each post processing pass
-                /*for (uint32_t p = 0; p < m_postProcessingPasses.size(); ++p) {
-                    VkRenderPassBeginInfo renderPassInfo = {};
-                    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-                    if (p == m_postProcessingPasses.size() - 1) {
-                        renderPassInfo.framebuffer = m_swapChainFramebuffers[i];
-                        renderPassInfo.renderArea.extent = m_vulkanSwapChain.GetExtent();
+                    if (materialComponents[materialIdx].m_shaderID == currShaderID &&
+                        materialComponents[materialIdx].m_descriptorID == currDescriptorID &&
+                        meshComponents[materialIdx].GetVertexHandle() == currMesh) {
+                        ++materialIdx;
                     } else {
-                        renderPassInfo.framebuffer = m_postProcessingPasses[p].framebuffer;
-                        renderPassInfo.renderArea.extent = { m_width, m_height };
+                        // Draw instanced mesh using curr material resources
+                        forwardShader->BindPushConstants_InstancedData(m_commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
+                        DrawMeshInstanced(m_commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, currMesh);
+
+                        if (materialComponents[materialIdx].m_shaderID != currShaderID) {
+                            currShaderID = materialComponents[materialIdx].m_shaderID;
+                            forwardShader = (JEForwardShader*)m_shaderManager.GetShaderAt(currShaderID);
+                            vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, forwardShader->GetPipeline());
+                            m_shaderManager.GetDescriptorAt(m_forwardModelMatrixDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 1, m_currSwapChainImageIndex);
+                        }
+                        if (materialComponents[materialIdx].m_descriptorID != currDescriptorID) {
+                            currDescriptorID = materialComponents[materialIdx].m_descriptorID;
+                            m_shaderManager.GetDescriptorAt(currDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
+                        }
+                        if (meshComponents[materialIdx].GetVertexHandle() != currMesh) {
+                            currMesh = meshComponents[materialIdx].GetVertexHandle();
+                        }
+                        currStartIdx = materialIdx;
                     }
-                    renderPassInfo.renderPass = m_postProcessingPasses[p].renderPass;
-                    renderPassInfo.renderArea.offset = { 0, 0 };
-
-                    std::array<VkClearValue, 1> clearValues = {};
-                    clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-                    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-                    renderPassInfo.pClearValues = clearValues.data();
-
-                    vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-                    vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_postProcessingShaders[p].GetPipeline());
-                    m_postProcessingShaders[p].BindDescriptorSets(m_commandBuffers[i], i);
-                    DrawScreenSpaceTriMesh(m_commandBuffers[i]);
-
-                    vkCmdEndRenderPass(m_commandBuffers[i]);
-                }*/
-
-                if (vkEndCommandBuffer(m_commandBuffers[m_currSwapChainImageIndex]) != VK_SUCCESS) {
-                    throw std::runtime_error("failed to record command buffer!");
                 }
+            }
+
+            vkCmdEndRenderPass(m_commandBuffers[m_currSwapChainImageIndex]);
+
+            // Loop over each post processing pass
+            /*for (uint32_t p = 0; p < m_postProcessingPasses.size(); ++p) {
+                VkRenderPassBeginInfo renderPassInfo = {};
+                renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+                if (p == m_postProcessingPasses.size() - 1) {
+                    renderPassInfo.framebuffer = m_swapChainFramebuffers[i];
+                    renderPassInfo.renderArea.extent = m_vulkanSwapChain.GetExtent();
+                } else {
+                    renderPassInfo.framebuffer = m_postProcessingPasses[p].framebuffer;
+                    renderPassInfo.renderArea.extent = { m_width, m_height };
+                }
+                renderPassInfo.renderPass = m_postProcessingPasses[p].renderPass;
+                renderPassInfo.renderArea.offset = { 0, 0 };
+
+                std::array<VkClearValue, 1> clearValues = {};
+                clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+                renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+                renderPassInfo.pClearValues = clearValues.data();
+
+                vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+                vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_postProcessingShaders[p].GetPipeline());
+                m_postProcessingShaders[p].BindDescriptorSets(m_commandBuffers[i], i);
+                DrawScreenSpaceTriMesh(m_commandBuffers[i]);
+
+                vkCmdEndRenderPass(m_commandBuffers[i]);
+            }*/
+
+            if (vkEndCommandBuffer(m_commandBuffers[m_currSwapChainImageIndex]) != VK_SUCCESS) {
+                throw std::runtime_error("failed to record command buffer!");
+            }
         } else {
         /*
             for (uint32_t i = 0; i < m_commandBuffers.size(); ++i) {
@@ -1312,7 +1311,7 @@ namespace JoeEngine {
                 attachmentDescs[i].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
             } else {
                 attachmentDescs[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-                attachmentDescs[i].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                attachmentDescs[i].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;;
             }
         }
 
@@ -1426,30 +1425,43 @@ namespace JoeEngine {
     /// Deferred Rendering Lighting Pass creation
 
     void JEVulkanRenderer::CreateDeferredPassLightingRenderPass() {
-        VkAttachmentDescription attachmentDesc = {};
-        attachmentDesc.samples = VK_SAMPLE_COUNT_1_BIT;
-        attachmentDesc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachmentDesc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachmentDesc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachmentDesc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        if (m_postProcessingPasses.size() > 0) {
-            attachmentDesc.format = VK_FORMAT_R8G8B8A8_UNORM;
-            attachmentDesc.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        } else {
-            attachmentDesc.format = m_vulkanSwapChain.GetFormat();
-            attachmentDesc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        std::array<VkAttachmentDescription, 2> attachmentDescs = {};
+        for (uint32_t i = 0; i < attachmentDescs.size(); ++i) {
+            attachmentDescs[i].samples = VK_SAMPLE_COUNT_1_BIT;
+            attachmentDescs[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            attachmentDescs[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            if (i == 0) {
+                attachmentDescs[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                attachmentDescs[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+                attachmentDescs[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+                if (m_postProcessingPasses.size() > 0) {
+                    attachmentDescs[i].format = VK_FORMAT_R8G8B8A8_UNORM;
+                    attachmentDescs[i].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                } else {
+                    attachmentDescs[i].format = m_vulkanSwapChain.GetFormat();
+                    attachmentDescs[i].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+                }
+            } else if (i == 1) {
+                attachmentDescs[i].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+                attachmentDescs[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+                attachmentDescs[i].format = FindDepthFormat(m_physicalDevice);
+                attachmentDescs[i].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+                attachmentDescs[i].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+            }
         }
 
-        VkAttachmentReference colorReference;
-        colorReference.attachment = 0;
-        colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        std::vector<VkAttachmentReference> colorReferences;
+        colorReferences.push_back({ 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
+
+        VkAttachmentReference depthAttachmentRef = {};
+        depthAttachmentRef.attachment = 1;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 
         std::array<VkSubpassDescription, 1> subpassDescs = {};
         subpassDescs[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpassDescs[0].colorAttachmentCount = 1;
-        subpassDescs[0].pColorAttachments = &colorReference;
-        subpassDescs[0].pDepthStencilAttachment = nullptr;
+        subpassDescs[0].colorAttachmentCount = static_cast<uint32_t>(colorReferences.size());
+        subpassDescs[0].pColorAttachments = colorReferences.data();
+        subpassDescs[0].pDepthStencilAttachment = &depthAttachmentRef;
 
         std::array<VkSubpassDependency, 2> subpassDependencies;
         subpassDependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -1470,8 +1482,8 @@ namespace JoeEngine {
 
         VkRenderPassCreateInfo renderPassInfo = {};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.attachmentCount = 1;
-        renderPassInfo.pAttachments = &attachmentDesc;
+        renderPassInfo.attachmentCount = attachmentDescs.size();
+        renderPassInfo.pAttachments = attachmentDescs.data();
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = subpassDescs.data();
         renderPassInfo.dependencyCount = static_cast<uint32_t>(subpassDependencies.size());
