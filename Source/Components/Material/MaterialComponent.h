@@ -7,7 +7,8 @@
 namespace JoeEngine {
     typedef enum JE_RENDER_LAYER : uint32_t {
         OPAQUE = 0x0,
-        TRANSLUCENT = 0x1
+        TRANSLUCENT = 0xFFFF,
+        MAX_LAYER = 0xFFFFFFFF
     } RenderLayer;
 
     typedef enum JE_GEOM_TYPE : uint32_t {

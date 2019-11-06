@@ -832,7 +832,7 @@ namespace JoeEngine {
                     DrawMeshInstanced(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, currMesh);
                     break;
                 }
-                if (materialComponents[idx].m_renderLayer == OPAQUE &&
+                if (materialComponents[idx].m_renderLayer < TRANSLUCENT &&
                     materialComponents[idx].m_descriptorID == currDescriptorID &&
                     meshComponents[idx].GetVertexHandle() == currMesh) {
                     ++idx;
@@ -841,7 +841,7 @@ namespace JoeEngine {
                     deferredGeomShader->BindPushConstants_InstancedData(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], {currStartIdx, 0, 0, 0});
                     DrawMeshInstanced(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, currMesh);
 
-                    if (materialComponents[idx].m_renderLayer != OPAQUE) {
+                    if (materialComponents[idx].m_renderLayer >= TRANSLUCENT) {
                         break;
                     }
                     if (materialComponents[idx].m_descriptorID != currDescriptorID) {

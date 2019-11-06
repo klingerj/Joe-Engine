@@ -34,7 +34,7 @@ namespace JoeEngine {
             MaterialComponent mat_opaque_deferred;
             mat_opaque_deferred.m_geomType = TRIANGLES;
             mat_opaque_deferred.m_materialSettings = ALL_SETTINGS;
-            mat_opaque_deferred.m_renderLayer = OPAQUE;
+            mat_opaque_deferred.m_renderLayer = OPAQUE + 1;
             mat_opaque_deferred.m_texAlbedo = tex2;
             m_engineInstance->CreateShader(mat_opaque_deferred, JE_SHADER_DIR + "vert_deferred_lighting.spv", JE_SHADER_DIR + "frag_deferred_lighting_new.spv");
             m_engineInstance->CreateDescriptor(mat_opaque_deferred);
@@ -42,7 +42,7 @@ namespace JoeEngine {
             MaterialComponent mat_opaque_deferred2;
             mat_opaque_deferred2.m_geomType = TRIANGLES;
             mat_opaque_deferred2.m_materialSettings = ALL_SETTINGS;
-            mat_opaque_deferred2.m_renderLayer = OPAQUE;
+            mat_opaque_deferred2.m_renderLayer = OPAQUE + 2;
             mat_opaque_deferred2.m_texAlbedo = tex7;
             mat_opaque_deferred2.m_texNormal = tex5;
             mat_opaque_deferred2.m_shaderID = mat_opaque_deferred.m_shaderID;
