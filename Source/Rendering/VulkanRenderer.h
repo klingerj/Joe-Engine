@@ -104,7 +104,6 @@ namespace JoeEngine {
         //std::vector<JEVulkanPostProcessShader> m_postProcessingShaders;
         //JEVulkanFlatShader m_flatShader;
         //JEVulkanForwardShader m_forwardShader;
-        void CleanupShaders();
         JEShaderManager m_shaderManager;
         uint32_t m_shadowShaderID;
         uint32_t m_deferredGeometryShaderID;
@@ -200,7 +199,7 @@ namespace JoeEngine {
         MeshComponent CreateMesh(const std::string& filepath);
         uint32_t CreateTexture(const std::string& filepath);
         void CreateShader(MaterialComponent& materialComponent, const std::string& vertFilepath, const std::string& fragFilepath);
-        void CreateDescriptor(MaterialComponent& materialComponent);
+        uint32_t CreateDescriptor(const MaterialComponent& materialComponent);
 
         // Renderer Functions
         void DrawShadowPass(const std::vector<MeshComponent>& meshComponents, const JECamera& camera);

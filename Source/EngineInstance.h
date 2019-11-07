@@ -35,11 +35,6 @@ namespace JoeEngine {
         void InitializeEngine(RendererSettings rendererSettings);
         void StopEngine();
 
-        template <typename T, typename U>
-        const PackedArray<T>& GetComponentList() const {
-            return static_cast<U*>(m_componentManagers[m_componentTypeToIndex.at(typeid(T))].get())->GetComponentList();
-        }
-
         std::vector<Entity> m_destroyedEntities;
         void DestroyEntities();
 
@@ -72,6 +67,11 @@ namespace JoeEngine {
         void RegisterComponentManager(U* componentMgr) {
             m_componentManagers.emplace_back(std::unique_ptr<U>(componentMgr));
             m_componentTypeToIndex[typeid(T)] = m_componentManagers.size() - 1;
+        }
+
+        template <typename T, typename U>
+        const PackedArray<T>& GetComponentList() const {
+            return static_cast<U*>(m_componentManagers[m_componentTypeToIndex.at(typeid(T))].get())->GetComponentList();
         }
 
         // TODO: replace me with something more general? or not, as this is a built-in component type

@@ -1,15 +1,16 @@
 #include "VulkanDescriptor.h"
 
 namespace JoeEngine {
-    void JEVulkanDescriptor::Cleanup() {
+    void JEVulkanDescriptor::Cleanup(VkDevice device) {
         if (m_descriptorPool != VK_NULL_HANDLE) {
-            vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
+            vkDestroyDescriptorPool(device, m_descriptorPool, nullptr);
+            // Destroying pool destroys sets too
         }
 
         for (uint32_t i = 0; i < m_uniformBuffers.size(); ++i) {
             for (uint32_t j = 0; j < m_uniformBuffers[i].size(); ++j) {
                 if (m_uniformBuffers[i][j] != VK_NULL_HANDLE) {
-                    vkDestroyBuffer(m_device, m_uniformBuffers[i][j], nullptr);
+                    vkDestroyBuffer(device, m_uniformBuffers[i][j], nullptr);
                 }
             }
         }
@@ -17,7 +18,7 @@ namespace JoeEngine {
         for (uint32_t i = 0; i < m_uniformDeviceMemory.size(); ++i) {
             for (uint32_t j = 0; j < m_uniformDeviceMemory[i].size(); ++j) {
                 if (m_uniformDeviceMemory[i][j] != VK_NULL_HANDLE) {
-                    vkFreeMemory(m_device, m_uniformDeviceMemory[i][j], nullptr);
+                    vkFreeMemory(device, m_uniformDeviceMemory[i][j], nullptr);
                 }
             }
         }
@@ -25,7 +26,7 @@ namespace JoeEngine {
         for (uint32_t i = 0; i < m_ssboBuffers.size(); ++i) {
             for (uint32_t j = 0; j < m_ssboBuffers[i].size(); ++j) {
                 if (m_ssboBuffers[i][j] != VK_NULL_HANDLE) {
-                    vkDestroyBuffer(m_device, m_ssboBuffers[i][j], nullptr);
+                    vkDestroyBuffer(device, m_ssboBuffers[i][j], nullptr);
                 }
             }
         }
@@ -33,7 +34,7 @@ namespace JoeEngine {
         for (uint32_t i = 0; i < m_ssboDeviceMemory.size(); ++i) {
             for (uint32_t j = 0; j < m_ssboDeviceMemory[i].size(); ++j) {
                 if (m_ssboDeviceMemory[i][j] != VK_NULL_HANDLE) {
-                    vkFreeMemory(m_device, m_ssboDeviceMemory[i][j], nullptr);
+                    vkFreeMemory(device, m_ssboDeviceMemory[i][j], nullptr);
                 }
             }
         }
@@ -205,22 +206,22 @@ namespace JoeEngine {
         }
     }
 
-    void JEVulkanDescriptor::UpdateDescriptorSets(uint32_t imageIndex, const std::vector<const void*>& buffers, const std::vector<uint32_t>& bufferSizes,
+    void JEVulkanDescriptor::UpdateDescriptorSets(VkDevice device, uint32_t imageIndex, const std::vector<const void*>& buffers, const std::vector<uint32_t>& bufferSizes,
         const std::vector<const void*>& ssboBuffers, const std::vector<uint32_t>& ssboSizes) {
         // Uniform buffers
         for (uint32_t i = 0; i < m_uniformBuffers.size(); ++i) {
             void* data;
-            vkMapMemory(m_device, m_uniformDeviceMemory[i][imageIndex], 0, bufferSizes[i], 0, &data);
+            vkMapMemory(device, m_uniformDeviceMemory[i][imageIndex], 0, bufferSizes[i], 0, &data);
             memcpy(data, buffers[i], bufferSizes[i]);
-            vkUnmapMemory(m_device, m_uniformDeviceMemory[i][imageIndex]);
+            vkUnmapMemory(device, m_uniformDeviceMemory[i][imageIndex]);
         }
 
         // SSBOs
         for (uint32_t i = 0; i < m_ssboBuffers.size(); ++i) {
             void* data;
-            vkMapMemory(m_device, m_ssboDeviceMemory[i][imageIndex], 0, ssboSizes[i], 0, &data);
+            vkMapMemory(device, m_ssboDeviceMemory[i][imageIndex], 0, ssboSizes[i], 0, &data);
             memcpy(data, ssboBuffers[i], ssboSizes[i]);
-            vkUnmapMemory(m_device, m_ssboDeviceMemory[i][imageIndex]);
+            vkUnmapMemory(device, m_ssboDeviceMemory[i][imageIndex]);
         }
     }
 }

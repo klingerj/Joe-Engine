@@ -5,6 +5,7 @@
 #include "JoeEngineConfig.h"
 #include "../EngineInstance.h"
 #include "../Utils/ScopedTimer.h"
+#include "../Containers/PackedArray.h"
 #include "VulkanRenderer.h"
 #include "../Scene/SceneManager.h"
 #include "../EngineInstance.h"
@@ -40,6 +41,7 @@ namespace JoeEngine {
         // Devices
         PickPhysicalDevice();
         CreateLogicalDevice();
+        m_shaderManager = JEShaderManager(m_device);
 
         // Swap Chain
         m_vulkanSwapChain.Create(m_physicalDevice, m_device, m_vulkanWindow, m_width, m_height);
@@ -81,24 +83,25 @@ namespace JoeEngine {
             m_shadowPass.renderPass, JE_SHADER_DIR + "vert_shadow.spv", "", SHADOW);
         m_shadowModelMatrixDescriptorID = m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain,
             {}, {}, {}, { JE_NUM_ENTITIES * sizeof(glm::mat4) },
-            ((JEVulkanShader*)m_shaderManager.GetShaderAt(m_shadowShaderID))->GetDescriptorSetLayout(1), SHADOW);
+            ((JEVulkanShader*)m_shaderManager.GetShaderAt(m_shadowShaderID))->GetDescriptorSetLayout(1), SHADOW, false);
 
         // Forward pass ssbo descriptor
         m_forwardModelMatrixDescriptorID = m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain,
             {}, {}, {}, { JE_NUM_ENTITIES * sizeof(glm::mat4) },
-            ((JEVulkanShader*)m_shaderManager.GetShaderAt(m_shadowShaderID))->GetDescriptorSetLayout(1), FORWARD);
+            ((JEVulkanShader*)m_shaderManager.GetShaderAt(m_shadowShaderID))->GetDescriptorSetLayout(1), FORWARD, false);
         // NOTE: that shader ID is obviously wrong, but the descriptor set layout would be the same for any forward shader, as it
         // is just a single ssbo for the model matrices.
 
         // Create the deferred geometry shader
         if (m_useDeferred) {
             MaterialComponent temp;
+            temp.m_renderLayer = OPAQUE;
             // TODO: deal with this hard-coded number
             m_deferredGeometryShaderID = m_shaderManager.CreateShader(m_device, m_physicalDevice, m_vulkanSwapChain, temp, 4,
                 m_deferredPass.renderPass, JE_SHADER_DIR + "vert_deferred_geom.spv", JE_SHADER_DIR + "frag_deferred_geom_new.spv", DEFERRED_GEOM);
             m_deferredGeometryModelMatrixDescriptorID = m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain,
                 {}, {}, {}, { JE_NUM_ENTITIES * sizeof(glm::mat4) },
-                ((JEVulkanShader*)m_shaderManager.GetShaderAt(m_deferredGeometryShaderID))->GetDescriptorSetLayout(1), DEFERRED_GEOM);
+                ((JEVulkanShader*)m_shaderManager.GetShaderAt(m_deferredGeometryShaderID))->GetDescriptorSetLayout(1), DEFERRED_GEOM, false);
 
             // TODO: hard-coded number
             CreateShader(temp, JE_SHADER_DIR + "vert_deferred_lighting.spv", JE_SHADER_DIR + "frag_deferred_lighting_new.spv");
@@ -113,7 +116,7 @@ namespace JoeEngine {
             m_deferredLightingDescriptorID = m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain,
                 imageViewsList, { m_deferredPass.sampler, m_deferredPass.sampler, m_deferredPass.sampler, m_shadowPass.depthSampler },
                 { sizeof(glm::mat4) * 2, sizeof(glm::mat4) }, {},
-                ((JEVulkanShader*)m_shaderManager.GetShaderAt(temp.m_shaderID))->GetDescriptorSetLayout(0), DEFERRED);
+                ((JEVulkanShader*)m_shaderManager.GetShaderAt(temp.m_shaderID))->GetDescriptorSetLayout(0), DEFERRED, false);
             // ^ These sizes are camera uniform - invView, invProj, then light viewProj
             // Create non-shadows variant of this shader
             // TODO: store these better
@@ -129,17 +132,11 @@ namespace JoeEngine {
             m_deferredLightingNoShadowsDescriptorID = m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain,
                 imageViewsList, { m_deferredPass.sampler, m_deferredPass.sampler, m_deferredPass.sampler },
                 { sizeof(glm::mat4) * 2 }, {},
-                ((JEVulkanShader*)m_shaderManager.GetShaderAt(temp.m_shaderID))->GetDescriptorSetLayout(0), DEFERRED);
+                ((JEVulkanShader*)m_shaderManager.GetShaderAt(temp.m_shaderID))->GetDescriptorSetLayout(0), DEFERRED, false);
             // ^ No shadows, so not light view proj and no shadow map
         }
 
         m_textureLibraryGlobal.CreateTexture(m_device, m_physicalDevice, m_graphicsQueue, m_commandPool, JE_TEXTURES_DIR + "fallback.png");
-
-        // Command buffers
-        //CreateShadowCommandBuffer();
-        //CreateDeferredPassGeometryCommandBuffer(i);
-        CreateDeferredLightingAndPostProcessingCommandBuffer();
-        CreateForwardPassCommandBuffer();
 
         // Sync objects
         CreateSemaphoresAndFences();
@@ -162,19 +159,16 @@ namespace JoeEngine {
         }
         vkFreeCommandBuffers(m_device, m_commandPool, m_swapChainFramebuffers.size(), m_shadowPass.commandBuffers.data());
 
-        // Deferred Pass - Geometry
-        for (uint32_t i = 0; i < m_swapChainFramebuffers.size(); ++i) {
-            vkDestroySemaphore(m_device, m_deferredPass.semaphores[i], nullptr);
-        }
-
         for (uint32_t i = 0; i < m_MAX_FRAMES_IN_FLIGHT; ++i) {
             vkDestroySemaphore(m_device, m_renderFinishedSemaphores[i], nullptr);
             vkDestroySemaphore(m_device, m_imageAvailableSemaphores[i], nullptr);
             vkDestroyFence(m_device, m_inFlightFences[i], nullptr);
         }
 
+        m_shaderManager.Cleanup();
+
         // Forward Pass
-        vkDestroySemaphore(m_device, m_forwardPass.semaphore, nullptr);
+        //vkDestroySemaphore(m_device, m_forwardPass.semaphore, nullptr);
 
         vkDestroyCommandPool(m_device, m_commandPool, nullptr);
 
@@ -511,18 +505,14 @@ namespace JoeEngine {
         m_textureLibraryGlobal.Cleanup(m_device);
     }*/
 
-    void JEVulkanRenderer::CleanupShaders() {
-        m_shaderManager.Cleanup();
-    }
-
     void JEVulkanRenderer::UpdateShaderBuffers(const std::vector<MaterialComponent>& materialComponents,
         const std::vector<glm::mat4>& transforms, const std::vector<glm::mat4>& transformsSorted, uint32_t imageIndex) {
         
-        m_shaderManager.UpdateBuffers(m_shadowModelMatrixDescriptorID, imageIndex, {}, {},
+        m_shaderManager.UpdateBuffers(m_device, m_shadowModelMatrixDescriptorID, imageIndex, {}, {},
             { transforms.data() }, { (uint32_t)(transforms.size() * sizeof(glm::mat4)) });
-        m_shaderManager.UpdateBuffers(m_deferredGeometryModelMatrixDescriptorID, imageIndex, {}, {},
+        m_shaderManager.UpdateBuffers(m_device, m_deferredGeometryModelMatrixDescriptorID, imageIndex, {}, {},
             { transformsSorted.data() }, { (uint32_t)(transformsSorted.size() * sizeof(glm::mat4)) });
-        m_shaderManager.UpdateBuffers(m_forwardModelMatrixDescriptorID, imageIndex, {}, {},
+        m_shaderManager.UpdateBuffers(m_device, m_forwardModelMatrixDescriptorID, imageIndex, {}, {},
             { transformsSorted.data() }, { (uint32_t)(transformsSorted.size() * sizeof(glm::mat4)) });
 
         if (m_useDeferred) {
@@ -544,7 +534,7 @@ namespace JoeEngine {
             sizes.push_back(sizeof(glm::mat4) * uniformLightData.size());
             //sizes.insert(sizes.end(), materialComponents[i].m_uniformDataSizes.begin(), materialComponents[i].m_uniformDataSizes.end());
             //m_shaderManager.UpdateUniformBuffers(materialComponents[i].m_descriptorID, imageIndex, buffers, sizes);
-            m_shaderManager.UpdateBuffers(m_deferredLightingDescriptorID, imageIndex, buffers, sizes, {}, {});
+            m_shaderManager.UpdateBuffers(m_device, m_deferredLightingDescriptorID, imageIndex, buffers, sizes, {}, {});
         }
 
         for (uint32_t i = 0; i < materialComponents.size(); ++i) {
@@ -561,7 +551,7 @@ namespace JoeEngine {
 
                 sizes.push_back(sizeof(glm::mat4) * uniformLightData.size());
                 //sizes.insert(sizes.end(), materialComponents[i].m_uniformDataSizes.begin(), materialComponents[i].m_uniformDataSizes.end());
-                m_shaderManager.UpdateBuffers(materialComponents[i].m_descriptorID, imageIndex, buffers, sizes, {}, {});
+                m_shaderManager.UpdateBuffers(m_device, materialComponents[i].m_descriptorID, imageIndex, buffers, sizes, {}, {});
             } else {
                 // TODO
             }
@@ -587,7 +577,7 @@ namespace JoeEngine {
         VkRenderPass renderPass;
         PipelineType type;
         if (m_useDeferred) {
-            if (materialComponent.m_renderLayer == TRANSLUCENT) {
+            if (materialComponent.m_renderLayer >= TRANSLUCENT) {
                 renderPass = m_renderPass_deferredLighting; // m_forwardPass.renderPass;
                 type = FORWARD;
             } else {
@@ -616,7 +606,7 @@ namespace JoeEngine {
             materialComponent, numTextures, renderPass, vertFilepath, fragFilepath, type);
     }
 
-    void JEVulkanRenderer::CreateDescriptor(MaterialComponent& materialComponent) {
+    uint32_t JEVulkanRenderer::CreateDescriptor(const MaterialComponent& materialComponent) {
         std::vector<std::vector<VkImageView>> imageViews;
         std::vector<VkSampler> samplers;
 
@@ -628,7 +618,7 @@ namespace JoeEngine {
             tempImageViews.push_back(m_textureLibraryGlobal.GetImageViewAt(materialComponent.m_texMetallic));
             tempImageViews.push_back(m_textureLibraryGlobal.GetImageViewAt(materialComponent.m_texNormal));
 
-            if (materialComponent.m_renderLayer == TRANSLUCENT) {
+            if (materialComponent.m_renderLayer >= TRANSLUCENT) {
                 // Using forward shader
                 if (materialComponent.m_materialSettings & RECEIVES_SHADOWS) {
                     tempImageViews.push_back(m_shadowPass.depths[i].imageView);
@@ -641,7 +631,7 @@ namespace JoeEngine {
         samplers.push_back(m_textureLibraryGlobal.GetSamplerAt(materialComponent.m_texRoughness));
         samplers.push_back(m_textureLibraryGlobal.GetSamplerAt(materialComponent.m_texMetallic));
         samplers.push_back(m_textureLibraryGlobal.GetSamplerAt(materialComponent.m_texNormal));
-        if (materialComponent.m_renderLayer == TRANSLUCENT) {
+        if (materialComponent.m_renderLayer >= TRANSLUCENT) {
             if (materialComponent.m_materialSettings & RECEIVES_SHADOWS) {
                 samplers.push_back(m_shadowPass.depthSampler);
             }
@@ -654,21 +644,21 @@ namespace JoeEngine {
 
         uint32_t descrID = 0;
         if (m_useDeferred) {
-            if (materialComponent.m_renderLayer == TRANSLUCENT) {
+            if (materialComponent.m_renderLayer >= TRANSLUCENT) {
                 descrID = m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain,
                     imageViews, samplers, uniformBufferSizes, {},
-                    ((JEVulkanShader*)m_shaderManager.GetShaderAt(materialComponent.m_shaderID))->GetDescriptorSetLayout(0), FORWARD);
+                    ((JEVulkanShader*)m_shaderManager.GetShaderAt(materialComponent.m_shaderID))->GetDescriptorSetLayout(0), FORWARD, false);
             } else {
                 descrID = m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain,
                     imageViews, samplers, {}, {},
-                    ((JEVulkanShader*)m_shaderManager.GetShaderAt(m_deferredGeometryShaderID))->GetDescriptorSetLayout(0), DEFERRED_GEOM);
+                    ((JEVulkanShader*)m_shaderManager.GetShaderAt(m_deferredGeometryShaderID))->GetDescriptorSetLayout(0), DEFERRED_GEOM, false);
             }
         } else {
             descrID = m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain,
                 imageViews, samplers, uniformBufferSizes, {},
-                ((JEVulkanShader*)m_shaderManager.GetShaderAt(materialComponent.m_shaderID))->GetDescriptorSetLayout(0), FORWARD);
+                ((JEVulkanShader*)m_shaderManager.GetShaderAt(materialComponent.m_shaderID))->GetDescriptorSetLayout(0), FORWARD, false);
         }
-        materialComponent.m_descriptorID = descrID;
+        return descrID;
     }
 
     void JEVulkanRenderer::DrawBoundingBoxMesh(VkCommandBuffer commandBuffer) {
@@ -816,6 +806,13 @@ namespace JoeEngine {
 
             JEDeferredGeometryShader* deferredGeomShader = (JEDeferredGeometryShader*)m_shaderManager.GetShaderAt(m_deferredGeometryShaderID);
             vkCmdBindPipeline(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, deferredGeomShader->GetPipeline());
+
+            VkViewport viewport = { 0.0f, 0.0f, (float)m_width, (float)m_height, 0.0f, 1.0f };
+            VkRect2D scissor = { { 0, 0 }, { m_width, m_height } };
+            vkCmdSetViewport(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], 0, 1, &viewport);
+            vkCmdSetScissor(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], 0, 1, &scissor);
+
+
             deferredGeomShader->BindPushConstants_ViewProj(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], camera.GetViewProj());
             m_shaderManager.GetDescriptorAt(m_deferredGeometryModelMatrixDescriptorID).BindDescriptorSets(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], deferredGeomShader->GetPipelineLayout(), 1, m_currSwapChainImageIndex);
             
@@ -901,6 +898,8 @@ namespace JoeEngine {
                 // TODO: make this less hard coded
                 JEDeferredShader* deferredShader = (JEDeferredShader*)m_shaderManager.GetShaderAt(materialComponents[0].m_shaderID);
                 vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, deferredShader->GetPipeline());
+                vkCmdSetViewport(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], 0, 1, &viewport);
+                vkCmdSetScissor(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], 0, 1, &scissor);
                 if (materialComponents[0].m_materialSettings & RECEIVES_SHADOWS) {
                     m_shaderManager.GetDescriptorAt(m_deferredLightingDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], deferredShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
                 } else {
@@ -915,13 +914,18 @@ namespace JoeEngine {
                     currStartIdx = materialIdx;
                     ++materialIdx;
                     currDescriptorID = materialComponents[currStartIdx].m_descriptorID;
+                    int currMesh = meshComponents[currStartIdx].GetVertexHandle();
                     uint32_t currShaderID = materialComponents[currStartIdx].m_shaderID;
+
                     JEForwardShader* forwardShader = (JEForwardShader*)m_shaderManager.GetShaderAt(currShaderID);
                     vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, forwardShader->GetPipeline());
+                    vkCmdSetViewport(m_commandBuffers[m_currSwapChainImageIndex], 0, 1, &viewport);
+                    vkCmdSetScissor(m_commandBuffers[m_currSwapChainImageIndex], 0, 1, &scissor);
+                    
                     m_shaderManager.GetDescriptorAt(currDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
                     forwardShader->BindPushConstants_ViewProj(m_commandBuffers[m_currSwapChainImageIndex], camera.GetViewProj());
+                    
                     m_shaderManager.GetDescriptorAt(m_forwardModelMatrixDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 1, m_currSwapChainImageIndex);
-                    int currMesh = meshComponents[currStartIdx].GetVertexHandle();
 
                     while (materialIdx <= materialComponents.size()) {
                         if (materialIdx == materialComponents.size()) {
@@ -942,6 +946,8 @@ namespace JoeEngine {
                                 currShaderID = materialComponents[materialIdx].m_shaderID;
                                 forwardShader = (JEForwardShader*)m_shaderManager.GetShaderAt(currShaderID);
                                 vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, forwardShader->GetPipeline());
+                                vkCmdSetViewport(m_commandBuffers[m_currSwapChainImageIndex], 0, 1, &viewport);
+                                vkCmdSetScissor(m_commandBuffers[m_currSwapChainImageIndex], 0, 1, &scissor);
                                 m_shaderManager.GetDescriptorAt(m_forwardModelMatrixDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 1, m_currSwapChainImageIndex);
                             }
                             if (materialComponents[materialIdx].m_descriptorID != currDescriptorID) {
@@ -1289,14 +1295,14 @@ namespace JoeEngine {
             throw std::runtime_error("failed to allocate forward pass command buffer!");
         }*/
 
-        if (m_forwardPass.semaphore == VK_NULL_HANDLE) {
+        //if (m_forwardPass.semaphore == VK_NULL_HANDLE) {
             VkSemaphoreCreateInfo semaphoreInfo = {};
             semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
             if (vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_forwardPass.semaphore) != VK_SUCCESS) {
                 throw std::runtime_error("failed to create forward pass semaphore!");
             }
-        }
+        //}
     }
 
     void JEVulkanRenderer::CreateForwardPassResources() {
@@ -1305,6 +1311,7 @@ namespace JoeEngine {
         CreateFramebufferAttachmentSampler(m_forwardPass.sampler);
         CreateForwardPassRenderPass();
         CreateForwardPassFramebuffer();
+        CreateForwardPassCommandBuffer();
     }
 
     /// Deferred Rendering Geometry Pass creation
@@ -1403,14 +1410,14 @@ namespace JoeEngine {
             throw std::runtime_error("failed to allocate deferred pass command buffer!");
         }
 
-        if (m_deferredPass.semaphores[index] == VK_NULL_HANDLE) {
+        //if (m_deferredPass.semaphores[index] == VK_NULL_HANDLE) {
             VkSemaphoreCreateInfo semaphoreInfo = {};
             semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
             if (vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_deferredPass.semaphores[index]) != VK_SUCCESS) {
                 throw std::runtime_error("failed to create deferred pass semaphore!");
             }
-        }
+        //}
     }
 
     void JEVulkanRenderer::CreateDeferredPassGeometryResources() {
@@ -1530,6 +1537,7 @@ namespace JoeEngine {
             CreateFramebufferAttachment(m_framebufferAttachment_deferredLighting, { m_width, m_height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R8G8B8A8_UNORM);
             CreateDeferredPassLightingFramebuffer();
         }
+        CreateDeferredLightingAndPostProcessingCommandBuffer();
     }
 
     /// Post Processing passes creation
@@ -1739,20 +1747,23 @@ namespace JoeEngine {
         }
 
         // Deferred Pass - Geometry
-        vkDestroyRenderPass(m_device, m_deferredPass.renderPass, nullptr);
-        vkDestroySampler(m_device, m_deferredPass.sampler, nullptr);
-        for (uint32_t i = 0; i < m_swapChainFramebuffers.size(); ++i) {
-            vkDestroyImage(m_device, m_deferredPass.colors[i].image, nullptr);
-            vkDestroyImage(m_device, m_deferredPass.normals[i].image, nullptr);
-            vkDestroyImage(m_device, m_deferredPass.depths[i].image, nullptr);
-            vkFreeMemory(m_device, m_deferredPass.colors[i].deviceMemory, nullptr);
-            vkFreeMemory(m_device, m_deferredPass.normals[i].deviceMemory, nullptr);
-            vkFreeMemory(m_device, m_deferredPass.depths[i].deviceMemory, nullptr);
-            vkDestroyImageView(m_device, m_deferredPass.colors[i].imageView, nullptr);
-            vkDestroyImageView(m_device, m_deferredPass.normals[i].imageView, nullptr);
-            vkDestroyImageView(m_device, m_deferredPass.depths[i].imageView, nullptr);
-            vkDestroyFramebuffer(m_device, m_deferredPass.framebuffers[i], nullptr);
-            vkFreeCommandBuffers(m_device, m_commandPool, 1, &m_deferredPass.commandBuffers[i]);
+        if (m_useDeferred) {
+            vkDestroyRenderPass(m_device, m_deferredPass.renderPass, nullptr);
+            vkDestroySampler(m_device, m_deferredPass.sampler, nullptr);
+            for (uint32_t i = 0; i < m_swapChainFramebuffers.size(); ++i) {
+                vkDestroyImage(m_device, m_deferredPass.colors[i].image, nullptr);
+                vkDestroyImage(m_device, m_deferredPass.normals[i].image, nullptr);
+                vkDestroyImage(m_device, m_deferredPass.depths[i].image, nullptr);
+                vkFreeMemory(m_device, m_deferredPass.colors[i].deviceMemory, nullptr);
+                vkFreeMemory(m_device, m_deferredPass.normals[i].deviceMemory, nullptr);
+                vkFreeMemory(m_device, m_deferredPass.depths[i].deviceMemory, nullptr);
+                vkDestroyImageView(m_device, m_deferredPass.colors[i].imageView, nullptr);
+                vkDestroyImageView(m_device, m_deferredPass.normals[i].imageView, nullptr);
+                vkDestroyImageView(m_device, m_deferredPass.depths[i].imageView, nullptr);
+                vkDestroyFramebuffer(m_device, m_deferredPass.framebuffers[i], nullptr);
+                vkFreeCommandBuffers(m_device, m_commandPool, 1, &m_deferredPass.commandBuffers[i]);
+                vkDestroySemaphore(m_device, m_deferredPass.semaphores[i], nullptr);
+            }
         }
 
         // Deferred Pass - Lighting
@@ -1774,6 +1785,7 @@ namespace JoeEngine {
         vkDestroyRenderPass(m_device, m_forwardPass.renderPass, nullptr);
         vkDestroyFramebuffer(m_device, m_forwardPass.framebuffer, nullptr);
         vkDestroySampler(m_device, m_forwardPass.sampler, nullptr);
+        vkDestroySemaphore(m_device, m_forwardPass.semaphore, nullptr);
 
         // Post Processing
         for (uint32_t p = 0; p < m_postProcessingPasses.size(); ++p) {
@@ -1788,7 +1800,6 @@ namespace JoeEngine {
         }
 
         vkFreeCommandBuffers(m_device, m_commandPool, static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
-        CleanupShaders();
         m_vulkanSwapChain.Cleanup(m_device);
     }
 
@@ -1826,14 +1837,51 @@ namespace JoeEngine {
         m_postProcessingPasses.push_back(p);*/
 
         // Deferred Pass - Lighting
-        CreateDeferredPassLightingRenderPass();
+        CreateDeferredPassLightingResources();
+        /*CreateDeferredPassLightingRenderPass();
         if (m_postProcessingPasses.size() > 0) {
             CreateFramebufferAttachment(m_framebufferAttachment_deferredLighting, { m_width, m_height }, static_cast<VkImageUsageFlagBits>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT), VK_FORMAT_R8G8B8A8_UNORM);
             CreateDeferredPassLightingFramebuffer();
-        }
+        }*/
 
         CreatePostProcessingPassResources();
         CreateSwapChainFramebuffers();
+
+        if (m_useDeferred) {
+            const PackedArray<MaterialComponent>& materialComponents = m_engineInstance->GetComponentList<MaterialComponent, JEMaterialComponentManager>();
+            for (const MaterialComponent& matComp : materialComponents) {
+                if (matComp.m_renderLayer < TRANSLUCENT) {
+                    // Only recreate opaque descriptors
+                    std::vector<std::vector<VkImageView>> imageViewsList;
+                    for (uint32_t i = 0; i < m_swapChainFramebuffers.size(); ++i) {
+                        if (matComp.m_materialSettings & RECEIVES_SHADOWS) {
+                            imageViewsList.push_back({
+                                m_deferredPass.colors[i].imageView,
+                                m_deferredPass.normals[i].imageView,
+                                m_deferredPass.depths[i].imageView,
+                                m_shadowPass.depths[i].imageView });
+                        } else {
+                            imageViewsList.push_back({
+                                m_deferredPass.colors[i].imageView,
+                                m_deferredPass.normals[i].imageView,
+                                m_deferredPass.depths[i].imageView });
+                        }
+                    }
+
+                    if (matComp.m_materialSettings & RECEIVES_SHADOWS) {
+                        m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain,
+                            imageViewsList, { m_deferredPass.sampler, m_deferredPass.sampler, m_deferredPass.sampler, m_shadowPass.depthSampler },
+                            { sizeof(glm::mat4) * 2, sizeof(glm::mat4) }, {},
+                            ((JEVulkanShader*)m_shaderManager.GetShaderAt(matComp.m_shaderID))->GetDescriptorSetLayout(0), DEFERRED, true, m_deferredLightingDescriptorID);
+                    } else {
+                        m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain,
+                            imageViewsList, { m_deferredPass.sampler, m_deferredPass.sampler, m_deferredPass.sampler },
+                            { sizeof(glm::mat4) * 2 }, {},
+                            ((JEVulkanShader*)m_shaderManager.GetShaderAt(matComp.m_shaderID))->GetDescriptorSetLayout(0), DEFERRED, true, m_deferredLightingNoShadowsDescriptorID);
+                    }
+                }
+            }
+        }
 
         m_sceneManager->RecreateResources({ m_width, m_height });
     }

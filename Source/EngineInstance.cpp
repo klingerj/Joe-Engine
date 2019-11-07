@@ -308,6 +308,7 @@ namespace JoeEngine {
     }
 
     void JEEngineInstance::CreateDescriptor(MaterialComponent& materialComponent) {
-        m_vulkanRenderer.CreateDescriptor(materialComponent);
+        uint32_t descrID = m_vulkanRenderer.CreateDescriptor(materialComponent);
+        materialComponent.m_descriptorID = descrID;
     }
 }

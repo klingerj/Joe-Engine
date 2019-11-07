@@ -19,8 +19,6 @@ namespace JoeEngine {
         std::vector<std::vector<VkBuffer>> m_ssboBuffers;
         std::vector<std::vector<VkDeviceMemory>> m_ssboDeviceMemory;
 
-        const VkDevice m_device;
-
         void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages, 
                                   const std::vector<uint32_t>& bufferSizes);
         void CreateSSBOBuffers(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages,
@@ -35,8 +33,7 @@ namespace JoeEngine {
         JEVulkanDescriptor() = delete;
         JEVulkanDescriptor(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages,
             const std::vector<std::vector<VkImageView>>& imageViews, const std::vector<VkSampler>& samplers,
-            const std::vector<uint32_t>& bufferSizes, const std::vector<uint32_t>& ssboSizes, VkDescriptorSetLayout descSetLayout, PipelineType type) :
-            m_device(device) {
+            const std::vector<uint32_t>& bufferSizes, const std::vector<uint32_t>& ssboSizes, VkDescriptorSetLayout descSetLayout, PipelineType type) {
             if (imageViews.size() == 0) {
                 CreateDescriptorPool(device, numSwapChainImages, 0, bufferSizes.size(), ssboSizes.size());
             } else {
@@ -49,13 +46,13 @@ namespace JoeEngine {
         }
         ~JEVulkanDescriptor() {}
 
-        void Cleanup();
+        void Cleanup(VkDevice device);
 
         void BindDescriptorSets(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, uint32_t descrSetIndex, uint32_t imageIndex) const {
             vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, descrSetIndex, 1, &m_descriptorSets[imageIndex], 0, nullptr);
         }
 
-        void UpdateDescriptorSets(uint32_t imageIndex, const std::vector<const void*>& buffers, const std::vector<uint32_t>& bufferSizes,
+        void UpdateDescriptorSets(VkDevice device, uint32_t imageIndex, const std::vector<const void*>& buffers, const std::vector<uint32_t>& bufferSizes,
             const std::vector<const void*>& ssboBuffers, const std::vector<uint32_t>& ssboSizes);
     };
 }

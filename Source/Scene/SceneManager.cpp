@@ -198,8 +198,8 @@ namespace JoeEngine {
             m_engineInstance->CreateShader(mat_opaque_deferred, JE_SHADER_DIR + "vert_deferred_lighting.spv", JE_SHADER_DIR + "frag_deferred_lighting_new.spv");
             m_engineInstance->CreateDescriptor(mat_opaque_deferred);
 
-            for (int i = 0; i < 5; ++i) {
-                for (int j = 0; j < 5; ++j) {
+            for (int i = 0; i < 32; ++i) {
+                for (int j = 0; j < 32; ++j) {
                     Entity newEntity = m_engineInstance->SpawnEntity();
                     entities.push_back(newEntity);
 

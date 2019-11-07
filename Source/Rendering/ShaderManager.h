@@ -12,9 +12,6 @@ namespace JoeEngine {
     private:
 
         std::vector<JEShader*> m_shaders;
-        // TODO: deferred geometry pass shader as static
-        // also static shadow pass shader   
-        // "real" materials like forward shaders and deferred lighting shaders can go in the above vector
         // going to have to use operator new for allocating these derived classes but that'll just have
         // to suck for now i guess, until I can implement some kind of custom allocator.
 
@@ -23,8 +20,11 @@ namespace JoeEngine {
         uint32_t m_numShaders;
         uint32_t m_numDescriptors;
 
+        VkDevice m_device;
+
     public:
-        JEShaderManager() : m_numShaders(0), m_numDescriptors(0) {}
+        JEShaderManager() : JEShaderManager(VK_NULL_HANDLE) {}
+        JEShaderManager(VkDevice device) : m_numShaders(0), m_numDescriptors(0), m_device(device) {}
         ~JEShaderManager() = default;
 
         uint32_t CreateShader(VkDevice device, VkPhysicalDevice physicalDevice, const JEVulkanSwapChain& swapChain,
@@ -71,15 +71,25 @@ namespace JoeEngine {
         uint32_t CreateDescriptor(VkDevice device, VkPhysicalDevice physicalDevice, const JEVulkanSwapChain& swapChain,
             const std::vector<std::vector<VkImageView>>& imageViews, const std::vector<VkSampler>& samplers,
             const std::vector<uint32_t>& bufferSizes, const std::vector<uint32_t>& ssboSizes, VkDescriptorSetLayout layout,
-            PipelineType type) {
-            m_descriptors.emplace_back(JEVulkanDescriptor(physicalDevice, device, swapChain.GetImageViews().size(),
-                imageViews, samplers, bufferSizes, ssboSizes, layout, type));
-            return m_numDescriptors++;
+            PipelineType type, bool recreate, uint32_t recreateIdx = UINT32_MAX) {
+            if (recreate) {
+                if (recreateIdx >= m_numDescriptors) {
+                    throw std::runtime_error("Invalid descriptor ID");
+                }
+
+                m_descriptors[recreateIdx].Cleanup(device);
+                m_descriptors[recreateIdx] = JEVulkanDescriptor(physicalDevice, device, swapChain.GetImageViews().size(),
+                    imageViews, samplers, bufferSizes, ssboSizes, layout, type);
+                return recreateIdx;
+            } else {
+                m_descriptors.emplace_back(JEVulkanDescriptor(physicalDevice, device, swapChain.GetImageViews().size(),
+                    imageViews, samplers, bufferSizes, ssboSizes, layout, type));
+                return m_numDescriptors++;
+            }
         }
 
         const JEShader* GetShaderAt(int shaderID) const {
             if (shaderID < 0 || shaderID >= m_numShaders) {
-                // TODO: return some default/debug material
                 throw std::runtime_error("Invalid shader ID");
             }
 
@@ -88,30 +98,30 @@ namespace JoeEngine {
 
         const JEVulkanDescriptor& GetDescriptorAt(int descriptorID) const {
             if (descriptorID < 0 || descriptorID >= m_numDescriptors) {
-                // TODO: return some default/debug material
                 throw std::runtime_error("Invalid descriptor ID");
             }
 
             return m_descriptors[descriptorID];
         }
 
-        void UpdateBuffers(uint32_t descriptorID, uint32_t imageIndex, const std::vector<const void*>& buffers, const std::vector<uint32_t>& bufferSizes,
+        void UpdateBuffers(VkDevice device, uint32_t descriptorID, uint32_t imageIndex, const std::vector<const void*>& buffers, const std::vector<uint32_t>& bufferSizes,
             const std::vector<const void*>& ssboBuffers, const std::vector<uint32_t>& ssboSizes) {
             if (descriptorID < 0 || descriptorID >= m_numDescriptors) {
                 // TODO: return some default/debug material
                 throw std::runtime_error("Invalid descriptor ID");
             }
 
-            m_descriptors[descriptorID].UpdateDescriptorSets(imageIndex, buffers, bufferSizes, ssboBuffers, ssboSizes);
+            m_descriptors[descriptorID].UpdateDescriptorSets(device, imageIndex, buffers, bufferSizes, ssboBuffers, ssboSizes);
         }
 
         void Cleanup() {
             for (uint32_t i = 0; i < m_numShaders; ++i) {
                 m_shaders[i]->Cleanup();
+                delete m_shaders[i];
             }
 
             for (uint32_t i = 0; i < m_numDescriptors; ++i) {
-                m_descriptors[i].Cleanup();
+                m_descriptors[i].Cleanup(m_device);
             }
         }
     };
