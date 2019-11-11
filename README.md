@@ -15,7 +15,8 @@ Brief [demo video](https://vimeo.com/326088400) here.
 * Data-oriented Entity-Component System
 * Material System
 * Deferred Renderer
-* Post Processing
+* Instanced rendering
+* Post Processing (Now broken after addition of material system :) )
 * Shadow Mapping
 * Frustum Culling
 * (Buggy) Rigidbody Simulation
