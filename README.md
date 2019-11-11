@@ -13,6 +13,7 @@ Brief [demo video](https://vimeo.com/326088400) here.
 
 ### Current features
 * Data-oriented Entity-Component System
+* Material System
 * Deferred Renderer
 * Post Processing
 * Shadow Mapping
