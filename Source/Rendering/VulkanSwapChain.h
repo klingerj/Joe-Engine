@@ -29,8 +29,8 @@ namespace JoeEngine {
         ~JEVulkanSwapChain() {}
 
         // Creates the swap chain
-        void Create(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanWindow& vulkanWindow, int width, int height);
-        void CreateImageViews(VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface, int width, int height);
+        void Create(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanWindow& vulkanWindow, uint32_t width, uint32_t height);
+        void CreateImageViews(VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface);
         void Cleanup(VkDevice device);
 
         static std::vector<const char*> GetDeviceExtensions() {

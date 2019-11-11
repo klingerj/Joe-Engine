@@ -11,6 +11,8 @@
 #include "VulkanShader.h"
 #include "VulkanRenderingTypes.h"
 #include "MeshBufferManager.h"
+#include "ShaderManager.h"
+#include "TextureLibrary.h"
 #include "../Components/Mesh/MeshComponent.h"
 #include "../Components/Transform/TransformComponent.h"
 
@@ -32,6 +34,12 @@ namespace JoeEngine {
         // Application width and height
         uint32_t m_width;
         uint32_t m_height;
+
+        // Renderer settings
+        bool m_useDeferred;
+        bool m_enableOIT;
+
+        uint32_t m_currSwapChainImageIndex;
 
         // References to other systems
         JEEngineInstance* m_engineInstance;
@@ -89,20 +97,32 @@ namespace JoeEngine {
 
         // Shaders
         // TODO: Move this to a shader manager
-        std::vector<JEVulkanShadowPassShader> m_shadowPassShaders;
-        JEVulkanDeferredPassGeometryShader m_deferredPassGeometryShader;
-        JEVulkanDeferredPassLightingShader m_deferredPassLightingShader; // TODO: change me to a list?
+        //std::vector<JEVulkanShadowPassShader> m_shadowPassShaders;
+        //JEVulkanDeferredPassGeometryShader m_deferredPassGeometryShader;
+        //JEVulkanDeferredPassLightingShader m_deferredPassLightingShader; // TODO: change me to a list?
         //std::vector<JEVulkanMeshShader> m_meshShaders; // TODO: add this to VulkanShader.h and re-implement
-        std::vector<JEVulkanPostProcessShader> m_postProcessingShaders;
-        JEVulkanFlatShader m_flatShader;
-        JEVulkanForwardShader m_forwardShader;
-        void CreateShaders();
-        void CleanupShaders();
+        //std::vector<JEVulkanPostProcessShader> m_postProcessingShaders;
+        //JEVulkanFlatShader m_flatShader;
+        //JEVulkanForwardShader m_forwardShader;
+        JEShaderManager m_shaderManager;
+        uint32_t m_shadowShaderID;
+        uint32_t m_deferredGeometryShaderID;
+        // TODO: support multiple or customizable lighting models
+        uint32_t m_deferredLightingDescriptorID;
+        uint32_t m_deferredLightingNoShadowsDescriptorID;
+        std::array<glm::mat4, 2> m_uniformInvViewProjData;
+
+        // SSBO model matrix decriptor sets
+        uint32_t m_shadowModelMatrixDescriptorID;
+        uint32_t m_deferredGeometryModelMatrixDescriptorID;
+        uint32_t m_forwardModelMatrixDescriptorID;
 
         // Textures
-        std::vector<JETexture> m_textures;
-        void CreateTextures();
-        void CleanupTextures();
+        JETextureLibrary m_textureLibraryGlobal;
+        
+        //std::vector<JETexture> m_textures;
+        //void CreateTextures();
+        //void CleanupTextures();
 
         // Helpers for offscreen rendering
         void CreateFramebufferAttachment(JEFramebufferAttachment& depth, VkExtent2D extent, VkImageUsageFlagBits usageBits, VkFormat format);
@@ -111,9 +131,9 @@ namespace JoeEngine {
         // Shadow pass
         JEOffscreenShadowPass m_shadowPass;
         void CreateShadowPassResources();
-        void CreateShadowRenderPass();
-        void CreateShadowFramebuffer();
-        void CreateShadowCommandBuffer();
+        void CreateShadowPassRenderPass();
+        void CreateShadowPassFramebuffer(uint32_t index);
+        void CreateShadowPassCommandBuffer(uint32_t index);
 
         // Forward Rendering
         JEForwardPass m_forwardPass;
@@ -126,8 +146,8 @@ namespace JoeEngine {
         JEOffscreenDeferredPass m_deferredPass;
         void CreateDeferredPassGeometryResources();
         void CreateDeferredPassGeometryRenderPass();
-        void CreateDeferredPassGeometryFramebuffer();
-        void CreateDeferredPassGeometryCommandBuffer();
+        void CreateDeferredPassGeometryFramebuffer(uint32_t index);
+        void CreateDeferredPassGeometryCommandBuffer(uint32_t index);
 
         // Deferred Rendering - lighting pass (only render offscreen if there is at least one post process)
         JEFramebufferAttachment m_framebufferAttachment_deferredLighting;
@@ -147,18 +167,20 @@ namespace JoeEngine {
         void CreateDeferredLightingAndPostProcessingCommandBuffer();
 
         void DrawMesh(VkCommandBuffer commandBuffer, const MeshComponent& meshComponent);
+        void DrawMeshInstanced(VkCommandBuffer commandBuffer, uint32_t endIdx, const MeshComponent& meshComponent);
         void DrawScreenSpaceTriMesh(VkCommandBuffer commandBuffer);
         void DrawBoundingBoxMesh(VkCommandBuffer commandBuffer);
 
-        void UpdateShaderUniformBuffers(uint32_t imageIndex);
+        void UpdateShaderBuffers(const std::vector<MaterialComponent>& materialComponents,
+            const std::vector<glm::mat4>& transforms, const std::vector<glm::mat4>& transformsSorted, uint32_t imageIndex);
 
     public:
         JEVulkanRenderer() : m_width(JE_DEFAULT_SCREEN_WIDTH), m_height(JE_DEFAULT_SCREEN_HEIGHT), m_MAX_FRAMES_IN_FLIGHT(JE_DEFAULT_MAX_FRAMES_IN_FLIGHT),
-                             m_currentFrame(0), m_didFramebufferResize(false), m_engineInstance(nullptr), m_sceneManager(nullptr) {}
+            m_useDeferred(false), m_enableOIT(false), m_currSwapChainImageIndex(0), m_engineInstance(nullptr), m_sceneManager(nullptr), m_didFramebufferResize(false), m_currentFrame(0) {}
         ~JEVulkanRenderer() {}
 
         // Vulkan setup
-        void Initialize(JESceneManager* sceneManager, JEEngineInstance* engineInstance);
+        void Initialize(RendererSettings rendererSettings, JESceneManager* sceneManager, JEEngineInstance* engineInstance);
         void RegisterCallbacks(JEIOHandler* ioHandler);
 
         // Vulkan cleanup
@@ -166,17 +188,23 @@ namespace JoeEngine {
 
         void FramebufferResized() { m_didFramebufferResize = true; }
 
+        void StartFrame();
+
         // Submit work to GPU
-        void SubmitFrame();
+        void SubmitFrame(const std::vector<MaterialComponent>& materialComponents,
+            const std::vector<glm::mat4>& transforms, const std::vector<glm::mat4>& transformsSorted);
 
         // Mesh Buffer Manager Functions
         const std::vector<BoundingBoxData>& GetBoundingBoxData() const;
         MeshComponent CreateMesh(const std::string& filepath);
+        uint32_t CreateTexture(const std::string& filepath);
+        void CreateShader(MaterialComponent& materialComponent, const std::string& vertFilepath, const std::string& fragFilepath);
+        uint32_t CreateDescriptor(const MaterialComponent& materialComponent);
 
         // Renderer Functions
-        void DrawShadowPass(const std::vector<MeshComponent>& meshComponents, const std::vector<TransformComponent>& transformComponents,
-                            uint32_t numEntities, const JECamera& camera);
-        void DrawMeshComponents(const std::vector<MeshComponent>& meshComponents, const std::vector<TransformComponent>& transformComponents, const JECamera& camera);
+        void DrawShadowPass(const std::vector<MeshComponent>& meshComponents, const JECamera& camera);
+        void DrawMeshComponents(const std::vector<MeshComponent>& meshComponents, const std::vector<MaterialComponent>& materialComponents,
+                                const JECamera& camera);
 
         void WaitForIdleDevice() {
             vkDeviceWaitIdle(m_device);

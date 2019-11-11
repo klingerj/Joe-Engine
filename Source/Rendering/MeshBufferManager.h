@@ -10,7 +10,7 @@
 #include "../Utils/Common.h"
 #include "VulkanRenderingTypes.h"
 #include "VulkanQueue.h"
-#include "../Components/Mesh/MeshComponent.h"   
+#include "../Components/Mesh/MeshComponent.h"
 
 namespace JoeEngine {
     using BoundingBoxData = std::array<glm::vec3, 8>;

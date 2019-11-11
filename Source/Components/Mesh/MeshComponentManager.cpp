@@ -12,7 +12,8 @@ namespace JoeEngine {
     }
 
     void JEMeshComponentManager::RemoveComponent(uint32_t id) {
-        m_meshComponents.RemoveElement(id);
+        m_meshComponents[id] = MeshComponent(-1);
+        //m_meshComponents.RemoveElement(id);
     }
 
     MeshComponent* JEMeshComponentManager::GetComponent(uint32_t id) const {

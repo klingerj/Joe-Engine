@@ -19,7 +19,8 @@ namespace JoeEngine {
     // Constants for rendering
     constexpr int JE_DEFAULT_SCREEN_WIDTH = 1280;
     constexpr int JE_DEFAULT_SCREEN_HEIGHT = 720;
-    constexpr int JE_DEFAULT_MAX_FRAMES_IN_FLIGHT = 2;
+    constexpr uint32_t JE_DEFAULT_MAX_FRAMES_IN_FLIGHT = 2;
+    constexpr int JE_NUM_ENTITIES = 50000; // max number of individual entities permitted to be rendered
 
     constexpr int JE_DEFAULT_SHADOW_MAP_WIDTH = 4000;
     constexpr int JE_DEFAULT_SHADOW_MAP_HEIGHT = 4000;
@@ -33,6 +34,22 @@ namespace JoeEngine {
     constexpr float JE_SHADOW_VIEW_NEAR_PLANE = 0.1f;
     constexpr float JE_SHADOW_VIEW_FAR_PLANE = 200.0f;
     const float JE_FOVY = glm::radians(22.5f);
+
+    // Engine settings
+    typedef enum class JE_RENDERER_SETTINGS_TYPE : uint32_t {
+        Default = 0x0,
+        EnableDeferred = 0x1,
+        EnableOIT = 0x2,
+        AllSettings = 0xFFFFFFFF
+    } RendererSettings;
+    inline uint32_t operator&(RendererSettings a, RendererSettings b)
+    { // Note the pass by value
+        return (uint32_t)a & (uint32_t)b;
+    }
+    inline uint32_t operator|(RendererSettings a, RendererSettings b)
+    { // Note the pass by value
+        return (uint32_t)a | (uint32_t)b;
+    }
 
     // Vulkan Functions
     VkCommandBuffer BeginSingleTimeCommands(VkDevice device, VkCommandPool commandPool);

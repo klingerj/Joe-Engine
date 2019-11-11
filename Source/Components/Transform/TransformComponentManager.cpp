@@ -12,7 +12,8 @@ namespace JoeEngine {
     }
 
     void JETransformComponentManager::RemoveComponent(uint32_t id) {
-        m_transformComponents.RemoveElement(id);
+        m_transformComponents[id] = TransformComponent();
+        //m_transformComponents.RemoveElement(id);
     }
 
     TransformComponent* JETransformComponentManager::GetComponent(uint32_t id) const {

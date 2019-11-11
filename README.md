@@ -34,3 +34,6 @@ Brief [demo video](https://vimeo.com/326088400) here.
 [Real-Time Collision Detection by Christer Ericson](https://realtimecollisiondetection.net/)  
 [Gaffer on Games](https://gafferongames.com/)  
 [Unconstrained Rigidbody Physics by David Baraff, Siggraph course notes](https://www.cs.cmu.edu/~baraff/sigcourse/notesd1.pdf)  
+
+# Assets
+[Metal PBR Texture](https://3dtextures.me/about/)  

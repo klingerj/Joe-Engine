@@ -21,6 +21,8 @@ namespace JoeEngine {
         glm::mat4 m_viewMatrix;
         glm::mat4 m_projMatrix;
         glm::mat4 m_viewProjMatrix;
+        glm::mat4 m_invViewMatrix;
+        glm::mat4 m_invProjMatrix;
 
         void UpdateView() {
             m_look = glm::normalize(m_ref - m_eye);
@@ -40,6 +42,9 @@ namespace JoeEngine {
             m_viewMatrix = o * t;
 
             m_viewProjMatrix = m_projMatrix * m_viewMatrix;
+
+            m_invViewMatrix = glm::inverse(m_viewMatrix);
+            m_invProjMatrix = glm::inverse(m_projMatrix);
         }
 
         void UpdateProjection() {
@@ -48,9 +53,9 @@ namespace JoeEngine {
         }
 
     public:
-        JECamera() : JECamera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE) {
-        }
-        JECamera(glm::vec3 e, glm::vec3 r, float a, float n, float f) : m_eye(e), m_ref(r), m_aspect(a), m_nearPlane(n), m_farPlane(f) {
+        JECamera() : JECamera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE) {}
+        JECamera(glm::vec3 e, glm::vec3 r, float a, float n, float f) : m_eye(e), m_ref(r), m_aspect(a), m_nearPlane(n), m_farPlane(f),
+            m_viewMatrix(1.0f), m_projMatrix(1.0f), m_viewProjMatrix(1.0f), m_invViewMatrix(1.0f), m_invProjMatrix(1.0f) {
             UpdateProjection();
             UpdateView();
         }
@@ -109,8 +114,14 @@ namespace JoeEngine {
         glm::mat4 GetViewProj() const {
             return m_viewProjMatrix;
         }
+        const glm::mat4& GetInvView() const {
+            return m_invViewMatrix;
+        }
+        const glm::mat4& GetInvProj() const {
+            return m_invProjMatrix;
+        }
         glm::mat4 GetOrthoViewProj() const {
-            const float coord = 10.0f;
+            const float coord = 5.0f;
             glm::mat4 proj = glm::orthoLH_ZO(-coord, coord, -coord, coord, m_nearPlane, m_farPlane);
             proj[1][1] *= -1.0f;
             return proj * GetView();
