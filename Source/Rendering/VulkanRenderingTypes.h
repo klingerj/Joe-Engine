@@ -14,7 +14,8 @@ namespace JoeEngine {
         FORWARD,
         DEFERRED,
         SHADOW,
-        DEFERRED_GEOM
+        DEFERRED_GEOM,
+        TRANSLUCENT_OIT
     } PipelineType;
 
     // Generic Framebuffer attachment

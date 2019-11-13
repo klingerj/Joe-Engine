@@ -4,7 +4,7 @@
 
 int RunApp() {
     try {
-        JoeEngine::JEEngineInstance app = JoeEngine::JEEngineInstance(JoeEngine::RendererSettings::AllSettings);
+        JoeEngine::JEEngineInstance app = JoeEngine::JEEngineInstance(JoeEngine::RendererSettings::EnableDeferred);
         app.RegisterComponentManager<RotatorComponent>(new RotatorComponentManager());
         app.LoadScene(0);
         app.Run();

@@ -21,6 +21,7 @@ namespace JoeEngine {
     constexpr int JE_DEFAULT_SCREEN_HEIGHT = 720;
     constexpr uint32_t JE_DEFAULT_MAX_FRAMES_IN_FLIGHT = 2;
     constexpr int JE_NUM_ENTITIES = 50000; // max number of individual entities permitted to be rendered
+    constexpr uint16_t JE_NUM_OIT_FRAGSPP = 4; // max number of oit fragments per pixel
 
     constexpr int JE_DEFAULT_SHADOW_MAP_WIDTH = 4000;
     constexpr int JE_DEFAULT_SHADOW_MAP_HEIGHT = 4000;

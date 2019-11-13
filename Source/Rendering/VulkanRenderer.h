@@ -36,7 +36,7 @@ namespace JoeEngine {
         uint32_t m_height;
 
         // Renderer settings
-        bool m_useDeferred;
+        bool m_enableDeferred;
         bool m_enableOIT;
 
         uint32_t m_currSwapChainImageIndex;
@@ -166,6 +166,15 @@ namespace JoeEngine {
 
         void CreateDeferredLightingAndPostProcessingCommandBuffer();
 
+        // Order-independent translucency
+        uint32_t m_oitLLDescriptor;
+        uint32_t m_oitSortShader;
+        // TODO: oit render pass, framebuffer, command buffer, etc
+        void CreateOITResources();
+        void CreateOITRenderPass();
+        void CreateOITFramebuffer();
+
+        // Drawing functions
         void DrawMesh(VkCommandBuffer commandBuffer, const MeshComponent& meshComponent);
         void DrawMeshInstanced(VkCommandBuffer commandBuffer, uint32_t endIdx, const MeshComponent& meshComponent);
         void DrawScreenSpaceTriMesh(VkCommandBuffer commandBuffer);
@@ -176,7 +185,7 @@ namespace JoeEngine {
 
     public:
         JEVulkanRenderer() : m_width(JE_DEFAULT_SCREEN_WIDTH), m_height(JE_DEFAULT_SCREEN_HEIGHT), m_MAX_FRAMES_IN_FLIGHT(JE_DEFAULT_MAX_FRAMES_IN_FLIGHT),
-            m_useDeferred(false), m_enableOIT(false), m_currSwapChainImageIndex(0), m_engineInstance(nullptr), m_sceneManager(nullptr), m_didFramebufferResize(false), m_currentFrame(0) {}
+            m_enableDeferred(false), m_enableOIT(false), m_currSwapChainImageIndex(0), m_engineInstance(nullptr), m_sceneManager(nullptr), m_didFramebufferResize(false), m_currentFrame(0) {}
         ~JEVulkanRenderer() {}
 
         // Vulkan setup
