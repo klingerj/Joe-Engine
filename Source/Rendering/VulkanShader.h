@@ -239,322 +239,61 @@ namespace JoeEngine {
         void BindPushConstants_InstancedData(VkCommandBuffer commandBuffer, const std::array<uint32_t, 4>& instancedData) const;
     };
 
-    // *************************** end new shader style
-
-    /*
-    // Forward shader
-
-    class JEVulkanForwardShader {
+    class JEForwardTranslucentShader : public JEVulkanShader {
     private:
-        VkPipeline m_graphicsPipeline;
-        VkPipelineLayout m_pipelineLayout;
-        VkDescriptorPool m_descriptorPool;
-        VkDescriptorSetLayout m_descriptorSetLayout;
-        VkDescriptorSet m_descriptorSet;
+        bool m_oit;
 
-        // Creation functions
-        void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
-            const JEVulkanSwapChain& swapChain, VkRenderPass renderPass);
-        void CreateDescriptorPool(VkDevice device);
-        void CreateDescriptorSetLayout(VkDevice device);
-        void CreateDescriptorSets(VkDevice device, const JETexture& texture);
-        void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device);
-
-    public:
-        JEVulkanForwardShader() {}
-        JEVulkanForwardShader(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanSwapChain& swapChain, VkRenderPass renderPass,
-            const JETexture& texture, const std::string& vertShader, const std::string& fragShader) {
-            // Read in shader code
-            auto vertShaderCode = ReadFile(vertShader);
-            auto fragShaderCode = ReadFile(fragShader);
-
-            // Create shader modules
-            VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
-            VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
+        void CreateDescriptorSetLayouts(VkDevice device, uint32_t numSourceTextures, uint32_t numUniformBuffers, uint32_t numStorageBuffers) override {
+            m_descriptorSetLayouts.push_back(VK_NULL_HANDLE);
             
-            CreateUniformBuffers(physicalDevice, device);
-            CreateDescriptorSetLayout(device);
-            CreateDescriptorPool(device);
-            CreateDescriptorSets(device, texture);
-            CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain, renderPass);
+            std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings;
+
+            for (uint32_t i = 0; i < numStorageBuffers; ++i) {
+                VkDescriptorSetLayoutBinding layoutBinding = {};
+                layoutBinding.binding = i;
+                layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                layoutBinding.descriptorCount = 1;
+                layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                layoutBinding.pImmutableSamplers = nullptr;
+                setLayoutBindings.push_back(layoutBinding);
+            }
+
+            if (setLayoutBindings.size() > 0) {
+                VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+                layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+                layoutInfo.bindingCount = static_cast<uint32_t>(setLayoutBindings.size());
+                layoutInfo.pBindings = setLayoutBindings.data();
+
+                // TODO: change this hard-coded index
+                if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &m_descriptorSetLayouts[2]) != VK_SUCCESS) {
+                    throw std::runtime_error("failed to create descriptor set layout!");
+                }
+            }
         }
-
-        ~JEVulkanForwardShader() {}
-
-        void Cleanup(VkDevice device);
-
-        void UpdateUniformBuffers(VkDevice device);
-        void BindDescriptorSets(VkCommandBuffer commandBuffer);
-
-        void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj);
-        void BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat);
-
-        // Getters
-        VkPipeline GetPipeline() const {
-            return m_graphicsPipeline;
-        }
-    };
-
-    // Flat shader
-
-    class JEVulkanFlatShader {
-    private:
-        VkPipeline m_graphicsPipeline;
-        VkPipelineLayout m_pipelineLayout;
-
-        // Creation functions
         void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
-            VkExtent2D extent, VkRenderPass renderPass);
-        //void CreateDescriptorPool(VkDevice device, uint32_t numSwapChainImages);
-        //void CreateDescriptorSetLayout(VkDevice device);
-        //void CreateDescriptorSets(VkDevice device, const JEPostProcessingPass& postProcessingPass, VkImageView postImageView, uint32_t numSwapChainImages);
-        //void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages);
+            VkExtent2D frameExtent, VkRenderPass renderPass, const MaterialComponent& materialComponent) override;
 
     public:
-        JEVulkanFlatShader() {}
-        JEVulkanFlatShader(VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, VkExtent2D extent,
-            const std::string& vertShader, const std::string& fragShader) {
-            // Read in shader code
-            auto vertShaderCode = ReadFile(vertShader);
-            auto fragShaderCode = ReadFile(fragShader);
-
-            // Create shader modules
-            VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
-            VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
-
-            //uint32_t numSwapChainImages = swapChain.GetImageViews().size();
-            //CreateUniformBuffers(physicalDevice, device, numSwapChainImages);
-            //CreateDescriptorSetLayout(device);
-            //CreateDescriptorPool(device, numSwapChainImages);
-            //CreateDescriptorSets(device, postProcessingPass, postImageView, numSwapChainImages);
-            CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, extent, renderPass);
-        }
-
-        ~JEVulkanFlatShader() {}
-
-        void Cleanup(VkDevice device);
-
-        //void UpdateUniformBuffers(VkDevice device, uint32_t currentImage);
-        //void BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t descriptorSetIndex);
-        void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj);
-        void BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat);
-
-        // Getters
-        VkPipeline GetPipeline() const {
-            return m_graphicsPipeline;
-        }
-    };
-
-    // Post Processing Shader: Draws a meshes with a texture uniform.
-
-    class JEVulkanPostProcessShader {
-    private:
-        VkPipeline m_graphicsPipeline;
-        VkPipelineLayout m_pipelineLayout;
-        VkDescriptorPool m_descriptorPool;
-        VkDescriptorSetLayout m_descriptorSetLayout;
-        std::vector<VkDescriptorSet> m_descriptorSets;
-
-        // Creation functions
-        void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
-            const JEVulkanSwapChain& swapChain, VkRenderPass renderPass);
-        void CreateDescriptorPool(VkDevice device, uint32_t numSwapChainImages);
-        void CreateDescriptorSetLayout(VkDevice device);
-        void CreateDescriptorSets(VkDevice device, const JEPostProcessingPass& postProcessingPass, VkImageView postImageView, uint32_t numSwapChainImages);
-        void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages);
-
-    public:
-        JEVulkanPostProcessShader() {}
-        JEVulkanPostProcessShader(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanSwapChain& swapChain, const JEPostProcessingPass& postProcessingPass,
-                                  VkImageView postImageView, const std::string& vertShader, const std::string& fragShader) {
-            // Read in shader code
-            auto vertShaderCode = ReadFile(vertShader);
-            auto fragShaderCode = ReadFile(fragShader);
-
+        JEForwardTranslucentShader() = delete;
+        JEForwardTranslucentShader(const MaterialComponent& materialComponent, uint32_t numSourceTextures, uint32_t numUniformBuffers, VkDevice device, VkPhysicalDevice physicalDevice,
+            const JEVulkanSwapChain& swapChain, VkRenderPass renderPass, bool enableOIT, const std::string& vertPath, const std::string& fragPath) :
+            JEVulkanShader(device, vertPath, fragPath) {
+            auto vertShaderCode = ReadFile(m_vertPath);
+            auto fragShaderCode = ReadFile(m_fragPath);
             // Create shader modules
             VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
             VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
 
             uint32_t numSwapChainImages = swapChain.GetImageViews().size();
-            CreateUniformBuffers(physicalDevice, device, numSwapChainImages);
-            CreateDescriptorSetLayout(device);
-            CreateDescriptorPool(device, numSwapChainImages);
-            CreateDescriptorSets(device, postProcessingPass, postImageView, numSwapChainImages);
-            CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain, postProcessingPass.renderPass);
+            m_oit = enableOIT;
+            JEVulkanShader::CreateDescriptorSetLayouts(device, numSourceTextures, numUniformBuffers, 1);
+            if (m_oit) {
+                CreateDescriptorSetLayouts(device, numSourceTextures, numUniformBuffers, 4);
+            }
+            CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain.GetExtent(), renderPass, materialComponent);
         }
 
-        ~JEVulkanPostProcessShader() {}
-
-        void Cleanup(VkDevice device);
-
-        void UpdateUniformBuffers(VkDevice device, uint32_t currentImage);
-        void BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t descriptorSetIndex);
-
-        // Getters
-        VkPipeline GetPipeline() const {
-            return m_graphicsPipeline;
-        }
+        void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) const;
+        void BindPushConstants_InstancedData(VkCommandBuffer commandBuffer, const std::array<uint32_t, 4>& instancedData) const;
     };
-
-    // Shadow pass: Render to depth from the perspective of a light source
-
-    class JEVulkanShadowPassShader {
-    private:
-        VkPipeline m_graphicsPipeline;
-        VkPipelineLayout m_pipelineLayout;
-        VkDescriptorPool m_descriptorPool;
-        VkDescriptorSetLayout m_descriptorSetLayout;
-        VkDescriptorSet m_descriptorSet;
-
-        // Creation functions
-        void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkExtent2D extent, VkRenderPass renderPass);
-        void CreateDescriptorPool(VkDevice device);
-        void CreateDescriptorSetLayout(VkDevice device);
-        void CreateDescriptorSets(VkDevice device);
-        void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device);
-
-    public:
-        JEVulkanShadowPassShader() {}
-        JEVulkanShadowPassShader(VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, VkExtent2D extent,
-                                 const std::string& vertShader, const std::string& fragShader) {
-            // Read in shader code
-            auto vertShaderCode = ReadFile(vertShader);
-
-            // Create shader modules
-            VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
-
-            CreateUniformBuffers(physicalDevice, device);
-            CreateDescriptorSetLayout(device);
-            CreateDescriptorPool(device);
-            CreateDescriptorSets(device);
-            CreateGraphicsPipeline(device, vertShaderModule, extent, renderPass);
-        }
-
-        ~JEVulkanShadowPassShader() {}
-
-        void Cleanup(VkDevice device);
-
-        void UpdateUniformBuffers(VkDevice device);
-        void BindDescriptorSets(VkCommandBuffer commandBuffer);
-
-        void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj);
-        void BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat);
-
-        // Getters
-        VkPipeline GetPipeline() const {
-            return m_graphicsPipeline;
-        }
-    };
-
-    // Deferred Geometry Pass Shader: Renders meshes to g-buffers
-
-    class JEVulkanDeferredPassGeometryShader {
-    private:
-        VkPipeline m_graphicsPipeline;
-        VkPipelineLayout m_pipelineLayout;
-        VkDescriptorPool m_descriptorPool;
-        VkDescriptorSetLayout m_descriptorSetLayout;
-        VkDescriptorSet m_descriptorSet;
-
-        // Creation functions
-        void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
-            const JEVulkanSwapChain& swapChain, VkRenderPass renderPass);
-        void CreateDescriptorPool(VkDevice device);
-        void CreateDescriptorSetLayout(VkDevice device);
-        void CreateDescriptorSets(VkDevice device, const JETexture& texture);
-        void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device);
-
-    public:
-        JEVulkanDeferredPassGeometryShader() {}
-        JEVulkanDeferredPassGeometryShader(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanSwapChain& swapChain, VkRenderPass renderPass,
-                                           const JETexture& texture, const std::string& vertShader, const std::string& fragShader) {
-            // Read in shader code
-            auto vertShaderCode = ReadFile(vertShader);
-            auto fragShaderCode = ReadFile(fragShader);
-
-            // Create shader modules
-            VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
-            VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
-
-            uint32_t numSwapChainImages = swapChain.GetImageViews().size();
-            CreateUniformBuffers(physicalDevice, device);
-            CreateDescriptorSetLayout(device);
-            CreateDescriptorPool(device);
-            CreateDescriptorSets(device, texture);
-            CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain, renderPass);
-        }
-
-        ~JEVulkanDeferredPassGeometryShader() {}
-
-        void Cleanup(VkDevice device);
-
-        void UpdateUniformBuffers(VkDevice device);
-        void BindDescriptorSets(VkCommandBuffer commandBuffer);
-
-        void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj);
-        void BindPushConstants_ModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& modelMat);
-
-        // Getters
-        VkPipeline GetPipeline() const {
-            return m_graphicsPipeline;
-        }
-    };
-
-    // Deferred Lighting Pass: Renders a scene using G-buffers
-
-    class JEVulkanDeferredPassLightingShader {
-    private:
-        VkPipeline m_graphicsPipeline;
-        VkPipelineLayout m_pipelineLayout;
-        VkDescriptorPool m_descriptorPool;
-        VkDescriptorSetLayout m_descriptorSetLayout;
-        std::vector<VkDescriptorSet> m_descriptorSets;
-
-        // Buffers
-        std::vector<VkBuffer> m_uniformBuffers_ViewProj;
-        std::vector<VkDeviceMemory> m_uniformBuffersMemory_ViewProj;
-        std::vector<VkBuffer> m_uniformBuffers_ViewProj_Shadow;
-        std::vector<VkDeviceMemory> m_uniformBuffersMemory_ViewProj_Shadow;
-
-        // Creation functions
-        void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
-            const JEVulkanSwapChain& swapChain, VkRenderPass renderPass);
-        void CreateDescriptorPool(VkDevice device, uint32_t numSwapChainImages);
-        void CreateDescriptorSetLayout(VkDevice device);
-        void CreateDescriptorSets(VkDevice device, const JETexture& texture, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass, uint32_t numSwapChainImages);
-        void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t numSwapChainImages);
-
-    public:
-        JEVulkanDeferredPassLightingShader() {}
-        JEVulkanDeferredPassLightingShader(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanSwapChain& swapChain, const JEOffscreenShadowPass& shadowPass, const JEOffscreenDeferredPass& deferredPass,
-            VkRenderPass renderPass, const JETexture& texture, const std::string& vertShader, const std::string& fragShader) {
-            // Read in shader code
-            auto vertShaderCode = ReadFile(vertShader);
-            auto fragShaderCode = ReadFile(fragShader);
-
-            // Create shader modules
-            VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
-            VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
-
-            uint32_t numSwapChainImages = swapChain.GetImageViews().size();
-            CreateUniformBuffers(physicalDevice, device, numSwapChainImages);
-            CreateDescriptorSetLayout(device);
-            CreateDescriptorPool(device, numSwapChainImages);
-            CreateDescriptorSets(device, texture, shadowPass, deferredPass, numSwapChainImages);
-            CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain, renderPass);
-        }
-
-        ~JEVulkanDeferredPassLightingShader() {}
-
-        void Cleanup(VkDevice device);
-
-        void UpdateUniformBuffers(VkDevice device, uint32_t currentImage, const JECamera& camera, const JECamera& shadowCamera);
-        void BindDescriptorSets(VkCommandBuffer commandBuffer, uint32_t descriptorSetIndex);
-
-        // Getters
-        VkPipeline GetPipeline() const {
-            return m_graphicsPipeline;
-        }
-    };
-    */
 }

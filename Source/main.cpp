@@ -4,9 +4,9 @@
 
 int RunApp() {
     try {
-        JoeEngine::JEEngineInstance app = JoeEngine::JEEngineInstance(JoeEngine::RendererSettings::EnableDeferred);
+        JoeEngine::JEEngineInstance app = JoeEngine::JEEngineInstance(JoeEngine::RendererSettings::AllSettings);
         app.RegisterComponentManager<RotatorComponent>(new RotatorComponentManager());
-        app.LoadScene(0);
+        app.LoadScene(2);
         app.Run();
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;

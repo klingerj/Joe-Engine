@@ -137,16 +137,18 @@ namespace JoeEngine {
         }
 
         if (m_enableOIT) {
+            CreateOITResources();
             MaterialComponent temp;
-            // TODO: setup material flags?
+            temp.m_materialSettings = NO_SETTINGS;
+            temp.m_renderLayer = TRANSLUCENT;
+            temp.m_geomType = TRIANGLES;
             // Create descriptors and shaders
-            CreateShader(temp, JE_SHADER_DIR + "vert_passthrough.spv", JE_SHADER_DIR + "frag_oit_sort.spv");
+            CreateShader(temp, JE_SHADER_DIR + "vert_forward.spv", JE_SHADER_DIR + "frag_forward_new_oit.spv");
             m_oitSortShader = temp.m_shaderID;
             // OIT SSBOs: linked list data, next pointers, head pointers, then atomic counter
             m_oitLLDescriptor = m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain, {}, {}, {},
                 { JE_NUM_OIT_FRAGSPP * m_width * m_height, JE_NUM_OIT_FRAGSPP * m_width * m_height, (uint32_t)sizeof(uint32_t) * m_width * m_height, sizeof(uint32_t) * 4 },
                 ((JEVulkanShader*)m_shaderManager.GetShaderAt(temp.m_shaderID))->GetDescriptorSetLayout(2), TRANSLUCENT_OIT, false);
-            CreateOITResources();
         }
 
         m_textureLibraryGlobal.CreateTexture(m_device, m_physicalDevice, m_graphicsQueue, m_commandPool, JE_TEXTURES_DIR + "fallback.png");
@@ -349,6 +351,7 @@ namespace JoeEngine {
 
         VkPhysicalDeviceFeatures deviceFeatures = {};
         deviceFeatures.samplerAnisotropy = VK_TRUE;
+        deviceFeatures.fragmentStoresAndAtomics = VK_TRUE;
         createInfo.pEnabledFeatures = &deviceFeatures;
 
         std::vector<const char*> deviceExtensions = JEVulkanSwapChain::GetDeviceExtensions();
@@ -598,14 +601,22 @@ namespace JoeEngine {
         PipelineType type;
         if (m_enableDeferred) {
             if (materialComponent.m_renderLayer >= TRANSLUCENT) {
-                renderPass = m_renderPass_deferredLighting; // m_forwardPass.renderPass;
+                if (m_enableOIT) {
+                    renderPass = m_oitRenderPass;
+                } else {
+                    renderPass = m_renderPass_deferredLighting;
+                }
                 type = FORWARD;
             } else {
                 renderPass = m_renderPass_deferredLighting;
                 type = DEFERRED;
             }
         } else {
-            renderPass = m_forwardPass.renderPass;
+            if (m_enableOIT) {
+                renderPass = m_oitRenderPass;
+            } else {
+                renderPass = m_forwardPass.renderPass;
+            }
             type = FORWARD;
         }
 
@@ -620,6 +631,10 @@ namespace JoeEngine {
         // Shadow map(s)
         if (materialComponent.m_materialSettings & RECEIVES_SHADOWS) {
             ++numTextures; // One shadow map
+        }
+
+        if (m_enableOIT && type == FORWARD && materialComponent.m_renderLayer >= TRANSLUCENT) {
+            type = TRANSLUCENT_OIT;
         }
 
         materialComponent.m_shaderID = m_shaderManager.CreateShader(m_device, m_physicalDevice, m_vulkanSwapChain,
@@ -877,17 +892,95 @@ namespace JoeEngine {
 
             vkCmdEndRenderPass(m_deferredPass.commandBuffers[m_currSwapChainImageIndex]);
 
-            if (vkEndCommandBuffer(m_deferredPass.commandBuffers[m_currSwapChainImageIndex]) != VK_SUCCESS) {
+            /*if (vkEndCommandBuffer(m_deferredPass.commandBuffers[m_currSwapChainImageIndex]) != VK_SUCCESS) {
                 throw std::runtime_error("failed to record deferred geometry pass command buffer!");
-            }
+            }*/
 
 
             /// Construct OIT first pass
 
             if (m_enableOIT) {
                 // start a command buffer and render pass that renders all translucent geometry and assembles the linked list data
+                /*if (vkBeginCommandBuffer(m_oitCommandBuffers[m_currSwapChainImageIndex], &beginInfo) != VK_SUCCESS) {
+                    throw std::runtime_error("failed to begin recording oit linked list pass command buffer!");
+                }*/
+
+                renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+                renderPassInfo.renderPass = m_oitRenderPass;
+                renderPassInfo.framebuffer = m_oitFramebuffers[m_currSwapChainImageIndex];
+                renderPassInfo.renderArea.offset = { 0, 0 };
+                renderPassInfo.renderArea.extent = { m_width, m_height };
+                renderPassInfo.clearValueCount = 0;
+                renderPassInfo.pClearValues = nullptr;
+
+                //vkCmdBeginRenderPass(m_oitCommandBuffers[m_currSwapChainImageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+                vkCmdBeginRenderPass(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+                
+                uint32_t materialIdx = idx;
+                if (materialIdx < materialComponents.size()) {
+                    currStartIdx = materialIdx;
+                    ++materialIdx;
+                    currDescriptorID = materialComponents[currStartIdx].m_descriptorID;
+                    int currMesh = meshComponents[currStartIdx].GetVertexHandle();
+                    uint32_t currShaderID = materialComponents[currStartIdx].m_shaderID;
+
+                    JEForwardShader* forwardShader = (JEForwardShader*)m_shaderManager.GetShaderAt(currShaderID);
+                    vkCmdBindPipeline(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, forwardShader->GetPipeline());
+                    vkCmdSetViewport(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], 0, 1, &viewport);
+                    vkCmdSetScissor(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], 0, 1, &scissor);
+
+                    m_shaderManager.GetDescriptorAt(currDescriptorID).BindDescriptorSets(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
+                    forwardShader->BindPushConstants_ViewProj(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], camera.GetViewProj());
+
+                    m_shaderManager.GetDescriptorAt(m_forwardModelMatrixDescriptorID).BindDescriptorSets(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 1, m_currSwapChainImageIndex);
+                    m_shaderManager.GetDescriptorAt(m_oitLLDescriptor).BindDescriptorSets(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 2, m_currSwapChainImageIndex);
+
+                    while (materialIdx <= materialComponents.size()) {
+                        if (materialIdx == materialComponents.size()) {
+                            forwardShader->BindPushConstants_InstancedData(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
+                            DrawMeshInstanced(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, currMesh);
+                            break;
+                        }
+                        if (materialComponents[materialIdx].m_shaderID == currShaderID &&
+                            materialComponents[materialIdx].m_descriptorID == currDescriptorID &&
+                            meshComponents[materialIdx].GetVertexHandle() == currMesh) {
+                            ++materialIdx;
+                        } else {
+                            // Draw instanced mesh using curr material resources
+                            forwardShader->BindPushConstants_InstancedData(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
+                            DrawMeshInstanced(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, currMesh);
+
+                            if (materialComponents[materialIdx].m_shaderID != currShaderID) {
+                                currShaderID = materialComponents[materialIdx].m_shaderID;
+                                forwardShader = (JEForwardShader*)m_shaderManager.GetShaderAt(currShaderID);
+                                vkCmdBindPipeline(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, forwardShader->GetPipeline());
+                                vkCmdSetViewport(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], 0, 1, &viewport);
+                                vkCmdSetScissor(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], 0, 1, &scissor);
+                                m_shaderManager.GetDescriptorAt(m_forwardModelMatrixDescriptorID).BindDescriptorSets(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 1, m_currSwapChainImageIndex);
+                            }
+                            if (materialComponents[materialIdx].m_descriptorID != currDescriptorID) {
+                                currDescriptorID = materialComponents[materialIdx].m_descriptorID;
+                                m_shaderManager.GetDescriptorAt(currDescriptorID).BindDescriptorSets(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], forwardShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
+                            }
+                            if (meshComponents[materialIdx].GetVertexHandle() != currMesh) {
+                                currMesh = meshComponents[materialIdx].GetVertexHandle();
+                            }
+                            currStartIdx = materialIdx;
+                        }
+                    }
+                }
+
+                //vkCmdEndRenderPass(m_oitCommandBuffers[m_currSwapChainImageIndex]);
+                vkCmdEndRenderPass(m_deferredPass.commandBuffers[m_currSwapChainImageIndex]);
+
+                /*if (vkEndCommandBuffer(m_oitCommandBuffers[m_currSwapChainImageIndex]) != VK_SUCCESS) {
+                    throw std::runtime_error("failed to record oit linked list pass command buffer!");
+                }*/
             }
 
+            if (vkEndCommandBuffer(m_deferredPass.commandBuffers[m_currSwapChainImageIndex]) != VK_SUCCESS) {
+                throw std::runtime_error("failed to record deferred geometry pass command buffer!");
+            }
 
             /// Construct deferred lighting and post processing passes
 
@@ -935,7 +1028,7 @@ namespace JoeEngine {
                 DrawScreenSpaceTriMesh(m_commandBuffers[m_currSwapChainImageIndex]);
 
                 if (!m_enableOIT) {
-                    // Draw transluscent geometry using forward rendering
+                    // Draw transluscent geometry
                     uint32_t materialIdx = idx;
                     if (materialIdx < materialComponents.size()) {
                         currStartIdx = materialIdx;
@@ -1667,15 +1760,78 @@ namespace JoeEngine {
 
     // OIT
     void JEVulkanRenderer::CreateOITResources() {
-
+        CreateOITRenderPass();
+        m_oitFramebuffers.resize(m_swapChainFramebuffers.size());
+        m_oitCommandBuffers.resize(m_swapChainFramebuffers.size());
+        for (uint32_t i = 0; i < m_swapChainFramebuffers.size(); ++i) {
+            CreateOITFramebuffer(i);
+            CreateOITCommandBuffer(i);
+        }
     }
 
     void JEVulkanRenderer::CreateOITRenderPass() {
+        std::array<VkSubpassDescription, 1> subpassDescs = {};
+        subpassDescs[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpassDescs[0].colorAttachmentCount = 0;
+        subpassDescs[0].pColorAttachments = nullptr;
+        subpassDescs[0].pDepthStencilAttachment = nullptr;
 
+        std::array<VkSubpassDependency, 2> subpassDependencies;
+        subpassDependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        subpassDependencies[0].dstSubpass = 0;
+        subpassDependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        subpassDependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpassDependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        subpassDependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpassDependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        subpassDependencies[1].srcSubpass = 0;
+        subpassDependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        subpassDependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpassDependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        subpassDependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpassDependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        subpassDependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        VkRenderPassCreateInfo renderPassInfo = {};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = 0;
+        renderPassInfo.pAttachments = nullptr;
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = subpassDescs.data();
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(subpassDependencies.size());
+        renderPassInfo.pDependencies = subpassDependencies.data();
+
+        if (vkCreateRenderPass(m_device, &renderPassInfo, nullptr, &m_oitRenderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create render pass!");
+        }
     }
 
-    void JEVulkanRenderer::CreateOITFramebuffer() {
+    void JEVulkanRenderer::CreateOITFramebuffer(uint32_t index) {
+        VkFramebufferCreateInfo framebufferInfo = {};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = m_oitRenderPass;
+        framebufferInfo.attachmentCount = 0;
+        framebufferInfo.pAttachments = nullptr;
+        framebufferInfo.width = m_width;
+        framebufferInfo.height = m_height;
+        framebufferInfo.layers = 1;
 
+        if (vkCreateFramebuffer(m_device, &framebufferInfo, nullptr, &m_oitFramebuffers[index]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create framebuffer!");
+        }
+    }
+
+    void JEVulkanRenderer::CreateOITCommandBuffer(uint32_t index) {
+        VkCommandBufferAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.commandPool = m_commandPool;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandBufferCount = 1;
+
+        if (vkAllocateCommandBuffers(m_device, &allocInfo, &m_oitCommandBuffers[index]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate deferred pass command buffer!");
+        }
     }
 
     void JEVulkanRenderer::StartFrame() {
@@ -1821,7 +1977,11 @@ namespace JoeEngine {
 
         // OIT resources
         if (m_enableOIT) {
-            // TODO: destroy stuff
+            vkDestroyRenderPass(m_device, m_oitRenderPass, nullptr);
+            vkFreeCommandBuffers(m_device, m_commandPool, static_cast<uint32_t>(m_oitCommandBuffers.size()), m_oitCommandBuffers.data());
+            for (uint32_t i = 0; i < m_swapChainFramebuffers.size(); ++i) {
+                vkDestroyFramebuffer(m_device, m_oitFramebuffers[i], nullptr);
+            }
         }
 
         // Forward Pass
@@ -1903,7 +2063,6 @@ namespace JoeEngine {
 
         const PackedArray<MaterialComponent>& materialComponents = m_engineInstance->GetComponentList<MaterialComponent, JEMaterialComponentManager>();
         for (const MaterialComponent& matComp : materialComponents) {
-
             if (m_enableDeferred) {
                 if (matComp.m_renderLayer < TRANSLUCENT) {
                     // Only recreate opaque descriptors
@@ -1937,7 +2096,7 @@ namespace JoeEngine {
                 }
             }
 
-            if (m_enableOIT) {
+            if (m_enableOIT && matComp.m_renderLayer >= TRANSLUCENT) {
                 // TODO: make a no-shadows variant of the OIT translucent shader
                 if (matComp.m_materialSettings & RECEIVES_SHADOWS) {
                     m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain, {}, {}, {},

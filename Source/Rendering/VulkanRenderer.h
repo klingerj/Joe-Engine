@@ -170,9 +170,14 @@ namespace JoeEngine {
         uint32_t m_oitLLDescriptor;
         uint32_t m_oitSortShader;
         // TODO: oit render pass, framebuffer, command buffer, etc
+        VkRenderPass m_oitRenderPass = VK_NULL_HANDLE;
+        std::vector<VkFramebuffer> m_oitFramebuffers;
+        std::vector<VkCommandBuffer> m_oitCommandBuffers;
+        
         void CreateOITResources();
         void CreateOITRenderPass();
-        void CreateOITFramebuffer();
+        void CreateOITFramebuffer(uint32_t index);
+        void CreateOITCommandBuffer(uint32_t index);
 
         // Drawing functions
         void DrawMesh(VkCommandBuffer commandBuffer, const MeshComponent& meshComponent);

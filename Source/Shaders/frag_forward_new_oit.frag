@@ -1,15 +1,10 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-layout(set = 0, binding = 0) uniform UBO_ViewProj_Shadow {
-    mat4 viewProj;
-} ubo_viewProj_Shadow;
-
-layout(set = 0, binding = 1) uniform sampler2D albedoMap;
-layout(set = 0, binding = 2) uniform sampler2D roughnessMap;
-layout(set = 0, binding = 3) uniform sampler2D metallicMap;
-layout(set = 0, binding = 4) uniform sampler2D normalMap;
-layout(set = 0, binding = 5) uniform sampler2D shadowMap;
+layout(set = 0, binding = 0) uniform sampler2D albedoMap;
+layout(set = 0, binding = 1) uniform sampler2D roughnessMap;
+layout(set = 0, binding = 2) uniform sampler2D metallicMap;
+layout(set = 0, binding = 3) uniform sampler2D normalMap;
 
 struct OITLinkedListNode {
   vec4 colorDepth; // RGB, Depth [0, 1]
@@ -41,17 +36,9 @@ void main() {
     float roughness = texture(roughnessMap, fragUV).r;
     float metallic = texture(metallicMap, fragUV).r;
     vec3 normal_tan = texture(normalMap, fragUV).xyz;
-    
-    vec3 worldPos = fragPos + normalize(vec3(20.0) - fragPos) * 0.01;
-    vec4 pointShadow = ubo_viewProj_Shadow.viewProj * vec4(worldPos, 1.0);
-    pointShadow.xy = pointShadow.xy * 0.5 + 0.5;
-    
-    float shadowColor = texture(shadowMap, pointShadow.xy).r;
-    float shadow = step(pointShadow.z, shadowColor);
-    shadow = max(shadow, 0.15);
     float lambert = clamp(dot(normalize(vec3(20.0)), normal_tan), 0.0, 1.0);
     
-    vec4 color = vec4(fragColor * albedo * lambert * shadow * 0.2, gl_FragCoord.z); // TODO: make sure this is right
+    vec4 color = vec4(fragColor * albedo * lambert * 0.4, gl_FragCoord.z); // TODO: make sure this is right
     uint headPtr = atomicAdd(ssboAtomicCtr.counter[0], 1);
     // TODO: make sure we don't have to worry about which corner this is relative to. Don't think so tho.
     ivec2 pixelIdx = ivec2(gl_FragCoord.xy - vec2(0.5));
