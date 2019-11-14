@@ -31,6 +31,8 @@ layout(location = 1) in vec2 fragUV;
 layout(location = 2) in vec3 fragPos;
 layout(location = 3) in vec3 fragNor;
 
+// No out color! Only writes to SSBOs
+
 void main() {
     vec3 albedo = texture(albedoMap, fragUV).xyz;
     float roughness = texture(roughnessMap, fragUV).r;
@@ -38,12 +40,12 @@ void main() {
     vec3 normal_tan = texture(normalMap, fragUV).xyz;
     float lambert = clamp(dot(normalize(vec3(20.0)), normal_tan), 0.0, 1.0);
     
-    vec4 color = vec4(fragColor * albedo * lambert * 0.4, gl_FragCoord.z); // TODO: make sure this is right
+    vec4 color = vec4(fragColor * albedo * lambert * 0.4, gl_FragCoord.z);
     uint headPtr = atomicAdd(ssboAtomicCtr.counter[0], 1);
     // TODO: make sure we don't have to worry about which corner this is relative to. Don't think so tho.
-    ivec2 pixelIdx = ivec2(gl_FragCoord.xy - vec2(0.5));
-    //uint pixel = uint(pixelIdx.x + pixelIdx.y * screenRes.x); // TODO: pass screen width
-    uint pixel = 0;
+    ivec2 pixelIdx = ivec2(gl_FragCoord.xy - 0.5);
+    ivec2 screenRes = ivec2(1280, 720);
+    uint pixel = uint(pixelIdx.x + pixelIdx.y * screenRes.x); // TODO: pass screen width
     
     // Create and write the color-depth node for the linked list
     OITLinkedListNode oitNode;
@@ -52,8 +54,7 @@ void main() {
     ssboOITLL.colorNodes[headPtr] = oitNode;
     
     // Update the head pointer for this pixel
-    uint oldHeadPtr = atomicExchange(ssboOITHP.headPointers[headPtr], headPtr);
-    ssboOITHP.headPointers[pixel] = headPtr;
+    uint oldHeadPtr = atomicExchange(ssboOITHP.headPointers[pixel], headPtr);
     
     // Update the next pointers for the head pointer with the old head pointer data
     ssboOITNP.nextPointers[headPtr] = oldHeadPtr;
