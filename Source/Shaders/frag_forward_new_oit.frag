@@ -7,7 +7,8 @@ layout(set = 0, binding = 2) uniform sampler2D metallicMap;
 layout(set = 0, binding = 3) uniform sampler2D normalMap;
 
 struct OITLinkedListNode {
-  vec4 colorDepth; // RGB, Depth [0, 1]
+  vec4 color; // RGB, Alpha
+  vec4 depth; // Depth [0, 1], unused float3
 };
 
 layout(set = 2, binding = 0, std430) buffer ssboOITLinkedList {
@@ -40,7 +41,7 @@ void main() {
     vec3 normal_tan = texture(normalMap, fragUV).xyz;
     float lambert = clamp(dot(normalize(vec3(20.0)), normal_tan), 0.0, 1.0);
     
-    vec4 color = vec4(fragColor * albedo * lambert * 0.4, gl_FragCoord.z);
+    vec4 color = vec4(fragColor * albedo * lambert, 0.4);
     uint headPtr = atomicAdd(ssboAtomicCtr.counter[0], 1);
     // TODO: make sure we don't have to worry about which corner this is relative to. Don't think so tho.
     ivec2 pixelIdx = ivec2(gl_FragCoord.xy - 0.5);
@@ -49,7 +50,8 @@ void main() {
     
     // Create and write the color-depth node for the linked list
     OITLinkedListNode oitNode;
-    oitNode.colorDepth = color;
+    oitNode.color = color;
+    oitNode.depth = vec4(gl_FragCoord.z, 0, 0, 0);
     // Set the color for the new atomic counter value to be this fragment
     ssboOITLL.colorNodes[headPtr] = oitNode;
     

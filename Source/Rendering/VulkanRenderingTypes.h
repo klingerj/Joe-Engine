@@ -15,8 +15,27 @@ namespace JoeEngine {
         DEFERRED,
         SHADOW,
         DEFERRED_GEOM,
-        TRANSLUCENT_OIT
+        TRANSLUCENT_OIT,
+        TRANSLUCENT_OIT_SORT
     } PipelineType;
+
+    // Order-independent translucency
+    typedef struct oit_ll_node_t {
+        glm::vec4 color; // color RBG, alpha
+        glm::vec4 depth; // depth [0, 1], unused vec3
+    } OITLinkedListNode;
+
+    typedef struct oit_hp_node_t {
+        uint32_t pointer;
+    } OITHeadPointerNode;
+
+    typedef struct oit_np_node_t {
+        uint32_t pointer;
+    } OITNextPointerNode;
+
+    typedef struct oit_atomic_ctr_t {
+        uint32_t atomicCtrData[4];
+    } OITAtomicCounterData;
 
     // Generic Framebuffer attachment
     typedef struct je_framebuffer_attachment_t {

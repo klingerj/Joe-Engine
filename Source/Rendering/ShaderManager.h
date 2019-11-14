@@ -64,6 +64,9 @@ namespace JoeEngine {
                 newShader = new JEForwardTranslucentShader(materialComponent, numSourceTextures, materialComponent.m_uniformData.size(), device, physicalDevice,
                     swapChain, renderPass, true, vertPath, fragPath);
                 break;
+            case TRANSLUCENT_OIT_SORT:
+                newShader = new JEOITSortShader(materialComponent, device, physicalDevice, swapChain, renderPass, vertPath, fragPath);
+                break;
             default:
                 throw std::runtime_error("Invalid shader pipeline type!");
             }

@@ -144,11 +144,16 @@ namespace JoeEngine {
             temp.m_geomType = TRIANGLES;
             // Create descriptors and shaders
             CreateShader(temp, JE_SHADER_DIR + "vert_forward.spv", JE_SHADER_DIR + "frag_forward_new_oit.spv");
-            m_oitSortShader = temp.m_shaderID;
             // OIT SSBOs: linked list data, next pointers, head pointers, then atomic counter
             m_oitLLDescriptor = m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain, {}, {}, {},
-                { JE_NUM_OIT_FRAGSPP * m_width * m_height, JE_NUM_OIT_FRAGSPP * m_width * m_height, (uint32_t)sizeof(uint32_t) * m_width * m_height, sizeof(uint32_t) * 4 },
+                { JE_NUM_OIT_FRAGSPP * m_width * m_height * (uint32_t)sizeof(OITLinkedListNode), // Linked list data
+                JE_NUM_OIT_FRAGSPP * m_width * m_height * (uint32_t)sizeof(OITNextPointerNode), // Next pointer data
+                m_width * m_height * (uint32_t)sizeof(OITHeadPointerNode), // Head pointer data
+                (uint32_t)sizeof(OITAtomicCounterData) }, // Atomic counter data
                 ((JEVulkanShader*)m_shaderManager.GetShaderAt(temp.m_shaderID))->GetDescriptorSetLayout(2), TRANSLUCENT_OIT, false);
+            // OIT sort shader
+            m_oitSortShader = m_shaderManager.CreateShader(m_device, m_physicalDevice, m_vulkanSwapChain, temp, 0, m_renderPass_deferredLighting,
+                JE_SHADER_DIR + "vert_oit.spv", JE_SHADER_DIR + "frag_oit_sort.spv", TRANSLUCENT_OIT_SORT);
         }
 
         m_textureLibraryGlobal.CreateTexture(m_device, m_physicalDevice, m_graphicsQueue, m_commandPool, JE_TEXTURES_DIR + "fallback.png");
@@ -899,7 +904,7 @@ namespace JoeEngine {
 
             /// Construct OIT first pass
 
-            if (m_enableOIT) {
+            if (m_enableOIT && materialComponents.size() > 0) {
                 // start a command buffer and render pass that renders all translucent geometry and assembles the linked list data
                 /*if (vkBeginCommandBuffer(m_oitCommandBuffers[m_currSwapChainImageIndex], &beginInfo) != VK_SUCCESS) {
                     throw std::runtime_error("failed to begin recording oit linked list pass command buffer!");
@@ -1082,8 +1087,13 @@ namespace JoeEngine {
                         }
                     }
                 } else {
-                    // Draw a full-screen quad that reads from the linked-list of fragments that we created previously,
-                    // sorts, and outputs the proper final color
+                    JEOITSortShader* oitSortShader = (JEOITSortShader*)m_shaderManager.GetShaderAt(m_oitSortShader);
+                    vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, oitSortShader->GetPipeline());
+                    vkCmdSetViewport(m_commandBuffers[m_currSwapChainImageIndex], 0, 1, &viewport);
+                    vkCmdSetScissor(m_commandBuffers[m_currSwapChainImageIndex], 0, 1, &scissor);
+                    m_shaderManager.GetDescriptorAt(m_oitLLDescriptor).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], oitSortShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
+
+                    DrawScreenSpaceTriMesh(m_commandBuffers[m_currSwapChainImageIndex]);
                 }
             }
 
@@ -2100,11 +2110,17 @@ namespace JoeEngine {
                 // TODO: make a no-shadows variant of the OIT translucent shader
                 if (matComp.m_materialSettings & RECEIVES_SHADOWS) {
                     m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain, {}, {}, {},
-                        { JE_NUM_OIT_FRAGSPP * m_width * m_height, JE_NUM_OIT_FRAGSPP * m_width * m_height, (uint32_t)sizeof(uint32_t) * m_width * m_height, sizeof(uint32_t) * 4 },
+                        { JE_NUM_OIT_FRAGSPP * m_width * m_height * (uint32_t)sizeof(OITLinkedListNode), // Linked list data
+                        JE_NUM_OIT_FRAGSPP * m_width * m_height * (uint32_t)sizeof(OITNextPointerNode), // Next pointer data
+                        m_width * m_height * (uint32_t)sizeof(OITHeadPointerNode), // Head pointer data
+                        (uint32_t)sizeof(OITAtomicCounterData) }, // Atomic counter data
                         ((JEVulkanShader*)m_shaderManager.GetShaderAt(matComp.m_shaderID))->GetDescriptorSetLayout(2), TRANSLUCENT_OIT, true, m_oitLLDescriptor);
                 } else {
                     m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain, {}, {}, {},
-                        { JE_NUM_OIT_FRAGSPP * m_width * m_height, JE_NUM_OIT_FRAGSPP * m_width * m_height, (uint32_t)sizeof(uint32_t) * m_width * m_height, sizeof(uint32_t) * 4 },
+                        { JE_NUM_OIT_FRAGSPP * m_width * m_height * (uint32_t)sizeof(OITLinkedListNode), // Linked list data
+                        JE_NUM_OIT_FRAGSPP * m_width * m_height * (uint32_t)sizeof(OITNextPointerNode), // Next pointer data
+                        m_width * m_height * (uint32_t)sizeof(OITHeadPointerNode), // Head pointer data
+                        (uint32_t)sizeof(OITAtomicCounterData) }, // Atomic counter data
                         ((JEVulkanShader*)m_shaderManager.GetShaderAt(matComp.m_shaderID))->GetDescriptorSetLayout(2), TRANSLUCENT_OIT, true, m_oitLLDescriptor);
                 }
             }

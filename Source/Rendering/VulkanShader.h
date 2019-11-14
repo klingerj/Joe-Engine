@@ -296,4 +296,53 @@ namespace JoeEngine {
         void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) const;
         void BindPushConstants_InstancedData(VkCommandBuffer commandBuffer, const std::array<uint32_t, 4>& instancedData) const;
     };
+
+    class JEOITSortShader : public JEVulkanShader {
+    private:
+        void CreateDescriptorSetLayouts(VkDevice device, uint32_t numSourceTextures, uint32_t numUniformBuffers, uint32_t numStorageBuffers) override {
+            m_descriptorSetLayouts = { VK_NULL_HANDLE };
+
+            std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings;
+
+            for (uint32_t i = 0; i < numStorageBuffers; ++i) {
+                VkDescriptorSetLayoutBinding layoutBinding = {};
+                layoutBinding.binding = i;
+                layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                layoutBinding.descriptorCount = 1;
+                layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                layoutBinding.pImmutableSamplers = nullptr;
+                setLayoutBindings.push_back(layoutBinding);
+            }
+
+            if (setLayoutBindings.size() > 0) {
+                VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+                layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+                layoutInfo.bindingCount = static_cast<uint32_t>(setLayoutBindings.size());
+                layoutInfo.pBindings = setLayoutBindings.data();
+
+                // TODO: change this hard-coded index
+                if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &m_descriptorSetLayouts[0]) != VK_SUCCESS) {
+                    throw std::runtime_error("failed to create descriptor set layout!");
+                }
+            }
+        }
+        void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
+            VkExtent2D frameExtent, VkRenderPass renderPass, const MaterialComponent& materialComponent) override;
+
+    public:
+        JEOITSortShader() = delete;
+        JEOITSortShader(const MaterialComponent& materialComponent, VkDevice device, VkPhysicalDevice physicalDevice,
+            const JEVulkanSwapChain& swapChain, VkRenderPass renderPass, const std::string& vertPath, const std::string& fragPath) :
+            JEVulkanShader(device, vertPath, fragPath) {
+            auto vertShaderCode = ReadFile(m_vertPath);
+            auto fragShaderCode = ReadFile(m_fragPath);
+            // Create shader modules
+            VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
+            VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
+
+            uint32_t numSwapChainImages = swapChain.GetImageViews().size();
+            CreateDescriptorSetLayouts(device, 0, 0, 4);
+            CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain.GetExtent(), renderPass, materialComponent);
+        }
+    };
 }
