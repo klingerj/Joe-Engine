@@ -228,7 +228,7 @@ namespace JoeEngine {
             void* data;
             vkMapMemory(device, m_ssboDeviceMemory[i][imageIndex], 0, ssboSizes[i], 0, &data);
             if (ssboBuffers[i] == nullptr) {
-                memset(data, 0, ssboSizes[i]);
+                memset(data, UINT32_MAX, ssboSizes[i]);
             } else {
                 memcpy(data, ssboBuffers[i], ssboSizes[i]);
             }

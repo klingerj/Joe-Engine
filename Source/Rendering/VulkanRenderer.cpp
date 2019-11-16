@@ -537,7 +537,7 @@ namespace JoeEngine {
             { transformsSorted.data() }, { (uint32_t)(transformsSorted.size() * sizeof(glm::mat4)) });
 
         if (m_enableOIT) {
-            constexpr std::array<uint32_t, 4> atomicCounterData = { 0, 0, 0, 0 };
+            const std::array<uint32_t, 4> atomicCounterData = { 0, JE_NUM_OIT_FRAGSPP * m_width * m_height, 0, 0 };
             m_shaderManager.UpdateBuffers(m_device, m_oitLLDescriptor, imageIndex, {}, {},
                 { nullptr, nullptr, nullptr, atomicCounterData.data() },
                 { JE_NUM_OIT_FRAGSPP * m_width * m_height, JE_NUM_OIT_FRAGSPP * m_width * m_height, (uint32_t)sizeof(uint32_t) * m_width * m_height, sizeof(uint32_t) * 4 });
