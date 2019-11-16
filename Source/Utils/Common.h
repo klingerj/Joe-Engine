@@ -21,6 +21,7 @@ namespace JoeEngine {
     constexpr int JE_DEFAULT_SCREEN_HEIGHT = 720;
     constexpr uint32_t JE_DEFAULT_MAX_FRAMES_IN_FLIGHT = 2;
     constexpr int JE_NUM_ENTITIES = 50000; // max number of individual entities permitted to be rendered
+    constexpr uint16_t JE_NUM_OIT_FRAGSPP = 32; // max number of oit fragments per pixel
 
     constexpr int JE_DEFAULT_SHADOW_MAP_WIDTH = 4000;
     constexpr int JE_DEFAULT_SHADOW_MAP_HEIGHT = 4000;
@@ -42,13 +43,13 @@ namespace JoeEngine {
         EnableOIT = 0x2,
         AllSettings = 0xFFFFFFFF
     } RendererSettings;
-    inline uint32_t operator&(RendererSettings a, RendererSettings b)
+    inline bool operator&(RendererSettings a, RendererSettings b)
     { // Note the pass by value
         return (uint32_t)a & (uint32_t)b;
     }
-    inline uint32_t operator|(RendererSettings a, RendererSettings b)
+    inline RendererSettings operator|(RendererSettings a, RendererSettings b)
     { // Note the pass by value
-        return (uint32_t)a | (uint32_t)b;
+        return (RendererSettings)((uint32_t)a | (uint32_t)b);
     }
 
     // Vulkan Functions

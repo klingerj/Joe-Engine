@@ -33,5 +33,5 @@ void main() {
     shadow = max(shadow, 0.15);
     float lambert = clamp(dot(normalize(vec3(20.0)), normal_tan), 0.0, 1.0);
     
-    outColor = vec4(fragColor * albedo * lambert * shadow, 0.2);
+    outColor = vec4(fragColor * albedo * lambert * shadow, 0.4);
 }
