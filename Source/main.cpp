@@ -4,7 +4,9 @@
 
 int RunApp() {
     try {
-        JoeEngine::JEEngineInstance app = JoeEngine::JEEngineInstance(JoeEngine::RendererSettings::AllSettings);
+        JoeEngine::RendererSettings rendererSettings = JoeEngine::RendererSettings::EnableDeferred;
+        rendererSettings = rendererSettings | JoeEngine::RendererSettings::EnableOIT;
+        JoeEngine::JEEngineInstance app = JoeEngine::JEEngineInstance(rendererSettings);
         app.RegisterComponentManager<RotatorComponent>(new RotatorComponentManager());
         app.LoadScene(2);
         app.Run();

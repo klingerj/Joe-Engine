@@ -209,8 +209,6 @@ namespace JoeEngine {
     void JEVulkanDescriptor::UpdateDescriptorSets(VkDevice device, uint32_t imageIndex, const std::vector<const void*>& buffers, const std::vector<uint32_t>& bufferSizes,
         const std::vector<const void*>& ssboBuffers, const std::vector<uint32_t>& ssboSizes) {
 
-        // TODO: do a check that looks for nullptr in the buffer data list, and does a memset of 0 instead
-
         // Uniform buffers
         for (uint32_t i = 0; i < m_uniformBuffers.size(); ++i) {
             void* data;
@@ -226,13 +224,16 @@ namespace JoeEngine {
         // SSBOs
         for (uint32_t i = 0; i < m_ssboBuffers.size(); ++i) {
             void* data;
-            vkMapMemory(device, m_ssboDeviceMemory[i][imageIndex], 0, ssboSizes[i], 0, &data);
-            if (ssboBuffers[i] == nullptr) {
-                memset(data, UINT32_MAX, ssboSizes[i]);
-            } else {
-                memcpy(data, ssboBuffers[i], ssboSizes[i]);
+            if (ssboSizes[i] > 0) {
+                vkMapMemory(device, m_ssboDeviceMemory[i][imageIndex], 0, ssboSizes[i], 0, &data);
+                if (ssboBuffers[i] == nullptr) {
+                    // TODO: create some debug value parameter for this, it is highly usage specific
+                    memset(data, UINT32_MAX, ssboSizes[i]);
+                } else {
+                    memcpy(data, ssboBuffers[i], ssboSizes[i]);
+                }
+                vkUnmapMemory(device, m_ssboDeviceMemory[i][imageIndex]);
             }
-            vkUnmapMemory(device, m_ssboDeviceMemory[i][imageIndex]);
         }
     }
 }

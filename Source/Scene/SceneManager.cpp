@@ -242,7 +242,7 @@ namespace JoeEngine {
             RotatorComponent* rot = m_engineInstance->GetComponent<RotatorComponent, RotatorComponentManager>(newEntity);
             rot->m_entityId = newEntity.GetId();
         } else if (sceneId == 2) {
-            m_camera = JECamera(glm::vec3(0.0f, 4.0f, 12.0f), glm::vec3(0.0f, 0.0f, 0.0f), windowExtent.width / (float)windowExtent.height, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE);
+            m_camera = JECamera(glm::vec3(-3.5f, 0.1f, -3.5f), glm::vec3(0.0f, 0.0f, 0.0f), windowExtent.width / (float)windowExtent.height, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE);
             m_shadowCamera = JECamera(glm::vec3(4.0f, 4.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPassExtent.width / (float)shadowPassExtent.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
 
             std::vector<Entity> entities;
@@ -408,6 +408,72 @@ namespace JoeEngine {
 
             RotatorComponent* rot = m_engineInstance->GetComponent<RotatorComponent, RotatorComponentManager>(newEntity);
             rot->m_entityId = newEntity.GetId();
+        } else if (sceneId == 3) {
+            m_camera = JECamera(glm::vec3(0.0f, 0.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), windowExtent.width / (float)windowExtent.height, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE);
+            m_shadowCamera = JECamera(glm::vec3(4.0f, 4.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPassExtent.width / (float)shadowPassExtent.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
+
+            MeshComponent meshComp_triLeft = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "triLeft.obj");
+            MeshComponent meshComp_triRight = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "triRight.obj");
+
+            uint32_t tex0 = m_engineInstance->LoadTexture(JE_TEXTURES_DIR + "red.png");
+            uint32_t tex1 = m_engineInstance->LoadTexture(JE_TEXTURES_DIR + "blue.png");
+
+            MaterialComponent mat_translucent_red;
+            mat_translucent_red.m_geomType = TRIANGLES;
+            mat_translucent_red.m_materialSettings = NO_SETTINGS;
+            mat_translucent_red.m_renderLayer = TRANSLUCENT;
+            mat_translucent_red.m_texAlbedo = tex0;
+            m_engineInstance->CreateShader(mat_translucent_red, JE_SHADER_DIR + "vert_forward.spv", JE_SHADER_DIR + "frag_forward_new_no_shadows.spv");
+            m_engineInstance->CreateDescriptor(mat_translucent_red);
+
+            MaterialComponent mat_translucent_blue;
+            mat_translucent_blue.m_geomType = TRIANGLES;
+            mat_translucent_blue.m_materialSettings = NO_SETTINGS;
+            mat_translucent_blue.m_renderLayer = TRANSLUCENT;
+            mat_translucent_blue.m_texAlbedo = tex1;
+            mat_translucent_blue.m_shaderID = mat_translucent_red.m_shaderID;
+            m_engineInstance->CreateDescriptor(mat_translucent_blue);
+
+            Entity entity0 = m_engineInstance->SpawnEntity();
+            m_engineInstance->SetComponent<JEMeshComponentManager>(entity0, meshComp_triLeft);
+            m_engineInstance->SetComponent<JEMaterialComponentManager>(entity0, mat_translucent_red);
+
+            Entity entity1 = m_engineInstance->SpawnEntity();
+            m_engineInstance->SetComponent<JEMeshComponentManager>(entity1, meshComp_triRight);
+            m_engineInstance->SetComponent<JEMaterialComponentManager>(entity1, mat_translucent_blue);
+        } else if (sceneId == 4) {
+            m_camera = JECamera(glm::vec3(0.0f, 0.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), windowExtent.width / (float)windowExtent.height, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE);
+            m_shadowCamera = JECamera(glm::vec3(4.0f, 4.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPassExtent.width / (float)shadowPassExtent.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
+
+            MeshComponent meshComp_triLeft = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "triLeft.obj");
+            MeshComponent meshComp_triRight = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "triRight.obj");
+
+            uint32_t tex0 = m_engineInstance->LoadTexture(JE_TEXTURES_DIR + "red.png");
+            uint32_t tex1 = m_engineInstance->LoadTexture(JE_TEXTURES_DIR + "blue.png");
+
+            MaterialComponent mat_translucent_red;
+            mat_translucent_red.m_geomType = TRIANGLES;
+            mat_translucent_red.m_materialSettings = NO_SETTINGS;
+            mat_translucent_red.m_renderLayer = TRANSLUCENT;
+            mat_translucent_red.m_texAlbedo = tex0;
+            m_engineInstance->CreateShader(mat_translucent_red, JE_SHADER_DIR + "vert_forward.spv", JE_SHADER_DIR + "frag_forward_new_oit.spv");
+            m_engineInstance->CreateDescriptor(mat_translucent_red);
+
+            MaterialComponent mat_translucent_blue;
+            mat_translucent_blue.m_geomType = TRIANGLES;
+            mat_translucent_blue.m_materialSettings = NO_SETTINGS;
+            mat_translucent_blue.m_renderLayer = TRANSLUCENT;
+            mat_translucent_blue.m_texAlbedo = tex1;
+            mat_translucent_blue.m_shaderID = mat_translucent_red.m_shaderID;
+            m_engineInstance->CreateDescriptor(mat_translucent_blue);
+
+            Entity entity0 = m_engineInstance->SpawnEntity();
+            m_engineInstance->SetComponent<JEMeshComponentManager>(entity0, meshComp_triLeft);
+            m_engineInstance->SetComponent<JEMaterialComponentManager>(entity0, mat_translucent_red);
+
+            Entity entity1 = m_engineInstance->SpawnEntity();
+            m_engineInstance->SetComponent<JEMeshComponentManager>(entity1, meshComp_triRight);
+            m_engineInstance->SetComponent<JEMaterialComponentManager>(entity1, mat_translucent_blue);
         }
     }
 

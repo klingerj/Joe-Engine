@@ -22,7 +22,7 @@ layout(set = 0, binding = 2, std430) readonly buffer ssboOITLinkedListHeadPointe
 
 layout(location = 0) out vec4 outColor;
 
-#define NUM_FRAGS_PER_PIXEL 16
+#define NUM_FRAGS_PER_PIXEL 32
 #define UINT_MAX 4294967295
 
 void main() {
@@ -51,7 +51,7 @@ void main() {
     for (int j = 1; j < numFrags; ++j) {
         OITLinkedListNode keyNode = fragments[j];
         int i = j - 1;
-        while (i >= 0 && fragments[i].depth.r > keyNode.depth.r) {
+        while (i >= 0 && fragments[i].depth.r < keyNode.depth.r) {
             fragments[i + 1] = fragments[i];
             --i;
         }
@@ -62,39 +62,16 @@ void main() {
     vec4 color = vec4(0);
     
     for (int i = 0; i < numFrags; ++i) {
-        const vec4 currCol = fragments[i].color;
+        if (i == numFrags - 1) {
+            gl_FragDepth = fragments[i].depth.r;
+        }
+        vec4 currCol = fragments[i].color;
         color.rgb = currCol.rgb * currCol.a + color.rgb * (1.0 - currCol.a);
-        color.a += currCol.a;
-        if (color.a > 1.0) {
-            color /= color.a;
-            break;
-        }
+        color.a = currCol.a + color.a * (1.0 - currCol.a);
     }
     
-    /*vec4 color = vec4(0);
-    if (headPtr != UINT_MAX) {
-        color = ssboOITLL.colorNodes[headPtr].color;
-        //depth = min(depth, ssboOITLL.colorNodes[headPtr].depth.x);
-        headPtr = ssboOITNP.nextPointers[headPtr];
+    if (color.a >= 1.0) {
+        color /= color.a;
     }
-    
-    for (int i = 0; i < 1000; ++i) {
-        if (headPtr != UINT_MAX) {
-            vec4 col = ssboOITLL.colorNodes[headPtr].color;
-            //depth = min(depth, ssboOITLL.colorNodes[headPtr].depth.x);
-            
-            color.rgb = col.rgb * col.a + color.rgb * color.a;
-            color.a += col.a;
-            if (color.a >= 1.0) {
-                color /= color.a;
-                break;
-            }
-            headPtr = ssboOITNP.nextPointers[headPtr];
-        } else {
-            break;
-        }
-    }*/
-    
-    //gl_FragDepth = depth;
     outColor = color;
 }

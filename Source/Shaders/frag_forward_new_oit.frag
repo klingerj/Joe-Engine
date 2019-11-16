@@ -27,6 +27,8 @@ layout(set = 2, binding = 3, std430) buffer ssboAtomicCounter {
     uint counter[4];
 } ssboAtomicCtr;
 
+layout(early_fragment_tests) in;
+
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec2 fragUV;
 layout(location = 2) in vec3 fragPos;
@@ -40,7 +42,7 @@ void main() {
     float metallic = texture(metallicMap, fragUV).r;
     vec3 normal_tan = texture(normalMap, fragUV).xyz;
     
-    vec4 color = vec4(fragColor * albedo, 0.2);
+    vec4 color = vec4(fragColor * albedo, 0.5);
     uint headPtr = atomicAdd(ssboAtomicCtr.counter[0], 1);
     
     if (headPtr < ssboAtomicCtr.counter[1]) {
@@ -60,7 +62,5 @@ void main() {
         
         // Update the next pointers for the head pointer with the old head pointer data
         ssboOITNP.nextPointers[headPtr] = oldHeadPtr;
-    } else {
-        discard;
     }
 }

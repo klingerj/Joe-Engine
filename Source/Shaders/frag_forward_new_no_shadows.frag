@@ -20,5 +20,5 @@ void main() {
     vec3 normal_tan = texture(normalMap, fragUV).xyz;
     
     float lambert = clamp(dot(normalize(vec3(20.0)), normal_tan), 0.0, 1.0);
-    outColor = vec4(fragColor * albedo * lambert, 0.4);
+    outColor = vec4(fragColor * albedo * 1, 0.5);
 }

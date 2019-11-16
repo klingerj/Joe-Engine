@@ -784,25 +784,27 @@ namespace JoeEngine {
         m_shaderManager.GetDescriptorAt(m_shadowModelMatrixDescriptorID).BindDescriptorSets(m_shadowPass.commandBuffers[m_currSwapChainImageIndex], shadowShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
         shadowShader->BindPushConstants_ViewProj(m_shadowPass.commandBuffers[m_currSwapChainImageIndex], camera.GetOrthoViewProj());
 
-        uint32_t idx = 1;
-        uint32_t currStartIdx = 0;
-        int currMesh = meshComponents[currStartIdx].GetVertexHandle();
+        if (meshComponents.size() > 0) {
+            uint32_t idx = 1;
+            uint32_t currStartIdx = 0;
+            int currMesh = meshComponents[currStartIdx].GetVertexHandle();
 
-        while (idx <= meshComponents.size()) {
-            if (idx == meshComponents.size()) {
-                shadowShader->BindPushConstants_InstancedData(m_shadowPass.commandBuffers[m_currSwapChainImageIndex], {currStartIdx, 0, 0, 0});
-                DrawMeshInstanced(m_shadowPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, currMesh);
-                break;
-            }
-            if (meshComponents[idx].GetVertexHandle() == currMesh) {
-                ++idx;
-            } else {
-                // Draw instanced mesh using curr material resources
-                shadowShader->BindPushConstants_InstancedData(m_shadowPass.commandBuffers[m_currSwapChainImageIndex], {currStartIdx, 0, 0, 0 });
-                DrawMeshInstanced(m_shadowPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, currMesh);
-                
-                currMesh = meshComponents[idx].GetVertexHandle();
-                currStartIdx = idx;
+            while (idx <= meshComponents.size()) {
+                if (idx == meshComponents.size()) {
+                    shadowShader->BindPushConstants_InstancedData(m_shadowPass.commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
+                    DrawMeshInstanced(m_shadowPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, currMesh);
+                    break;
+                }
+                if (meshComponents[idx].GetVertexHandle() == currMesh) {
+                    ++idx;
+                } else {
+                    // Draw instanced mesh using curr material resources
+                    shadowShader->BindPushConstants_InstancedData(m_shadowPass.commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
+                    DrawMeshInstanced(m_shadowPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, currMesh);
+
+                    currMesh = meshComponents[idx].GetVertexHandle();
+                    currStartIdx = idx;
+                }
             }
         }
 
@@ -860,7 +862,7 @@ namespace JoeEngine {
             uint32_t currStartIdx = 0;
             uint32_t currDescriptorID = 0;
 
-            if (materialComponents.size() > 0) {
+            if (materialComponents.size() > 0 && materialComponents[0].m_renderLayer < TRANSLUCENT) {
                 currDescriptorID = materialComponents[0].m_descriptorID;
                 m_shaderManager.GetDescriptorAt(currDescriptorID).BindDescriptorSets(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], deferredGeomShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
                 int currMesh = meshComponents[currStartIdx].GetVertexHandle();
@@ -881,6 +883,7 @@ namespace JoeEngine {
                         DrawMeshInstanced(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, currMesh);
 
                         if (materialComponents[idx].m_renderLayer >= TRANSLUCENT) {
+                            currStartIdx = idx;
                             break;
                         }
                         if (materialComponents[idx].m_descriptorID != currDescriptorID) {
@@ -904,7 +907,7 @@ namespace JoeEngine {
 
             /// Construct OIT first pass
 
-            if (m_enableOIT && materialComponents.size() > 0) {
+            if (m_enableOIT && materialComponents.size() > 0 && materialComponents[currStartIdx].m_renderLayer >= TRANSLUCENT) {
                 // start a command buffer and render pass that renders all translucent geometry and assembles the linked list data
                 /*if (vkBeginCommandBuffer(m_oitCommandBuffers[m_currSwapChainImageIndex], &beginInfo) != VK_SUCCESS) {
                     throw std::runtime_error("failed to begin recording oit linked list pass command buffer!");
@@ -915,15 +918,18 @@ namespace JoeEngine {
                 renderPassInfo.framebuffer = m_oitFramebuffers[m_currSwapChainImageIndex];
                 renderPassInfo.renderArea.offset = { 0, 0 };
                 renderPassInfo.renderArea.extent = { m_width, m_height };
-                renderPassInfo.clearValueCount = 0;
-                renderPassInfo.pClearValues = nullptr;
+
+                VkClearValue clearValue = {};
+                clearValue.depthStencil = { 1.0f, 0 };
+                renderPassInfo.clearValueCount = 1;
+                renderPassInfo.pClearValues = &clearValue;
 
                 //vkCmdBeginRenderPass(m_oitCommandBuffers[m_currSwapChainImageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
                 vkCmdBeginRenderPass(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
                 
-                uint32_t materialIdx = idx;
+                uint32_t materialIdx = currStartIdx;
                 if (materialIdx < materialComponents.size()) {
-                    currStartIdx = materialIdx;
+                    //currStartIdx = materialIdx;
                     ++materialIdx;
                     currDescriptorID = materialComponents[currStartIdx].m_descriptorID;
                     int currMesh = meshComponents[currStartIdx].GetVertexHandle();
@@ -1020,23 +1026,26 @@ namespace JoeEngine {
             vkCmdBeginRenderPass(m_commandBuffers[m_currSwapChainImageIndex], &renderPassInfoDeferred, VK_SUBPASS_CONTENTS_INLINE);
 
             if (materialComponents.size() > 0) {
-                JEDeferredShader* deferredShader = (JEDeferredShader*)m_shaderManager.GetShaderAt(materialComponents[0].m_shaderID);
-                vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, deferredShader->GetPipeline());
-                vkCmdSetViewport(m_commandBuffers[m_currSwapChainImageIndex], 0, 1, &viewport);
-                vkCmdSetScissor(m_commandBuffers[m_currSwapChainImageIndex], 0, 1, &scissor);
-                if (materialComponents[0].m_materialSettings & RECEIVES_SHADOWS) {
-                    m_shaderManager.GetDescriptorAt(m_deferredLightingDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], deferredShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
-                } else {
-                    m_shaderManager.GetDescriptorAt(m_deferredLightingNoShadowsDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], deferredShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
-                }
+                // Only do deferred pass if at least one material is opaque
+                if (materialComponents[0].m_renderLayer < TRANSLUCENT) {
+                    JEDeferredShader* deferredShader = (JEDeferredShader*)m_shaderManager.GetShaderAt(materialComponents[0].m_shaderID);
+                    vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, deferredShader->GetPipeline());
+                    vkCmdSetViewport(m_commandBuffers[m_currSwapChainImageIndex], 0, 1, &viewport);
+                    vkCmdSetScissor(m_commandBuffers[m_currSwapChainImageIndex], 0, 1, &scissor);
+                    if (materialComponents[0].m_materialSettings & RECEIVES_SHADOWS) {
+                        m_shaderManager.GetDescriptorAt(m_deferredLightingDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], deferredShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
+                    } else {
+                        m_shaderManager.GetDescriptorAt(m_deferredLightingNoShadowsDescriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], deferredShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
+                    }
 
-                DrawScreenSpaceTriMesh(m_commandBuffers[m_currSwapChainImageIndex]);
+                    DrawScreenSpaceTriMesh(m_commandBuffers[m_currSwapChainImageIndex]);
+                }
 
                 if (!m_enableOIT) {
                     // Draw transluscent geometry
-                    uint32_t materialIdx = idx;
-                    if (materialIdx < materialComponents.size()) {
-                        currStartIdx = materialIdx;
+                    uint32_t materialIdx = currStartIdx;
+                    if (materialIdx < materialComponents.size() && materialComponents[currStartIdx].m_renderLayer >= TRANSLUCENT) {
+                        //currStartIdx = materialIdx;
                         ++materialIdx;
                         currDescriptorID = materialComponents[currStartIdx].m_descriptorID;
                         int currMesh = meshComponents[currStartIdx].GetVertexHandle();
@@ -1780,11 +1789,25 @@ namespace JoeEngine {
     }
 
     void JEVulkanRenderer::CreateOITRenderPass() {
+        VkAttachmentDescription depthAttachDesc = {};
+        depthAttachDesc.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachDesc.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+        depthAttachDesc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        depthAttachDesc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachDesc.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+        depthAttachDesc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+        depthAttachDesc.format = FindDepthFormat(m_physicalDevice);
+
+        VkAttachmentReference depthAttachmentRef = {};
+        depthAttachmentRef.attachment = 0;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+
         std::array<VkSubpassDescription, 1> subpassDescs = {};
         subpassDescs[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpassDescs[0].colorAttachmentCount = 0;
         subpassDescs[0].pColorAttachments = nullptr;
-        subpassDescs[0].pDepthStencilAttachment = nullptr;
+        subpassDescs[0].pDepthStencilAttachment = &depthAttachmentRef;
 
         std::array<VkSubpassDependency, 2> subpassDependencies;
         subpassDependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -1805,8 +1828,8 @@ namespace JoeEngine {
 
         VkRenderPassCreateInfo renderPassInfo = {};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.attachmentCount = 0;
-        renderPassInfo.pAttachments = nullptr;
+        renderPassInfo.attachmentCount = 1;
+        renderPassInfo.pAttachments = &depthAttachDesc;
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = subpassDescs.data();
         renderPassInfo.dependencyCount = static_cast<uint32_t>(subpassDependencies.size());
@@ -1821,8 +1844,8 @@ namespace JoeEngine {
         VkFramebufferCreateInfo framebufferInfo = {};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         framebufferInfo.renderPass = m_oitRenderPass;
-        framebufferInfo.attachmentCount = 0;
-        framebufferInfo.pAttachments = nullptr;
+        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.pAttachments = &m_deferredPass.depths[index].imageView;
         framebufferInfo.width = m_width;
         framebufferInfo.height = m_height;
         framebufferInfo.layers = 1;
