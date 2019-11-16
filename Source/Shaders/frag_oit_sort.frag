@@ -67,11 +67,12 @@ void main() {
         }
         vec4 currCol = fragments[i].color;
         color.rgb = currCol.rgb * currCol.a + color.rgb * (1.0 - currCol.a);
-        color.a = currCol.a + color.a * (1.0 - currCol.a);
+        //color.a = currCol.a + color.a * (1.0 - currCol.a);
+        color.a = 1.0;
     }
     
-    if (color.a >= 1.0) {
+    /*if (color.a >= 1.0) {
         color /= color.a;
-    }
+    }*/
     outColor = color;
 }
