@@ -238,10 +238,9 @@ namespace JoeEngine {
         {
             ScopedTimer<float> timer("Initialize Joe Engine");
             // Init list of component managers
-            // TODO: custom allocator instead of 'operator new'
-            RegisterComponentManager<MeshComponent>(new JEMeshComponentManager());
-            RegisterComponentManager<MaterialComponent>(new JEMaterialComponentManager());
-            RegisterComponentManager<TransformComponent>(new JETransformComponentManager());
+            RegisterComponentManager<MeshComponent, JEMeshComponentManager>();
+            RegisterComponentManager<MaterialComponent, JEMaterialComponentManager>();
+            RegisterComponentManager<TransformComponent, JETransformComponentManager>();
 
             //m_physicsManager.Initialize(meshDataManager);
             m_sceneManager.Initialize(this);

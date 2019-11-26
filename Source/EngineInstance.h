@@ -64,8 +64,9 @@ namespace JoeEngine {
         void LoadScene(uint32_t id);
 
         template <typename T, typename U>
-        void RegisterComponentManager(U* componentMgr) {
-            m_componentManagers.emplace_back(std::unique_ptr<U>(componentMgr));
+        void RegisterComponentManager() {
+            // TODO: custom allocator instead of 'operator new'?
+            m_componentManagers.emplace_back(std::unique_ptr<U>(new U()));
             m_componentTypeToIndex[typeid(T)] = m_componentManagers.size() - 1;
         }
 
