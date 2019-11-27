@@ -2,7 +2,25 @@
 
 #include <chrono>
 
-//#include "../Scene/MeshDataManager.h"
+#include "ParticleSystem.h"
+
+namespace JoeEngine {
+    class JEPhysicsManager {
+    private:
+        using JE_TIMER = std::chrono::time_point<std::chrono::steady_clock>;
+        JE_TIMER m_startTime; // Start time of the physics system
+        const float m_updateRateMillis; // time increment
+        const float m_updateDt; // dt for physics integration
+
+    public:
+        JEPhysicsManager() : m_startTime(), m_updateRateMillis(16.6666667f), m_updateDt(1.0f / 60.0f) {}
+        ~JEPhysicsManager() {}
+
+        void Initialize();
+
+        void UpdateParticleSystem(const JEParticleSystem& particleSystem);
+    };
+}
 
 /*
 namespace JoeEngine {
@@ -19,7 +37,7 @@ namespace JoeEngine {
     class JEPhysicsManager {
     private:
         std::shared_ptr<JEMeshDataManager> m_meshDataManager;
-
+        
         using JE_TIMER = std::chrono::time_point<std::chrono::steady_clock>;
         JE_TIMER m_startTime; // Start time of the physics system
         double m_currentTime; // Current time of the physics system

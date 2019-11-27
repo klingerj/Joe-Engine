@@ -40,6 +40,8 @@ set(SOURCE_LIST
     "Source/Io/IOHandler.h"
     "Source/Physics/PhysicsManager.cpp"
     "Source/Physics/PhysicsManager.h"
+    "Source/Physics/ParticleSystem.cpp"
+    "Source/Physics/ParticleSystem.h"
     "Source/Rendering/MeshBufferManager.cpp"
     "Source/Rendering/MeshBufferManager.h"
     "Source/Rendering/TextureLibrary.cpp"

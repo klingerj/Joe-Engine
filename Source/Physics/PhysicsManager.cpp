@@ -1,6 +1,17 @@
 #include "PhysicsManager.h"
 #include "glm/gtc/epsilon.hpp"
 #include "glm/gtx/norm.hpp"
+
+namespace JoeEngine {
+    void JEPhysicsManager::Initialize() {
+
+    }
+
+    void UpdateParticleSystem(const JEParticleSystem& particleSystem) {
+
+    }
+}
+
 /*
 namespace JoeEngine {
     void JEPhysicsManager::Initialize(const std::shared_ptr<JEMeshDataManager>& m) {
