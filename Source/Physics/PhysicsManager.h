@@ -18,7 +18,7 @@ namespace JoeEngine {
 
         void Initialize();
 
-        void UpdateParticleSystem(JEParticleSystem& particleSystem);
+        void UpdateParticleSystems(std::vector<JEParticleSystem>& particleSystems);
     };
 }
 

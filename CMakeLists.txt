@@ -30,6 +30,7 @@ configure_file(
 # add the binary tree to the search path for include files
 # so that we will find JoeEngineConfig.h
 include_directories("${PROJECT_BINARY_DIR}")
+include_directories("${PROJECT_BINARY_DIR}/../ThirdParty/pcg-cpp-0.98/include")
 
 # Source files
 set(SOURCE_LIST
@@ -91,6 +92,8 @@ set(SOURCE_LIST
     "Source/Utils/Common.h"
     "Source/Utils/MemAllocUtils.cpp"
     "Source/Utils/MemAllocUtils.h"
+    "Source/Utils/RandomNumberGen.cpp"
+    "Source/Utils/RandomNumberGen.h"
     "Source/Utils/ScopedTimer.cpp"
     "Source/Utils/ScopedTimer.h"
     "Source/Utils/ThreadPool.cpp"
@@ -99,6 +102,9 @@ set(SOURCE_LIST
     "Source/Utils/VulkanValidationLayers.h"
     "Source/Containers/PackedArray.cpp"
     "Source/Containers/PackedArray.h"
+    "ThirdParty/pcg-cpp-0.98/include/pcg_random.hpp"
+    "ThirdParty/pcg-cpp-0.98/include/pcg_extras.hpp"
+    "ThirdParty/pcg-cpp-0.98/include/pcg_uint128.hpp"
 )
 
 add_executable(JoeEngine ${SOURCE_LIST})

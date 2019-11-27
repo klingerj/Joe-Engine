@@ -408,6 +408,8 @@ namespace JoeEngine {
 
             RotatorComponent* rot = m_engineInstance->GetComponent<RotatorComponent, RotatorComponentManager>(newEntity);
             rot->m_entityId = newEntity.GetId();
+
+            m_engineInstance->InstantiateParticleSystem({ glm::vec3(0.0f, 1.0f, 0.0f), 5.0f, 500 });
         } else if (sceneId == 3) {
             m_camera = JECamera(glm::vec3(0.0f, 0.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), windowExtent.width / (float)windowExtent.height, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE);
             m_shadowCamera = JECamera(glm::vec3(4.0f, 4.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPassExtent.width / (float)shadowPassExtent.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);

@@ -31,6 +31,12 @@ namespace JoeEngine {
                 // Destroy any entities marked for deletion
                 DestroyEntities();
 
+                // Update particle systems
+                {
+                    ScopedTimer<float> timer("Update particle systems");
+                    m_physicsManager.UpdateParticleSystems(m_particleSystems);
+                }
+
                 const PackedArray<MeshComponent>&      meshComponents      = GetComponentList<MeshComponent, JEMeshComponentManager>();
                 const PackedArray<MaterialComponent>&  materialComponents  = GetComponentList<MaterialComponent, JEMaterialComponentManager>();
                 const PackedArray<TransformComponent>& transformComponents = GetComponentList<TransformComponent, JETransformComponentManager>();
@@ -242,7 +248,7 @@ namespace JoeEngine {
             RegisterComponentManager<MaterialComponent, JEMaterialComponentManager>();
             RegisterComponentManager<TransformComponent, JETransformComponentManager>();
 
-            //m_physicsManager.Initialize(meshDataManager);
+            m_physicsManager.Initialize();
             m_sceneManager.Initialize(this);
             m_vulkanRenderer.Initialize(rendererSettings, &m_sceneManager, this);
 
@@ -309,5 +315,9 @@ namespace JoeEngine {
     void JEEngineInstance::CreateDescriptor(MaterialComponent& materialComponent) {
         uint32_t descrID = m_vulkanRenderer.CreateDescriptor(materialComponent);
         materialComponent.m_descriptorID = descrID;
+    }
+
+    void JEEngineInstance::InstantiateParticleSystem(const JEParticleSystemSettings& settings) {
+        m_particleSystems.emplace_back(JEParticleSystem(settings));
     }
 }
