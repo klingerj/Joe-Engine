@@ -4,11 +4,21 @@
 
 namespace JoeEngine {
     void JEPhysicsManager::Initialize() {
-
+        m_startTime = std::chrono::high_resolution_clock::now();
     }
 
-    void UpdateParticleSystem(const JEParticleSystem& particleSystem) {
+    void JEPhysicsManager::UpdateParticleSystem(JEParticleSystem& particleSystem) {
+        JE_TIME currentTime = std::chrono::high_resolution_clock::now();
+        const uint32_t elapsedMillis = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - m_startTime).count();
+        const float dt = (float)elapsedMillis * 0.001f;
+        
+        for (uint32_t i = 0; i < particleSystem.m_numParticles; ++i) {
+            particleSystem.m_velocityData[i] = particleSystem.m_accelData[i] * dt;
+        }
 
+        for (uint32_t i = 0; i < particleSystem.m_numParticles; ++i) {
+            particleSystem.m_positionData[i] = particleSystem.m_velocityData[i] * dt;
+        }
     }
 }
 

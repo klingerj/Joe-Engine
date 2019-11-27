@@ -7,8 +7,8 @@
 namespace JoeEngine {
     class JEPhysicsManager {
     private:
-        using JE_TIMER = std::chrono::time_point<std::chrono::steady_clock>;
-        JE_TIMER m_startTime; // Start time of the physics system
+        using JE_TIME = std::chrono::time_point<std::chrono::steady_clock>;
+        JE_TIME m_startTime; // Start time of the physics system
         const float m_updateRateMillis; // time increment
         const float m_updateDt; // dt for physics integration
 
@@ -18,7 +18,7 @@ namespace JoeEngine {
 
         void Initialize();
 
-        void UpdateParticleSystem(const JEParticleSystem& particleSystem);
+        void UpdateParticleSystem(JEParticleSystem& particleSystem);
     };
 }
 
