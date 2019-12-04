@@ -15,6 +15,7 @@ namespace JoeEngine {
         DEFERRED,
         SHADOW,
         DEFERRED_GEOM,
+        FORWARD_POINTS,
         TRANSLUCENT_OIT,
         TRANSLUCENT_OIT_SORT
     } PipelineType;

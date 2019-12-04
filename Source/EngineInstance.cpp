@@ -33,10 +33,18 @@ namespace JoeEngine {
 
                 // Update particle systems
                 {
-                    ScopedTimer<float> timer("Update particle systems");
+                    //ScopedTimer<float> timer("Update particle systems");
                     m_physicsManager.UpdateParticleSystems(m_particleSystems);
                 }
 
+                {
+                    //ScopedTimer<float> timer("Update particle systems meshes");
+                    for (uint32_t i = 0; i < m_particleSystems.size(); ++i) {
+                        JEParticleSystem& particleSystem = m_particleSystems[i];
+                        m_vulkanRenderer.UpdateMesh(particleSystem.m_meshComponent, particleSystem.GetVertices(), particleSystem.GetIndices());
+                    }
+                }
+                
                 const PackedArray<MeshComponent>&      meshComponents      = GetComponentList<MeshComponent, JEMeshComponentManager>();
                 const PackedArray<MaterialComponent>&  materialComponents  = GetComponentList<MaterialComponent, JEMaterialComponentManager>();
                 const PackedArray<TransformComponent>& transformComponents = GetComponentList<TransformComponent, JETransformComponentManager>();
@@ -210,7 +218,7 @@ namespace JoeEngine {
 
                 {
                     //ScopedTimer<float> timer("Deferred Geom/Lighting/Post Passes Command Buffer Recording");
-                    m_vulkanRenderer.DrawMeshComponents(meshComponentsSorted, materialComponentsSorted, m_sceneManager.m_camera);
+                    m_vulkanRenderer.DrawMeshes(meshComponentsSorted, materialComponentsSorted, m_sceneManager.m_camera, m_particleSystems);
                 }
                 
                 {
@@ -317,7 +325,12 @@ namespace JoeEngine {
         materialComponent.m_descriptorID = descrID;
     }
 
-    void JEEngineInstance::InstantiateParticleSystem(const JEParticleSystemSettings& settings) {
+    void JEEngineInstance::InstantiateParticleSystem(const JEParticleSystemSettings& settings, const MaterialComponent& materialComponent) {
         m_particleSystems.emplace_back(JEParticleSystem(settings));
+
+        JEParticleSystem& particleSystem = m_particleSystems[m_particleSystems.size() - 1];
+        particleSystem.m_meshComponent = m_vulkanRenderer.m_meshBufferManager.CreateMeshComponent(particleSystem.GetVertices(),
+                                                                 particleSystem.GetIndices());
+        particleSystem.m_materialComponent = materialComponent;
     }
 }

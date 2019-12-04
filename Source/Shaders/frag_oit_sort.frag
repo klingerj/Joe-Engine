@@ -20,6 +20,10 @@ layout(set = 0, binding = 2, std430) readonly buffer ssboOITLinkedListHeadPointe
   uint headPointers[];
 } ssboOITHP;
 
+layout(set = 0, binding = 3, std430) buffer ssboAtomicCounter {
+    uint counter[4];
+} ssboAtomicCtr;
+
 layout(location = 0) out vec4 outColor;
 
 #define NUM_FRAGS_PER_PIXEL 32
@@ -27,8 +31,7 @@ layout(location = 0) out vec4 outColor;
 
 void main() {
     ivec2 pixelIdx = ivec2(gl_FragCoord.xy - 0.5);
-    ivec2 screenRes = ivec2(1280, 720);
-    uint pixel = uint(pixelIdx.x + pixelIdx.y * screenRes.x); // TODO: pass screen width
+    uint pixel = uint(pixelIdx.x + pixelIdx.y * float(ssboAtomicCtr.counter[2])); // TODO: pass screen width
     
     uint headPtr = ssboOITHP.headPointers[pixel];
     

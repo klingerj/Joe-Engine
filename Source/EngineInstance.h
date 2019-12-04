@@ -85,7 +85,7 @@ namespace JoeEngine {
         void CreateShader(MaterialComponent& materialComponent, const std::string& vertFilepath, const std::string& fragFilepath);
         void CreateDescriptor(MaterialComponent& materialComponent);
 
-        void InstantiateParticleSystem(const JEParticleSystemSettings& settings);
+        void InstantiateParticleSystem(const JEParticleSystemSettings& settings, const MaterialComponent& materialComponent);
 
         template<typename T>
         void AddComponent(const Entity& entity) {

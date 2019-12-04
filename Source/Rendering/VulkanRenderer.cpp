@@ -537,7 +537,7 @@ namespace JoeEngine {
             { transformsSorted.data() }, { (uint32_t)(transformsSorted.size() * sizeof(glm::mat4)) });
 
         if (m_enableOIT) {
-            const std::array<uint32_t, 4> atomicCounterData = { 0, JE_NUM_OIT_FRAGSPP * m_width * m_height, 0, 0 };
+            const std::array<uint32_t, 4> atomicCounterData = { 0, JE_NUM_OIT_FRAGSPP * m_width * m_height, m_width, 0 };
             m_shaderManager.UpdateBuffers(m_device, m_oitLLDescriptor, imageIndex, {}, {},
                 { nullptr, nullptr, nullptr, atomicCounterData.data() },
                 { JE_NUM_OIT_FRAGSPP * m_width * m_height, JE_NUM_OIT_FRAGSPP * m_width * m_height, (uint32_t)sizeof(uint32_t) * m_width * m_height, sizeof(uint32_t) * 4 });
@@ -606,12 +606,18 @@ namespace JoeEngine {
         PipelineType type;
         if (m_enableDeferred) {
             if (materialComponent.m_renderLayer >= TRANSLUCENT) {
-                if (m_enableOIT) {
-                    renderPass = m_oitRenderPass;
-                } else {
+                if (materialComponent.m_geomType == POINTS) {
+                    type = FORWARD_POINTS;
                     renderPass = m_renderPass_deferredLighting;
+                } else {
+                    if (m_enableOIT) {
+                        renderPass = m_oitRenderPass;
+                    } else {
+                        renderPass = m_renderPass_deferredLighting;
+                    }
+                    type = FORWARD;
                 }
-                type = FORWARD;
+                
             } else {
                 renderPass = m_renderPass_deferredLighting;
                 type = DEFERRED;
@@ -653,27 +659,33 @@ namespace JoeEngine {
         // Source textures
         for (uint32_t i = 0; i < m_swapChainFramebuffers.size(); ++i) {
             std::vector<VkImageView> tempImageViews;
-            tempImageViews.push_back(m_textureLibraryGlobal.GetImageViewAt(materialComponent.m_texAlbedo));
-            tempImageViews.push_back(m_textureLibraryGlobal.GetImageViewAt(materialComponent.m_texRoughness));
-            tempImageViews.push_back(m_textureLibraryGlobal.GetImageViewAt(materialComponent.m_texMetallic));
-            tempImageViews.push_back(m_textureLibraryGlobal.GetImageViewAt(materialComponent.m_texNormal));
 
-            if (materialComponent.m_renderLayer >= TRANSLUCENT) {
-                // Using forward shader
-                if (materialComponent.m_materialSettings & RECEIVES_SHADOWS) {
-                    tempImageViews.push_back(m_shadowPass.depths[i].imageView);
+            tempImageViews.push_back(m_textureLibraryGlobal.GetImageViewAt(materialComponent.m_texAlbedo));
+
+            if (materialComponent.m_geomType == TRIANGLES) {
+                tempImageViews.push_back(m_textureLibraryGlobal.GetImageViewAt(materialComponent.m_texRoughness));
+                tempImageViews.push_back(m_textureLibraryGlobal.GetImageViewAt(materialComponent.m_texMetallic));
+                tempImageViews.push_back(m_textureLibraryGlobal.GetImageViewAt(materialComponent.m_texNormal));
+
+                if (materialComponent.m_renderLayer >= TRANSLUCENT) {
+                    // Using forward shader
+                    if (materialComponent.m_materialSettings & RECEIVES_SHADOWS) {
+                        tempImageViews.push_back(m_shadowPass.depths[i].imageView);
+                    }
                 }
             }
             imageViews.push_back(tempImageViews);
         }
         
         samplers.push_back(m_textureLibraryGlobal.GetSamplerAt(materialComponent.m_texAlbedo));
-        samplers.push_back(m_textureLibraryGlobal.GetSamplerAt(materialComponent.m_texRoughness));
-        samplers.push_back(m_textureLibraryGlobal.GetSamplerAt(materialComponent.m_texMetallic));
-        samplers.push_back(m_textureLibraryGlobal.GetSamplerAt(materialComponent.m_texNormal));
-        if (materialComponent.m_renderLayer >= TRANSLUCENT) {
-            if (materialComponent.m_materialSettings & RECEIVES_SHADOWS) {
-                samplers.push_back(m_shadowPass.depthSampler);
+        if (materialComponent.m_geomType == TRIANGLES) {
+            samplers.push_back(m_textureLibraryGlobal.GetSamplerAt(materialComponent.m_texRoughness));
+            samplers.push_back(m_textureLibraryGlobal.GetSamplerAt(materialComponent.m_texMetallic));
+            samplers.push_back(m_textureLibraryGlobal.GetSamplerAt(materialComponent.m_texNormal));
+            if (materialComponent.m_renderLayer >= TRANSLUCENT) {
+                if (materialComponent.m_materialSettings & RECEIVES_SHADOWS) {
+                    samplers.push_back(m_shadowPass.depthSampler);
+                }
             }
         }
 
@@ -685,9 +697,23 @@ namespace JoeEngine {
         uint32_t descrID = 0;
         if (m_enableDeferred) {
             if (materialComponent.m_renderLayer >= TRANSLUCENT) {
-                descrID = m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain,
-                    imageViews, samplers, uniformBufferSizes, {},
-                    ((JEVulkanShader*)m_shaderManager.GetShaderAt(materialComponent.m_shaderID))->GetDescriptorSetLayout(0), FORWARD, false);
+                switch (materialComponent.m_geomType) {
+                case TRIANGLES:
+                    descrID = m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain,
+                        imageViews, samplers, uniformBufferSizes, {},
+                        ((JEVulkanShader*)m_shaderManager.GetShaderAt(materialComponent.m_shaderID))->GetDescriptorSetLayout(0), FORWARD, false);
+                    break;
+                case LINES:
+                    // TODO
+                    break;
+                case POINTS:
+                    descrID = m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain,
+                        imageViews, samplers, uniformBufferSizes, {},
+                        ((JEVulkanShader*)m_shaderManager.GetShaderAt(materialComponent.m_shaderID))->GetDescriptorSetLayout(0), FORWARD_POINTS, false);
+                    break;
+                default:
+                    break;
+                }
             } else {
                 descrID = m_shaderManager.CreateDescriptor(m_device, m_physicalDevice, m_vulkanSwapChain,
                     imageViews, samplers, {}, {},
@@ -699,6 +725,10 @@ namespace JoeEngine {
                 ((JEVulkanShader*)m_shaderManager.GetShaderAt(materialComponent.m_shaderID))->GetDescriptorSetLayout(0), FORWARD, false);
         }
         return descrID;
+    }
+
+    void JEVulkanRenderer::UpdateMesh(const MeshComponent& meshComponent, const std::vector<JEMeshVertex>& vertices, const std::vector<uint32_t>& indices) {
+        m_meshBufferManager.UpdateMeshBuffer(meshComponent.GetVertexHandle(), vertices, indices);
     }
 
     void JEVulkanRenderer::DrawBoundingBoxMesh(VkCommandBuffer commandBuffer) {
@@ -815,9 +845,9 @@ namespace JoeEngine {
         }
     }
 
-    void JEVulkanRenderer::DrawMeshComponents(const std::vector<MeshComponent>& meshComponents,
+    void JEVulkanRenderer::DrawMeshes(const std::vector<MeshComponent>& meshComponents,
                                               const std::vector<MaterialComponent>& materialComponents,
-                                              const JECamera& camera) {
+                                              const JECamera& camera, const std::vector<JEParticleSystem>& particleSystems) {
         if (m_enableDeferred) {
             /// Construct deferred geometry render pass
             VkCommandBufferBeginInfo beginInfo = {};
@@ -929,7 +959,6 @@ namespace JoeEngine {
                 
                 uint32_t materialIdx = currStartIdx;
                 if (materialIdx < materialComponents.size()) {
-                    //currStartIdx = materialIdx;
                     ++materialIdx;
                     currDescriptorID = materialComponents[currStartIdx].m_descriptorID;
                     int currMesh = meshComponents[currStartIdx].GetVertexHandle();
@@ -1045,7 +1074,6 @@ namespace JoeEngine {
                     // Draw transluscent geometry
                     uint32_t materialIdx = currStartIdx;
                     if (materialIdx < materialComponents.size() && materialComponents[currStartIdx].m_renderLayer >= TRANSLUCENT) {
-                        //currStartIdx = materialIdx;
                         ++materialIdx;
                         currDescriptorID = materialComponents[currStartIdx].m_descriptorID;
                         int currMesh = meshComponents[currStartIdx].GetVertexHandle();
@@ -1103,6 +1131,17 @@ namespace JoeEngine {
                     m_shaderManager.GetDescriptorAt(m_oitLLDescriptor).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], oitSortShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
 
                     DrawScreenSpaceTriMesh(m_commandBuffers[m_currSwapChainImageIndex]);
+                }
+            }
+
+            if (particleSystems.size() > 0) {
+                for (const JEParticleSystem& particleSystem : particleSystems) {
+                    JEPointsShader* pointsShader = (JEPointsShader*)m_shaderManager.GetShaderAt(particleSystem.GetMaterialComponent().m_shaderID);
+                    vkCmdBindPipeline(m_commandBuffers[m_currSwapChainImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pointsShader->GetPipeline());
+                    vkCmdSetViewport(m_commandBuffers[m_currSwapChainImageIndex], 0, 1, &viewport);
+                    vkCmdSetScissor(m_commandBuffers[m_currSwapChainImageIndex], 0, 1, &scissor);
+                    m_shaderManager.GetDescriptorAt(particleSystem.GetMaterialComponent().m_descriptorID).BindDescriptorSets(m_commandBuffers[m_currSwapChainImageIndex], pointsShader->GetPipelineLayout(), 0, m_currSwapChainImageIndex);
+                    DrawMeshInstanced(m_commandBuffers[m_currSwapChainImageIndex], 1, particleSystem.GetMeshComponent());
                 }
             }
 

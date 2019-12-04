@@ -47,8 +47,7 @@ void main() {
     
     if (headPtr < ssboAtomicCtr.counter[1]) {
         ivec2 pixelIdx = ivec2(gl_FragCoord.xy - 0.5);
-        ivec2 screenRes = ivec2(1280, 720);
-        uint pixel = uint(pixelIdx.x + pixelIdx.y * screenRes.x); // TODO: pass screen width
+        uint pixel = uint(pixelIdx.x + pixelIdx.y * float(ssboAtomicCtr.counter[2])); // TODO: pass screen width
         
         // Create and write the color-depth node for the linked list
         OITLinkedListNode oitNode;

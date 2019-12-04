@@ -12,7 +12,6 @@ namespace JoeEngine {
     void JEPhysicsManager::UpdateParticleSystems(std::vector<JEParticleSystem>& particleSystems) {
         JE_TIME currentTime = std::chrono::high_resolution_clock::now();
         const uint32_t elapsedMillis = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - m_startTime).count();
-        //const float dt = (float)elapsedMillis * 0.001f;
         
         if (elapsedMillis >= m_updateRateMillis) {
             m_startTime = currentTime;
@@ -24,18 +23,21 @@ namespace JoeEngine {
                 std::vector<glm::vec3>& velocities = particleSystem.m_velocityData.GetData();
                 std::vector<glm::vec3>& accels = particleSystem.m_accelData.GetData();
 
-                // Attempt to use SIMD to integrate 4 particles at a time
+                // TODO: multithread
+                // TODO: need to re-order stuff to take advantage of the dod (do vel integ, then pos)
+
+                // Attempt to use SIMD to integrate multiple particles at a time
                 const uint8_t groupSize = 2;
-                uint32_t numGroups = particleSystem.m_numParticles / groupSize;
+                uint32_t numGroups = particleSystem.m_settings.numParticles / groupSize;
                 for (uint32_t i = 0; i < numGroups; ++i) {
                     uint32_t offset = i * groupSize;
                     // Create vector for dt float
                     __m256 dtData = _mm256_set1_ps(m_updateDt);
                     
                     // Copy velocity and acceleration data into registers
-                    __m256 velData = _mm256_set_ps(velocities[offset].x, velocities[offset].y, velocities[offset].z,
+                    __m256 velData = _mm256_setr_ps(velocities[offset].x, velocities[offset].y, velocities[offset].z,
                         velocities[offset + 1].x, velocities[offset + 1].y, velocities[offset + 1].z, 0.0f, 0.0f);
-                    __m256 accelData = _mm256_set_ps(accels[offset].x, accels[offset].y, accels[offset].z,
+                    __m256 accelData = _mm256_setr_ps(accels[offset].x, accels[offset].y, accels[offset].z,
                         accels[offset + 1].x, accels[offset + 1].y, accels[offset + 1].z, 0.0f, 0.0f);
 
                     // Scale acceleration by dt
@@ -44,10 +46,10 @@ namespace JoeEngine {
                     __m256 velDataUpdated = _mm256_add_ps(accelDt, velData);
 
                     // Copy position data
-                    __m256 posData = _mm256_set_ps(accels[offset].x, accels[offset].y, accels[offset].z,
-                                                   accels[offset + 1].x, accels[offset + 1].y, accels[offset + 1].z, 0.0f, 0.0f);
+                    __m256 posData = _mm256_setr_ps(positions[offset].x, positions[offset].y, positions[offset].z,
+                        positions[offset + 1].x, positions[offset + 1].y, positions[offset + 1].z, 0.0f, 0.0f);
                     // Scale velocity by dt
-                    __m256 velDt = _mm256_mul_ps(dtData, velData);
+                    __m256 velDt = _mm256_mul_ps(dtData, velDataUpdated);
                     // Add result to position
                     __m256 posDataUpdated = _mm256_add_ps(velDt, posData);
 
@@ -66,29 +68,32 @@ namespace JoeEngine {
                     positions[offset].z = posDataPtr[2];
                     positions[offset + 1].x = posDataPtr[3];
                     positions[offset + 1].y = posDataPtr[4];
-                    positions[offset + 1].z = velDataPtr[5];
+                    positions[offset + 1].z = posDataPtr[5];
                 }
 
                 // Integrate leftover particles
-                if (particleSystem.m_numParticles % groupSize != 0) {
-                    uint32_t i = numGroups * groupSize - 1;
-                    for (; i < particleSystem.m_numParticles; ++i) {
-                        velocities[i] = accels[i] * m_updateDt;
-                    }
-                    for (; i < particleSystem.m_numParticles; ++i) {
-                        positions[i] = velocities[i] * m_updateDt;
+                if (particleSystem.m_settings.numParticles % groupSize != 0) {
+                    uint32_t i = numGroups * groupSize;
+                    for (; i < particleSystem.m_settings.numParticles; ++i) {
+                        velocities[i] += accels[i] * m_updateDt;
+                        positions[i] += velocities[i] * m_updateDt;
                     }
                 }
+                
 
-
-
-                /*for (uint32_t i = 0; i < particleSystem.m_numParticles; ++i) {
-                    velocities[i] = accels[i] * dt;
+                /*
+                for (uint32_t i = 0; i < particleSystem.m_settings.numParticles; ++i) {
+                    velocities[i] += accels[i] * m_updateDt;
                 }
 
-                for (uint32_t i = 0; i < particleSystem.m_numParticles; ++i) {
-                    positions[i] = velocities[i] * dt;
+                for (uint32_t i = 0; i < particleSystem.m_settings.numParticles; ++i) {
+                    positions[i] += velocities[i] * m_updateDt;
                 }*/
+
+                std::vector<float>& lifetimes = particleSystem.m_lifetimeData.GetData();
+                for (uint32_t i = 0; i < particleSystem.m_settings.numParticles; ++i) {
+                    lifetimes[i] -= m_updateRateMillis;
+                }
             }
         }
     }

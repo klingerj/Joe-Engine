@@ -36,6 +36,12 @@ namespace JoeEngine {
         static JESingleMesh m_screenSpaceTriangle;
         static JESingleMesh m_boundingBoxMesh;
 
+        void LoadModelFromFile(const std::string& filepath);
+        void CreateVertexBuffer(const std::vector<JEMeshVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory);
+        void CreateIndexBuffer(const std::vector<uint32_t>& indices, VkBuffer* indexBuffer, VkDeviceMemory* indexBufferMemory);
+
+        void JEMeshBufferManager::ComputeMeshBounds(const std::vector<JEMeshVertex>& vertices, uint32_t bufferId);
+
     public:
         JEMeshBufferManager() : m_numBuffers(0) {
             m_vertexBuffers.reserve(128);
@@ -50,12 +56,11 @@ namespace JoeEngine {
 
         void Initialize(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue);
         void Cleanup();
+        void ExpandMemberLists();
 
-        // TODO: overload to create from custom vert/idx buffer lists
         MeshComponent CreateMeshComponent(const std::string& filepath);
-        void LoadModelFromFile(const std::string& filepath);
-        void CreateVertexBuffer(const std::vector<JEMeshVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory);
-        void CreateIndexBuffer(const std::vector<uint32_t>& indices, VkBuffer* indexBuffer, VkDeviceMemory* indexBufferMemory);
+        MeshComponent CreateMeshComponent(const std::vector<JEMeshVertex>& vertices, const std::vector<uint32_t>& indices);
+        void UpdateMeshBuffer(uint32_t bufferId, const std::vector<JEMeshVertex>& vertices, const std::vector<uint32_t>& indices);
 
         // Getters
         const VkBuffer& GetVertexBufferAt(int index) const {

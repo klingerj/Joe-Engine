@@ -239,6 +239,30 @@ namespace JoeEngine {
         void BindPushConstants_InstancedData(VkCommandBuffer commandBuffer, const std::array<uint32_t, 4>& instancedData) const;
     };
 
+    class JEPointsShader : public JEVulkanShader {
+    private:
+        void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
+            VkExtent2D frameExtent, VkRenderPass renderPass, const MaterialComponent& materialComponent) override;
+        
+    public:
+        JEPointsShader() = delete;
+        JEPointsShader(const MaterialComponent& materialComponent, uint32_t numSourceTextures, uint32_t numUniformBuffers,
+            VkDevice device, VkPhysicalDevice physicalDevice, const JEVulkanSwapChain& swapChain, VkRenderPass renderPass,
+            const std::string& vertPath, const std::string& fragPath) : JEVulkanShader(device, vertPath, fragPath) {
+            auto vertShaderCode = ReadFile(m_vertPath);
+            auto fragShaderCode = ReadFile(m_fragPath);
+            // Create shader modules
+            VkShaderModule vertShaderModule = CreateShaderModule(device, vertShaderCode);
+            VkShaderModule fragShaderModule = CreateShaderModule(device, fragShaderCode);
+
+            uint32_t numSwapChainImages = swapChain.GetImageViews().size();
+            CreateDescriptorSetLayouts(device, numSourceTextures, numUniformBuffers, 0);
+            CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain.GetExtent(), renderPass, materialComponent);
+        }
+
+        void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) const;
+    };
+
     class JEForwardTranslucentShader : public JEVulkanShader {
     private:
         bool m_oit;
