@@ -40,7 +40,7 @@ namespace JoeEngine {
         void CreateVertexBuffer(const std::vector<JEMeshVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory);
         void CreateIndexBuffer(const std::vector<uint32_t>& indices, VkBuffer* indexBuffer, VkDeviceMemory* indexBufferMemory);
 
-        void JEMeshBufferManager::ComputeMeshBounds(const std::vector<JEMeshVertex>& vertices, uint32_t bufferId);
+        void ComputeMeshBounds(const std::vector<JEMeshVertex>& vertices, uint32_t bufferId);
 
     public:
         JEMeshBufferManager() : m_numBuffers(0) {
