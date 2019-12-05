@@ -20,6 +20,8 @@ else (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     endif()
 endif()
 
+include("./Source/Scripts/CheckHWCapabilities.cmake")
+
 # configure a header file to pass some of the CMake settings
 # to the source code
 configure_file(
@@ -35,6 +37,7 @@ include_directories("${PROJECT_BINARY_DIR}/../ThirdParty/pcg-cpp-0.98/include")
 # Source files
 set(SOURCE_LIST
     "Source/main.cpp"
+    "Build/JoeEngineConfig.h"
     "Source/EngineInstance.cpp"
     "Source/EngineInstance.h"
     "Source/Io/IOHandler.cpp"
@@ -112,7 +115,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCE_LIST})
 
 include("./ThirdParty/ImportDependencies.cmake")
 
-# Run pre-build scripts
+# Run post-build scripts
 if (WIN32)
     set(MAKE_CMD "${CMAKE_CURRENT_SOURCE_DIR}/Source/Scripts/compileShaders.bat")
 else (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
