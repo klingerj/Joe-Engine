@@ -80,5 +80,17 @@ namespace JoeEngine {
             return m_materialComponent;
         }
 
+        PackedArray<glm::vec3>& GetPositionData() {
+            return m_positionData;
+        }
+
+        PackedArray<glm::vec3>& GetVelocityData() {
+            return m_velocityData;
+        }
+
+        PackedArray<glm::vec3>& GetAccelData() {
+            return m_accelData;
+        }
+
     };
 }

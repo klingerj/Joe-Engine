@@ -33,12 +33,12 @@ namespace JoeEngine {
 
                 // Update particle systems
                 {
-                    //ScopedTimer<float> timer("Update particle systems");
+                    ScopedTimer<float> timer("Update particle systems");
                     m_physicsManager.UpdateParticleSystems(m_particleSystems);
                 }
 
                 {
-                    //ScopedTimer<float> timer("Update particle systems meshes");
+                    ScopedTimer<float> timer("Update particle systems meshes");
                     for (uint32_t i = 0; i < m_particleSystems.size(); ++i) {
                         JEParticleSystem& particleSystem = m_particleSystems[i];
                         m_vulkanRenderer.UpdateMesh(particleSystem.m_meshComponent, particleSystem.GetVertices(), particleSystem.GetIndices());

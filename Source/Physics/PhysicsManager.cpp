@@ -1,12 +1,45 @@
 #include <immintrin.h>
 
-#include "PhysicsManager.h"
 #include "glm/gtc/epsilon.hpp"
 #include "glm/gtx/norm.hpp"
+
+#include "PhysicsManager.h"
+#include "../Utils/ThreadPool.h"
 
 namespace JoeEngine {
     void JEPhysicsManager::Initialize() {
         m_startTime = std::chrono::high_resolution_clock::now();
+    }
+
+    typedef struct particle_update_data_t {
+        JEParticleSystem* particleSystem;
+        float dt;
+        uint32_t startIdx;
+        uint32_t endIdx;
+        bool complete;
+    } ParticleUpdateData;
+
+    // Multithreading functions for particle updates
+    void UpdateParticleSystems_MT(void* data) {
+        ParticleUpdateData* particleData = (ParticleUpdateData*)data;
+        
+        std::vector<glm::vec3>& positions = particleData->particleSystem->GetPositionData().GetData();
+        std::vector<glm::vec3>& velocities = particleData->particleSystem->GetVelocityData().GetData();
+        std::vector<glm::vec3>& accels = particleData->particleSystem->GetAccelData().GetData();
+
+        // Update velocities
+        //std::cout << "Updating particles from idx " << particleData->startIdx << "to idx " << particleData->endIdx << std::endl;
+        for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
+            velocities[i] += particleData->dt * accels[i];
+            //std::cout << "i on thread: " << i << std::endl;
+        }
+        //std::cout << "halfway done" << std::endl;
+        // Update positions
+        for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
+            positions[i] += particleData->dt * velocities[i];
+        }
+        std::cout << "done" << std::endl;
+        particleData->complete = true;
     }
 
     void JEPhysicsManager::UpdateParticleSystems(std::vector<JEParticleSystem>& particleSystems) {
@@ -19,81 +52,141 @@ namespace JoeEngine {
             // Update particles
             for (uint32_t j = 0; j < particleSystems.size(); ++j) {
                 JEParticleSystem& particleSystem = particleSystems[j];
+
                 std::vector<glm::vec3>& positions = particleSystem.m_positionData.GetData();
                 std::vector<glm::vec3>& velocities = particleSystem.m_velocityData.GetData();
                 std::vector<glm::vec3>& accels = particleSystem.m_accelData.GetData();
 
-                // TODO: multithread
-                // TODO: need to re-order stuff to take advantage of the dod (do vel integ, then pos)
+                const bool multithread = true;
+                const bool simd = false;
 
-                // Attempt to use SIMD to integrate multiple particles at a time
-                const uint8_t groupSize = 2;
-                uint32_t numGroups = particleSystem.m_settings.numParticles / groupSize;
-                for (uint32_t i = 0; i < numGroups; ++i) {
-                    uint32_t offset = i * groupSize;
-                    // Create vector for dt float
-                    __m256 dtData = _mm256_set1_ps(m_updateDt);
-                    
-                    // Copy velocity and acceleration data into registers
-                    __m256 velData = _mm256_setr_ps(velocities[offset].x, velocities[offset].y, velocities[offset].z,
-                        velocities[offset + 1].x, velocities[offset + 1].y, velocities[offset + 1].z, 0.0f, 0.0f);
-                    __m256 accelData = _mm256_setr_ps(accels[offset].x, accels[offset].y, accels[offset].z,
-                        accels[offset + 1].x, accels[offset + 1].y, accels[offset + 1].z, 0.0f, 0.0f);
+                if (multithread) {
+                    const uint32_t numParticlesPerGroup = 50000;
+                    const uint32_t numGroups = particleSystem.m_settings.numParticles / numParticlesPerGroup;
 
-                    // Scale acceleration by dt
-                    __m256 accelDt = _mm256_mul_ps(dtData, accelData);
-                    // Add result to velocity
-                    __m256 velDataUpdated = _mm256_add_ps(accelDt, velData);
+                    std::vector<ParticleUpdateData> particleUpdateDataList;
+                    for (uint32_t i = 0; i < numGroups; ++i) {
+                        ParticleUpdateData particleUpdate;
+                        particleUpdate.complete = false;
+                        particleUpdate.dt = m_updateDt;
+                        particleUpdate.startIdx = i * numParticlesPerGroup;
+                        particleUpdate.endIdx = particleUpdate.startIdx + numParticlesPerGroup;
+                        particleUpdate.particleSystem = &particleSystem;
+                        particleUpdateDataList.push_back(particleUpdate);
+                        JEThreadPoolInstance.EnqueueJob({ UpdateParticleSystems_MT, particleUpdateDataList.data() + i, false });
+                    }
 
-                    // Copy position data
-                    __m256 posData = _mm256_setr_ps(positions[offset].x, positions[offset].y, positions[offset].z,
-                        positions[offset + 1].x, positions[offset + 1].y, positions[offset + 1].z, 0.0f, 0.0f);
-                    // Scale velocity by dt
-                    __m256 velDt = _mm256_mul_ps(dtData, velDataUpdated);
-                    // Add result to position
-                    __m256 posDataUpdated = _mm256_add_ps(velDt, posData);
-
-                    // Copy results back to particle system
-                    float *velDataPtr = (float*)&velDataUpdated;
-                    velocities[offset].x = velDataPtr[0];
-                    velocities[offset].y = velDataPtr[1];
-                    velocities[offset].z = velDataPtr[2];
-                    velocities[offset + 1].x = velDataPtr[3];
-                    velocities[offset + 1].y = velDataPtr[4];
-                    velocities[offset + 1].z = velDataPtr[5];
-
-                    float *posDataPtr = (float*)&posDataUpdated;
-                    positions[offset].x = posDataPtr[0];
-                    positions[offset].y = posDataPtr[1];
-                    positions[offset].z = posDataPtr[2];
-                    positions[offset + 1].x = posDataPtr[3];
-                    positions[offset + 1].y = posDataPtr[4];
-                    positions[offset + 1].z = posDataPtr[5];
-                }
-
-                // Integrate leftover particles
-                if (particleSystem.m_settings.numParticles % groupSize != 0) {
-                    uint32_t i = numGroups * groupSize;
-                    for (; i < particleSystem.m_settings.numParticles; ++i) {
+                    // Integrate any remaining particles on this thread
+                    for (uint32_t i = numParticlesPerGroup * numGroups; i < particleSystem.m_settings.numParticles; ++i) {
                         velocities[i] += accels[i] * m_updateDt;
+                    }
+
+                    for (uint32_t i = numParticlesPerGroup * numGroups; i < particleSystem.m_settings.numParticles; ++i) {
                         positions[i] += velocities[i] * m_updateDt;
                     }
+
+                    // Busy-wait for the thread jobs to complete
+                    bool keepWaiting = true;
+                    while (keepWaiting) {
+                        uint32_t numJobsComplete = 0;
+                        for (uint32_t i = 0; i < particleUpdateDataList.size(); ++i) {
+                            // If any job is not yet complete, start waiting again
+                            if (particleUpdateDataList[i].complete) {
+                                ++numJobsComplete;
+                            }
+                        }
+                        std::cout << "Num jobs complete: " << numJobsComplete << std::endl;
+                        //std::cout << "TODO: " << particleUpdateDataList.size() << std::endl;
+                        // All jobs completed
+                        if (numJobsComplete == particleUpdateDataList.size()) {
+                            break;
+                        }
+                    }
+
+                    // Update particle lifetimes
+                    std::vector<float>& lifetimes = particleSystem.m_lifetimeData.GetData();
+                    for (uint32_t i = 0; i < particleSystem.m_settings.numParticles; ++i) {
+                        lifetimes[i] -= m_updateRateMillis;
+                    }
+                } else {
+                    if (simd) {
+                        // Use SIMD to integrate multiple particles at a time
+                        const uint8_t groupSize = 2;
+                        uint32_t numGroups = particleSystem.m_settings.numParticles / groupSize;
+                        for (uint32_t i = 0; i < numGroups; ++i) {
+                            uint32_t offset = i * groupSize;
+                            // Create vector for dt float
+                            __m256 dtData = _mm256_set1_ps(m_updateDt);
+
+                            // Copy velocity and acceleration data into registers
+                            __m256 velData = _mm256_setr_ps(velocities[offset].x, velocities[offset].y, velocities[offset].z,
+                                velocities[offset + 1].x, velocities[offset + 1].y, velocities[offset + 1].z, 0.0f, 0.0f);
+                            __m256 accelData = _mm256_setr_ps(accels[offset].x, accels[offset].y, accels[offset].z,
+                                accels[offset + 1].x, accels[offset + 1].y, accels[offset + 1].z, 0.0f, 0.0f);
+
+                            // Scale acceleration by dt
+                            __m256 accelDt = _mm256_mul_ps(dtData, accelData);
+                            // Add result to velocity
+                            __m256 velDataUpdated = _mm256_add_ps(accelDt, velData);
+
+                            // Copy position data
+                            __m256 posData = _mm256_setr_ps(positions[offset].x, positions[offset].y, positions[offset].z,
+                                positions[offset + 1].x, positions[offset + 1].y, positions[offset + 1].z, 0.0f, 0.0f);
+                            // Scale velocity by dt
+                            __m256 velDt = _mm256_mul_ps(dtData, velDataUpdated);
+                            // Add result to position
+                            __m256 posDataUpdated = _mm256_add_ps(velDt, posData);
+
+                            // Copy results back to particle system
+                            float *velDataPtr = (float*)&velDataUpdated;
+                            velocities[offset].x = velDataPtr[0];
+                            velocities[offset].y = velDataPtr[1];
+                            velocities[offset].z = velDataPtr[2];
+                            velocities[offset + 1].x = velDataPtr[3];
+                            velocities[offset + 1].y = velDataPtr[4];
+                            velocities[offset + 1].z = velDataPtr[5];
+
+                            float *posDataPtr = (float*)&posDataUpdated;
+                            positions[offset].x = posDataPtr[0];
+                            positions[offset].y = posDataPtr[1];
+                            positions[offset].z = posDataPtr[2];
+                            positions[offset + 1].x = posDataPtr[3];
+                            positions[offset + 1].y = posDataPtr[4];
+                            positions[offset + 1].z = posDataPtr[5];
+                        }
+
+                        // Integrate leftover particles
+                        if (particleSystem.m_settings.numParticles % groupSize != 0) {
+                            uint32_t i = numGroups * groupSize;
+                            for (; i < particleSystem.m_settings.numParticles; ++i) {
+                                velocities[i] += accels[i] * m_updateDt;
+                                positions[i] += velocities[i] * m_updateDt;
+                            }
+                        }
+
+                        // Update particle lifetimes
+                        std::vector<float>& lifetimes = particleSystem.m_lifetimeData.GetData();
+                        for (uint32_t i = 0; i < particleSystem.m_settings.numParticles; ++i) {
+                            lifetimes[i] -= m_updateRateMillis;
+                        }
+                    } else {
+                        for (uint32_t i = 0; i < particleSystem.m_settings.numParticles; ++i) {
+                            velocities[i] += accels[i] * m_updateDt;
+                        }
+
+                        for (uint32_t i = 0; i < particleSystem.m_settings.numParticles; ++i) {
+                            positions[i] += velocities[i] * m_updateDt;
+                        }
+
+                        // Update particle lifetimes
+                        std::vector<float>& lifetimes = particleSystem.m_lifetimeData.GetData();
+                        for (uint32_t i = 0; i < particleSystem.m_settings.numParticles; ++i) {
+                            lifetimes[i] -= m_updateRateMillis;
+                        }
+                    }
                 }
+
                 
-
-                /*
-                for (uint32_t i = 0; i < particleSystem.m_settings.numParticles; ++i) {
-                    velocities[i] += accels[i] * m_updateDt;
-                }
-
-                for (uint32_t i = 0; i < particleSystem.m_settings.numParticles; ++i) {
-                    positions[i] += velocities[i] * m_updateDt;
-                }*/
-
-                std::vector<float>& lifetimes = particleSystem.m_lifetimeData.GetData();
-                for (uint32_t i = 0; i < particleSystem.m_settings.numParticles; ++i) {
-                    lifetimes[i] -= m_updateRateMillis;
-                }
             }
         }
     }

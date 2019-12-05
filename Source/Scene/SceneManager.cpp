@@ -417,7 +417,7 @@ namespace JoeEngine {
             particleMat.m_texAlbedo = tex6;
             m_engineInstance->CreateShader(particleMat, JE_SHADER_DIR + "vert_points.spv", JE_SHADER_DIR + "frag_points.spv");
             m_engineInstance->CreateDescriptor(particleMat);
-            m_engineInstance->InstantiateParticleSystem({ glm::vec3(0.0f, 1.0f, 0.0f), 3000.0f, 300000 }, particleMat);
+            m_engineInstance->InstantiateParticleSystem({ glm::vec3(0.0f, 1.0f, 0.0f), 3000.0f, 750000 }, particleMat);
         } else if (sceneId == 3) {
             m_camera = JECamera(glm::vec3(0.0f, 0.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), windowExtent.width / (float)windowExtent.height, JE_SCENE_VIEW_NEAR_PLANE, JE_SCENE_VIEW_FAR_PLANE);
             m_shadowCamera = JECamera(glm::vec3(4.0f, 4.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPassExtent.width / (float)shadowPassExtent.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
