@@ -29,6 +29,7 @@ namespace JoeEngine {
         std::vector<glm::vec3>& positions = particleData->particleSystem->GetPositionData().GetData();
         std::vector<glm::vec3>& velocities = particleData->particleSystem->GetVelocityData().GetData();
         std::vector<glm::vec3>& accels = particleData->particleSystem->GetAccelData().GetData();
+        std::vector<float>& lifetimes = particleData->particleSystem->GetLifetimeData().GetData();
 
         // Update velocities
         for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
@@ -38,6 +39,11 @@ namespace JoeEngine {
         // Update positions
         for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
             positions[i] += particleData->dt * velocities[i];
+        }
+
+        const float lifetimeDecrement = particleData->dt * 1000;
+        for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
+            lifetimes[i] -= lifetimeDecrement;
         }
 
         particleData->complete = true;
@@ -57,11 +63,12 @@ namespace JoeEngine {
                 std::vector<glm::vec3>& positions = particleSystem.m_positionData.GetData();
                 std::vector<glm::vec3>& velocities = particleSystem.m_velocityData.GetData();
                 std::vector<glm::vec3>& accels = particleSystem.m_accelData.GetData();
+                std::vector<float>& lifetimes = particleSystem.m_lifetimeData.GetData();
 
                 const bool multithread = true;
 
                 if (multithread) {
-                    const uint32_t numParticlesPerGroup = 100000;
+                    const uint32_t numParticlesPerGroup = 10000;
                     const uint32_t numGroups = particleSystem.m_settings.numParticles / numParticlesPerGroup;
                     
                     std::vector<ParticleUpdateData> particleUpdateDataList;
@@ -74,7 +81,7 @@ namespace JoeEngine {
                         particleUpdate.endIdx = particleUpdate.startIdx + numParticlesPerGroup;
                         particleUpdate.particleSystem = &particleSystem;
                         particleUpdateDataList.push_back(particleUpdate);
-                        JEThreadPoolInstance.EnqueueJob({ UpdateParticleSystems_MT, particleUpdateDataList.data() + i, false });
+                        JEThreadPoolInstance.EnqueueJob({ UpdateParticleSystems_MT, particleUpdateDataList.data() + i });
                     }
 
                     // Integrate any remaining particles on this thread
@@ -86,26 +93,27 @@ namespace JoeEngine {
                         positions[i] += velocities[i] * m_updateDt;
                     }
 
-                    // Busy-wait for the thread jobs to complete
-                    while (true) {
-                        uint32_t numJobsComplete = 0;
-                        for (uint32_t i = 0; i < particleUpdateDataList.size(); ++i) {
-                            // If any job is not yet complete, start waiting again
-                            if (particleUpdateDataList[i].complete) {
-                                ++numJobsComplete;
-                            }
-                        }
-
-                        // All jobs completed
-                        if (numJobsComplete == particleUpdateDataList.size()) {
-                            break;
-                        }
+                    for (uint32_t i = numParticlesPerGroup * numGroups; i < particleSystem.m_settings.numParticles; ++i) {
+                        lifetimes[i] -= m_updateRateMillis;
                     }
 
-                    // Update particle lifetimes
-                    std::vector<float>& lifetimes = particleSystem.m_lifetimeData.GetData();
-                    for (uint32_t i = 0; i < particleSystem.m_settings.numParticles; ++i) {
-                        lifetimes[i] -= m_updateRateMillis;
+                    // Busy-wait for the thread jobs to complete
+                    {
+                        //ScopedTimer<float> timer("Busy-wait for particle update threads to complete");
+                        while (true) {
+                            uint32_t numJobsComplete = 0;
+                            for (uint32_t i = 0; i < particleUpdateDataList.size(); ++i) {
+                                // If any job is not yet complete, start waiting again
+                                if (particleUpdateDataList[i].complete) {
+                                    ++numJobsComplete;
+                                }
+                            }
+
+                            // All jobs completed
+                            if (numJobsComplete == particleUpdateDataList.size()) {
+                                break;
+                            }
+                        }
                     }
                 } else {
 
@@ -180,7 +188,7 @@ namespace JoeEngine {
                     // Update velocities
                     for (uint32_t i = 0; i < particleSystem.m_settings.numParticles; ++i) {
                         velocities[i] += accels[i] * m_updateDt;
-                        }
+                    }
 
                     // Update positions
                     for (uint32_t i = 0; i < particleSystem.m_settings.numParticles; ++i) {
@@ -194,8 +202,6 @@ namespace JoeEngine {
                     }
                     #endif
                 }
-
-                
             }
         }
     }

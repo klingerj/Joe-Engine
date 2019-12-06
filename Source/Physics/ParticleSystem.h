@@ -92,5 +92,9 @@ namespace JoeEngine {
             return m_accelData;
         }
 
+        PackedArray<float>& GetLifetimeData() {
+            return m_lifetimeData;
+        }
+
     };
 }
