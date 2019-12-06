@@ -48,7 +48,7 @@ namespace JoeEngine {
 
         particleData->complete = true;
     }
-
+    
     void JEPhysicsManager::UpdateParticleSystems(std::vector<JEParticleSystem>& particleSystems) {
         JE_TIME currentTime = std::chrono::high_resolution_clock::now();
         const uint32_t elapsedMillis = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - m_startTime).count();

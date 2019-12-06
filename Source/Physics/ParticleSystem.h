@@ -40,10 +40,10 @@ namespace JoeEngine {
             m_indices.reserve(m_settings.numParticles);
             for (uint32_t i = 0; i < m_settings.numParticles; ++i) {
                 m_positionData.AddElement(i, m_settings.position);
-                m_velocityData.AddElement(i, glm::vec3(m_rng.GetNextRandomNum() * 2.0f - 1.0f,
-                                                       m_rng.GetNextRandomNum() * 2.0f - 1.0f,
-                                                       m_rng.GetNextRandomNum() * 2.0f - 1.0f));
-                m_accelData.AddElement(i, glm::vec3(0.0f, -0.6f, 0.0f));
+                m_velocityData.AddElement(i, glm::normalize(glm::vec3(m_rng.GetNextRandomNum() * 2.0f - 1.0f,
+                    m_rng.GetNextRandomNum() * 2.0f - 1.0f,
+                    m_rng.GetNextRandomNum() * 2.0f - 1.0f)) * m_rng.GetNextRandomNum());
+                m_accelData.AddElement(i, glm::vec3(0.0f, -1.0f, 0.0f));
                 m_lifetimeData.AddElement(i, m_rng.GetNextRandomNum() * m_settings.lifetime);
                 m_indices.push_back(i);
                 m_vertices.push_back({ { m_positionData[i] }, { glm::vec3(0.0f, 0.0f, 0.0f) }, { glm::vec3(1.0f, 1.0f, 1.0f) }, { glm::vec2(0.0f, 0.0f) } });
@@ -58,9 +58,9 @@ namespace JoeEngine {
                     if (m_lifetimeData[i] < 0.0f) {
                         m_lifetimeData[i] = m_settings.lifetime;
                         m_positionData[i] = m_settings.position;
-                        m_velocityData[i] = glm::vec3(m_rng.GetNextRandomNum() * 2.0f - 1.0f,
+                        m_velocityData[i] = glm::normalize(glm::vec3(m_rng.GetNextRandomNum() * 2.0f - 1.0f,
                             m_rng.GetNextRandomNum() * 2.0f - 1.0f,
-                            m_rng.GetNextRandomNum() * 2.0f - 1.0f);
+                            m_rng.GetNextRandomNum() * 2.0f - 1.0f)) * m_rng.GetNextRandomNum();
                     }
                     m_vertices[i].pos = m_positionData[i];
                 }

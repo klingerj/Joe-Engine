@@ -13,7 +13,7 @@
 namespace JoeEngine {
     static void JEFramebufferResizeCallback(GLFWwindow* window, int width, int height) {
         auto& renderer = reinterpret_cast<JEEngineInstance*>(glfwGetWindowUserPointer(window))->GetRenderSubsystem();
-        renderer.FramebufferResized();
+        //renderer.FramebufferResized();
     }
 
     void JEVulkanRenderer::Initialize(RendererSettings rendererSettings, JESceneManager* sceneManager, JEEngineInstance* engineInstance) {
@@ -728,7 +728,10 @@ namespace JoeEngine {
     }
 
     void JEVulkanRenderer::UpdateMesh(const MeshComponent& meshComponent, const std::vector<JEMeshVertex>& vertices, const std::vector<uint32_t>& indices) {
-        m_meshBufferManager.UpdateMeshBuffer(meshComponent.GetVertexHandle(), vertices, indices);
+        {
+            //ScopedTimer<float> timer("Copy mesh data to buffer");
+            m_meshBufferManager.UpdateMeshBuffer(meshComponent.GetVertexHandle(), vertices, indices);
+        }
     }
 
     void JEVulkanRenderer::DrawBoundingBoxMesh(VkCommandBuffer commandBuffer) {

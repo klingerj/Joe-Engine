@@ -178,19 +178,19 @@ namespace JoeEngine {
 
     void JEMeshBufferManager::UpdateMeshBuffer(uint32_t bufferId, const std::vector<JEMeshVertex>& vertices, const std::vector<uint32_t>& indices) {
         VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        CreateBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+        //VkBuffer stagingBuffer;
+        //VkDeviceMemory stagingBufferMemory;
+        //CreateBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
         void* data;
-        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        vkMapMemory(device, m_vertexBufferMemory[bufferId], 0, bufferSize, 0, &data);
         memcpy(data, vertices.data(), (size_t)bufferSize);
-        vkUnmapMemory(device, stagingBufferMemory);
+        vkUnmapMemory(device, m_vertexBufferMemory[bufferId]);
 
-        CopyBuffer(device, commandPool, graphicsQueue, stagingBuffer, m_vertexBuffers[bufferId], bufferSize);
+        //CopyBuffer(device, commandPool, graphicsQueue, stagingBuffer, m_vertexBuffers[bufferId], bufferSize);
 
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
-        vkFreeMemory(device, stagingBufferMemory, nullptr);
+        //vkDestroyBuffer(device, stagingBuffer, nullptr);
+        //vkFreeMemory(device, stagingBufferMemory, nullptr);
         ComputeMeshBounds(m_vertexLists[bufferId], bufferId);
     }
 
