@@ -31,17 +31,15 @@ namespace JoeEngine {
         std::vector<glm::vec3>& accels = particleData->particleSystem->GetAccelData().GetData();
 
         // Update velocities
-        //std::cout << "Updating particles from idx " << particleData->startIdx << "to idx " << particleData->endIdx << std::endl;
         for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
             velocities[i] += particleData->dt * accels[i];
-            //std::cout << "i on thread: " << i << std::endl;
         }
-        //std::cout << "halfway done" << std::endl;
+
         // Update positions
         for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
             positions[i] += particleData->dt * velocities[i];
         }
-        std::cout << "done" << std::endl;
+
         particleData->complete = true;
     }
 
@@ -63,10 +61,11 @@ namespace JoeEngine {
                 const bool multithread = true;
 
                 if (multithread) {
-                    const uint32_t numParticlesPerGroup = 50;
+                    const uint32_t numParticlesPerGroup = 100000;
                     const uint32_t numGroups = particleSystem.m_settings.numParticles / numParticlesPerGroup;
-
+                    
                     std::vector<ParticleUpdateData> particleUpdateDataList;
+                    particleUpdateDataList.reserve(numGroups);
                     for (uint32_t i = 0; i < numGroups; ++i) {
                         ParticleUpdateData particleUpdate;
                         particleUpdate.complete = false;
@@ -88,8 +87,7 @@ namespace JoeEngine {
                     }
 
                     // Busy-wait for the thread jobs to complete
-                    bool keepWaiting = true;
-                    while (keepWaiting) {
+                    while (true) {
                         uint32_t numJobsComplete = 0;
                         for (uint32_t i = 0; i < particleUpdateDataList.size(); ++i) {
                             // If any job is not yet complete, start waiting again
@@ -97,8 +95,7 @@ namespace JoeEngine {
                                 ++numJobsComplete;
                             }
                         }
-                        std::cout << "Num jobs complete: " << numJobsComplete << std::endl;
-                        //std::cout << "TODO: " << particleUpdateDataList.size() << std::endl;
+
                         // All jobs completed
                         if (numJobsComplete == particleUpdateDataList.size()) {
                             break;
