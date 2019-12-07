@@ -237,7 +237,7 @@ namespace JoeEngine {
                     }
 
                     // Update particle lifetimes
-                    std::vector<float>& lifetimes = particleSystem.m_lifetimeData.GetData();
+                    std::vector<float>& lifetimes = particleSystem.m_lifetimeData;
                     for (uint32_t i = 0; i < particleSystem.m_settings.numParticles; ++i) {
                         lifetimes[i] -= m_updateRateMillis;
                     }
