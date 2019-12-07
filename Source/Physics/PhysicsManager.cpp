@@ -25,11 +25,11 @@ namespace JoeEngine {
     // Multithreading functions for particle updates
     void UpdateParticleSystems_MT(void* data) {
         ParticleUpdateData* particleData = (ParticleUpdateData*)data;
-        
-        std::vector<glm::vec3>& positions = particleData->particleSystem->GetPositionData().GetData();
-        std::vector<glm::vec3>& velocities = particleData->particleSystem->GetVelocityData().GetData();
-        std::vector<glm::vec3>& accels = particleData->particleSystem->GetAccelData().GetData();
-        std::vector<float>& lifetimes = particleData->particleSystem->GetLifetimeData().GetData();
+
+        std::vector<glm::vec3>& positions = particleData->particleSystem->GetPositionData();
+        std::vector<glm::vec3>& velocities = particleData->particleSystem->GetVelocityData();
+        std::vector<glm::vec3>& accels = particleData->particleSystem->GetAccelData();
+        std::vector<float>& lifetimes = particleData->particleSystem->GetLifetimeData();
 
         // Update velocities
         for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
@@ -46,6 +46,47 @@ namespace JoeEngine {
             lifetimes[i] -= lifetimeDecrement;
         }
 
+        /*std::vector<glm::vec3>& positions = particleData->particleSystem->GetPositionData();
+        std::vector<glm::vec3>& velocities = particleData->particleSystem->GetVelocityData();
+        const std::vector<glm::vec3>& accels = particleData->particleSystem->GetAccelData();
+        std::vector<float>& lifetimes = particleData->particleSystem->GetLifetimeData();
+        const uint32_t numParticlesToUpdate = particleData->startIdx - particleData->endIdx;
+
+        // Local particle velocity data
+        std::vector<glm::vec3> velocitiesUpdated(numParticlesToUpdate);
+
+        // Update velocities
+        for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
+            velocitiesUpdated[i - particleData->startIdx] += particleData->dt * accels[i];
+        }
+
+        // Local particle position data
+        std::vector<glm::vec3> positionsUpdated(numParticlesToUpdate);
+
+        // Update positions
+        for (uint32_t i = 0; i < numParticlesToUpdate; ++i) {
+            positionsUpdated[i - particleData->startIdx] += particleData->dt * velocitiesUpdated[i];
+        }
+
+        // Local particle lifetime data
+        std::vector<float> lifetimesUpdated(numParticlesToUpdate);
+
+        const float lifetimeDecrement = particleData->dt * 1000;
+        for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
+            lifetimesUpdated[i - particleData->startIdx] -= lifetimeDecrement;
+        }
+
+        // Copy updated data to original particle system
+        for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
+            velocities[i] = velocitiesUpdated[i - particleData->startIdx];
+        }
+        for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
+            positions[i] = positionsUpdated[i - particleData->startIdx];
+        }
+        for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
+            lifetimes[i] = lifetimesUpdated[i - particleData->startIdx];
+        }*/
+
         particleData->complete = true;
     }
     
@@ -60,15 +101,15 @@ namespace JoeEngine {
             for (uint32_t j = 0; j < particleSystems.size(); ++j) {
                 JEParticleSystem& particleSystem = particleSystems[j];
 
-                std::vector<glm::vec3>& positions = particleSystem.m_positionData.GetData();
-                std::vector<glm::vec3>& velocities = particleSystem.m_velocityData.GetData();
-                std::vector<glm::vec3>& accels = particleSystem.m_accelData.GetData();
-                std::vector<float>& lifetimes = particleSystem.m_lifetimeData.GetData();
+                std::vector<glm::vec3>& positions = particleSystem.m_positionData;
+                std::vector<glm::vec3>& velocities = particleSystem.m_velocityData;
+                std::vector<glm::vec3>& accels = particleSystem.m_accelData;
+                std::vector<float>& lifetimes = particleSystem.m_lifetimeData;
 
                 const bool multithread = true;
 
                 if (multithread) {
-                    const uint32_t numParticlesPerGroup = 10000;
+                    const uint32_t numParticlesPerGroup = 100;
                     const uint32_t numGroups = particleSystem.m_settings.numParticles / numParticlesPerGroup;
                     
                     std::vector<ParticleUpdateData> particleUpdateDataList;
@@ -178,7 +219,7 @@ namespace JoeEngine {
 
                     // Update particle lifetimes
                     // TODO: make this use SIMD
-                    std::vector<float>& lifetimes = particleSystem.m_lifetimeData.GetData();
+                    std::vector<float>& lifetimes = particleSystem.m_lifetimeData;
                     for (uint32_t i = 0; i < particleSystem.m_settings.numParticles; ++i) {
                         lifetimes[i] -= m_updateRateMillis;
                     }

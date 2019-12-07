@@ -875,8 +875,8 @@ namespace JoeEngine {
         VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-        auto bindingDescription = JEMeshVertex::getBindingDescription();
-        auto attributeDescriptions = JEMeshVertex::getAttributeDescriptions();
+        auto bindingDescription = JEMeshPointVertex::getBindingDescription();
+        auto attributeDescriptions = JEMeshPointVertex::getAttributeDescriptions();
 
         vertexInputInfo.vertexBindingDescriptionCount = 1;
         vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());

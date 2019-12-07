@@ -734,6 +734,13 @@ namespace JoeEngine {
         }
     }
 
+    void JEVulkanRenderer::UpdateMesh(const MeshComponent& meshComponent, const std::vector<JEMeshPointVertex>& vertices, const std::vector<uint32_t>& indices) {
+        {
+            //ScopedTimer<float> timer("Copy mesh data to buffer");
+            m_meshBufferManager.UpdateMeshBuffer(meshComponent.GetVertexHandle(), vertices, indices);
+        }
+    }
+
     void JEVulkanRenderer::DrawBoundingBoxMesh(VkCommandBuffer commandBuffer) {
         const JESingleMesh& boundingBox = m_meshBufferManager.GetBoundingBoxMesh();
         VkBuffer vertexBuffers[] = { boundingBox.vertexBuffer };
@@ -825,7 +832,7 @@ namespace JoeEngine {
             while (idx <= meshComponents.size()) {
                 if (idx == meshComponents.size()) {
                     shadowShader->BindPushConstants_InstancedData(m_shadowPass.commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
-                    DrawMeshInstanced(m_shadowPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, currMesh);
+                    DrawMeshInstanced(m_shadowPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, { currMesh, MESH_TRIANGLES });
                     break;
                 }
                 if (meshComponents[idx].GetVertexHandle() == currMesh) {
@@ -833,7 +840,7 @@ namespace JoeEngine {
                 } else {
                     // Draw instanced mesh using curr material resources
                     shadowShader->BindPushConstants_InstancedData(m_shadowPass.commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
-                    DrawMeshInstanced(m_shadowPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, currMesh);
+                    DrawMeshInstanced(m_shadowPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, { currMesh, MESH_TRIANGLES });
 
                     currMesh = meshComponents[idx].GetVertexHandle();
                     currStartIdx = idx;
@@ -903,7 +910,7 @@ namespace JoeEngine {
                 while (idx <= materialComponents.size()) {
                     if (idx == materialComponents.size()) {
                         deferredGeomShader->BindPushConstants_InstancedData(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
-                        DrawMeshInstanced(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, currMesh);
+                        DrawMeshInstanced(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, { currMesh, MESH_TRIANGLES });
                         break;
                     }
                     if (materialComponents[idx].m_renderLayer < TRANSLUCENT &&
@@ -913,7 +920,7 @@ namespace JoeEngine {
                     } else {
                         // Draw instanced mesh using curr material resources
                         deferredGeomShader->BindPushConstants_InstancedData(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
-                        DrawMeshInstanced(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, currMesh);
+                        DrawMeshInstanced(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], idx - currStartIdx, { currMesh, MESH_TRIANGLES });
 
                         if (materialComponents[idx].m_renderLayer >= TRANSLUCENT) {
                             currStartIdx = idx;
@@ -981,7 +988,7 @@ namespace JoeEngine {
                     while (materialIdx <= materialComponents.size()) {
                         if (materialIdx == materialComponents.size()) {
                             forwardShader->BindPushConstants_InstancedData(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
-                            DrawMeshInstanced(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, currMesh);
+                            DrawMeshInstanced(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, { currMesh, MESH_TRIANGLES });
                             break;
                         }
                         if (materialComponents[materialIdx].m_shaderID == currShaderID &&
@@ -991,7 +998,7 @@ namespace JoeEngine {
                         } else {
                             // Draw instanced mesh using curr material resources
                             forwardShader->BindPushConstants_InstancedData(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
-                            DrawMeshInstanced(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, currMesh);
+                            DrawMeshInstanced(m_deferredPass.commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, { currMesh, MESH_TRIANGLES });
 
                             if (materialComponents[materialIdx].m_shaderID != currShaderID) {
                                 currShaderID = materialComponents[materialIdx].m_shaderID;
@@ -1095,7 +1102,7 @@ namespace JoeEngine {
                         while (materialIdx <= materialComponents.size()) {
                             if (materialIdx == materialComponents.size()) {
                                 forwardShader->BindPushConstants_InstancedData(m_commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
-                                DrawMeshInstanced(m_commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, currMesh);
+                                DrawMeshInstanced(m_commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, { currMesh, MESH_TRIANGLES });
                                 break;
                             }
                             if (materialComponents[materialIdx].m_shaderID == currShaderID &&
@@ -1105,7 +1112,7 @@ namespace JoeEngine {
                             } else {
                                 // Draw instanced mesh using curr material resources
                                 forwardShader->BindPushConstants_InstancedData(m_commandBuffers[m_currSwapChainImageIndex], { currStartIdx, 0, 0, 0 });
-                                DrawMeshInstanced(m_commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, currMesh);
+                                DrawMeshInstanced(m_commandBuffers[m_currSwapChainImageIndex], materialIdx - currStartIdx, { currMesh, MESH_TRIANGLES });
 
                                 if (materialComponents[materialIdx].m_shaderID != currShaderID) {
                                     currShaderID = materialComponents[materialIdx].m_shaderID;

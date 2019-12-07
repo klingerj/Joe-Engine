@@ -218,6 +218,7 @@ namespace JoeEngine {
         void CreateShader(MaterialComponent& materialComponent, const std::string& vertFilepath, const std::string& fragFilepath);
         uint32_t CreateDescriptor(const MaterialComponent& materialComponent);
         void UpdateMesh(const MeshComponent& meshComponent, const std::vector<JEMeshVertex>& vertices, const std::vector<uint32_t>& indices);
+        void UpdateMesh(const MeshComponent& meshComponent, const std::vector<JEMeshPointVertex>& vertices, const std::vector<uint32_t>& indices);
 
         // Renderer Functions
         void DrawShadowPass(const std::vector<MeshComponent>& meshComponents, const JECamera& camera);
