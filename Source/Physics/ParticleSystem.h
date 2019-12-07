@@ -97,5 +97,9 @@ namespace JoeEngine {
             return m_lifetimeData;
         }
 
+        uint32_t GetNumParticles() const {
+            return m_settings.numParticles;
+        }
+
     };
 }

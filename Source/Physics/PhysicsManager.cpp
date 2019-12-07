@@ -30,7 +30,72 @@ namespace JoeEngine {
         std::vector<glm::vec3>& velocities = particleData->particleSystem->GetVelocityData();
         std::vector<glm::vec3>& accels = particleData->particleSystem->GetAccelData();
         std::vector<float>& lifetimes = particleData->particleSystem->GetLifetimeData();
+        const uint32_t numParticlesToUpdate = particleData->endIdx - particleData->startIdx;
 
+        #ifdef JOE_ENGINE_SIMD_AVX2
+        // Use AVX2 SIMD commands to integrate multiple particles at a time
+        const uint8_t groupSize = 2;
+        uint32_t numGroups = numParticlesToUpdate / groupSize;
+        for (uint32_t i = 0; i < numGroups; ++i) {
+            uint32_t offset = i * groupSize + particleData->startIdx;
+            // Create vector for dt float
+            __m256 dtData = _mm256_set1_ps(particleData->dt);
+
+            // Copy velocity and acceleration data into registers
+            __m256 velData = _mm256_setr_ps(velocities[offset].x, velocities[offset].y, velocities[offset].z,
+                velocities[offset + 1].x, velocities[offset + 1].y, velocities[offset + 1].z, 0.0f, 0.0f);
+            __m256 accelData = _mm256_setr_ps(accels[offset].x, accels[offset].y, accels[offset].z,
+                accels[offset + 1].x, accels[offset + 1].y, accels[offset + 1].z, 0.0f, 0.0f);
+
+            // Scale acceleration by dt
+            __m256 accelDt = _mm256_mul_ps(dtData, accelData);
+            // Add result to velocity
+            __m256 velDataUpdated = _mm256_add_ps(accelDt, velData);
+
+            // Copy position data
+            __m256 posData = _mm256_setr_ps(positions[offset].x, positions[offset].y, positions[offset].z,
+                positions[offset + 1].x, positions[offset + 1].y, positions[offset + 1].z, 0.0f, 0.0f);
+            // Scale velocity by dt
+            __m256 velDt = _mm256_mul_ps(dtData, velDataUpdated);
+            // Add result to position
+            __m256 posDataUpdated = _mm256_add_ps(velDt, posData);
+
+            // Copy results back to particle system
+            float *velDataPtr = (float*)&velDataUpdated;
+            velocities[offset].x = velDataPtr[0];
+            velocities[offset].y = velDataPtr[1];
+            velocities[offset].z = velDataPtr[2];
+            velocities[offset + 1].x = velDataPtr[3];
+            velocities[offset + 1].y = velDataPtr[4];
+            velocities[offset + 1].z = velDataPtr[5];
+
+            float *posDataPtr = (float*)&posDataUpdated;
+            positions[offset].x = posDataPtr[0];
+            positions[offset].y = posDataPtr[1];
+            positions[offset].z = posDataPtr[2];
+            positions[offset + 1].x = posDataPtr[3];
+            positions[offset + 1].y = posDataPtr[4];
+            positions[offset + 1].z = posDataPtr[5];
+        }
+
+        // Integrate leftover particles
+        if (numParticlesToUpdate % groupSize != 0) {
+            uint32_t j = numGroups * groupSize + particleData->startIdx;
+            for (; j < particleData->endIdx; ++j) {
+                velocities[j] += accels[j] * particleData->dt;
+                positions[j] += velocities[j] * particleData->dt;
+            }
+        }
+
+        // Update particle lifetimes
+        // TODO: make this use SIMD
+        const float lifetimeDecrement = particleData->dt * 1000;
+        for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
+            lifetimes[i] -= lifetimeDecrement;
+        }
+        #endif
+        
+        #ifdef JOE_ENGINE_SIMD_NONE
         // Update velocities
         for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
             velocities[i] += particleData->dt * accels[i];
@@ -45,19 +110,20 @@ namespace JoeEngine {
         for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
             lifetimes[i] -= lifetimeDecrement;
         }
+        #endif
 
         /*std::vector<glm::vec3>& positions = particleData->particleSystem->GetPositionData();
         std::vector<glm::vec3>& velocities = particleData->particleSystem->GetVelocityData();
         const std::vector<glm::vec3>& accels = particleData->particleSystem->GetAccelData();
         std::vector<float>& lifetimes = particleData->particleSystem->GetLifetimeData();
-        const uint32_t numParticlesToUpdate = particleData->startIdx - particleData->endIdx;
+        const uint32_t numParticlesToUpdate = particleData->endIdx - particleData->startIdx;
 
         // Local particle velocity data
         std::vector<glm::vec3> velocitiesUpdated(numParticlesToUpdate);
 
         // Update velocities
-        for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
-            velocitiesUpdated[i - particleData->startIdx] += particleData->dt * accels[i];
+        for (uint32_t i = 0; i < numParticlesToUpdate; ++i) {
+            velocitiesUpdated[i] = velocities[i + particleData->startIdx] + particleData->dt * accels[i];
         }
 
         // Local particle position data
@@ -65,15 +131,15 @@ namespace JoeEngine {
 
         // Update positions
         for (uint32_t i = 0; i < numParticlesToUpdate; ++i) {
-            positionsUpdated[i - particleData->startIdx] += particleData->dt * velocitiesUpdated[i];
+            positionsUpdated[i] = positions[i + particleData->startIdx] + particleData->dt * velocitiesUpdated[i];
         }
 
         // Local particle lifetime data
         std::vector<float> lifetimesUpdated(numParticlesToUpdate);
 
         const float lifetimeDecrement = particleData->dt * 1000;
-        for (uint32_t i = particleData->startIdx; i < particleData->endIdx; ++i) {
-            lifetimesUpdated[i - particleData->startIdx] -= lifetimeDecrement;
+        for (uint32_t i = 0; i < numParticlesToUpdate; ++i) {
+            lifetimesUpdated[i] = lifetimes[i + particleData->startIdx] - lifetimeDecrement;
         }
 
         // Copy updated data to original particle system
@@ -106,10 +172,10 @@ namespace JoeEngine {
                 std::vector<glm::vec3>& accels = particleSystem.m_accelData;
                 std::vector<float>& lifetimes = particleSystem.m_lifetimeData;
 
-                const bool multithread = true;
+                constexpr bool multithread = true;
 
-                if (multithread) {
-                    const uint32_t numParticlesPerGroup = 100;
+                if constexpr (multithread) {
+                    const uint32_t numParticlesPerGroup = 10000;
                     const uint32_t numGroups = particleSystem.m_settings.numParticles / numParticlesPerGroup;
                     
                     std::vector<ParticleUpdateData> particleUpdateDataList;
@@ -157,13 +223,12 @@ namespace JoeEngine {
                         }
                     }
                 } else {
-
                     #ifdef JOE_ENGINE_SIMD_AVX
                     // TODO: AVX implementation for particle updates
                     #endif
 
                     #ifdef JOE_ENGINE_SIMD_AVX2
-                    // Use AVX2 SIMD commanda to integrate multiple particles at a time
+                    // Use AVX2 SIMD commands to integrate multiple particles at a time
                     const uint8_t groupSize = 2;
                     uint32_t numGroups = particleSystem.m_settings.numParticles / groupSize;
                     for (uint32_t i = 0; i < numGroups; ++i) {

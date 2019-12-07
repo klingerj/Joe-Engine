@@ -13,7 +13,7 @@
 namespace JoeEngine {
     static void JEFramebufferResizeCallback(GLFWwindow* window, int width, int height) {
         auto& renderer = reinterpret_cast<JEEngineInstance*>(glfwGetWindowUserPointer(window))->GetRenderSubsystem();
-        //renderer.FramebufferResized();
+        renderer.FramebufferResized();
     }
 
     void JEVulkanRenderer::Initialize(RendererSettings rendererSettings, JESceneManager* sceneManager, JEEngineInstance* engineInstance) {
