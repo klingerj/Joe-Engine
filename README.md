@@ -20,6 +20,7 @@ Brief [demo video](https://vimeo.com/326088400) here (outdated).
 * Post Processing (Now broken after addition of material system :) )
 * Shadow Mapping
 * Frustum Culling
+* CPU Particle Emitter Systems
 * (Buggy) Rigidbody Simulation
 * Threadpool 
 
