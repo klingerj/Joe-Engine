@@ -15,6 +15,7 @@
 #include "TextureLibrary.h"
 #include "../Components/Mesh/MeshComponent.h"
 #include "../Components/Transform/TransformComponent.h"
+#include "../Physics/ParticleSystem.h"
 
 namespace JoeEngine {
     class JESceneManager;
@@ -25,6 +26,8 @@ namespace JoeEngine {
 
     class JEVulkanRenderer {
     private:
+        friend class JEEngineInstance;
+
         // Wrapper for GLFW window
         JEVulkanWindow m_vulkanWindow;
 
@@ -214,11 +217,13 @@ namespace JoeEngine {
         uint32_t CreateTexture(const std::string& filepath);
         void CreateShader(MaterialComponent& materialComponent, const std::string& vertFilepath, const std::string& fragFilepath);
         uint32_t CreateDescriptor(const MaterialComponent& materialComponent);
+        void UpdateMesh(const MeshComponent& meshComponent, const std::vector<JEMeshVertex>& vertices, const std::vector<uint32_t>& indices);
+        void UpdateMesh(const MeshComponent& meshComponent, const std::vector<JEMeshPointVertex>& vertices, const std::vector<uint32_t>& indices);
 
         // Renderer Functions
         void DrawShadowPass(const std::vector<MeshComponent>& meshComponents, const JECamera& camera);
-        void DrawMeshComponents(const std::vector<MeshComponent>& meshComponents, const std::vector<MaterialComponent>& materialComponents,
-                                const JECamera& camera);
+        void DrawMeshes(const std::vector<MeshComponent>& meshComponents, const std::vector<MaterialComponent>& materialComponents,
+                                const JECamera& camera, const std::vector<JEParticleSystem>& particleSystems);
 
         void WaitForIdleDevice() {
             vkDeviceWaitIdle(m_device);

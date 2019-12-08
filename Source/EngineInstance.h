@@ -7,6 +7,7 @@
 #include "Io/IOHandler.h"
 #include "Scene/SceneManager.h"
 #include "Rendering/VulkanRenderer.h"
+#include "Physics/ParticleSystem.h"
 #include "Physics/PhysicsManager.h"
 #include "Scene/EntityManager.h"
 #include "Components/ComponentManager.h"
@@ -21,12 +22,14 @@ namespace JoeEngine {
         JESceneManager m_sceneManager;
         JEVulkanRenderer m_vulkanRenderer;
         JEIOHandler m_ioHandler;
-        //JEPhysicsManager m_physicsManager;
+        JEPhysicsManager m_physicsManager;
 
         // Entity-Component System Managers
         JEEntityManager m_entityManager;
 
         std::vector<std::unique_ptr<JEComponentManager>> m_componentManagers;
+
+        std::vector<JEParticleSystem> m_particleSystems;
 
         // TODO: replace me?
         std::unordered_map<std::type_index, uint32_t> m_componentTypeToIndex;
@@ -81,6 +84,8 @@ namespace JoeEngine {
         uint32_t LoadTexture(const std::string& filepath);
         void CreateShader(MaterialComponent& materialComponent, const std::string& vertFilepath, const std::string& fragFilepath);
         void CreateDescriptor(MaterialComponent& materialComponent);
+
+        void InstantiateParticleSystem(const JEParticleSystemSettings& settings, const MaterialComponent& materialComponent);
 
         template<typename T>
         void AddComponent(const Entity& entity) {

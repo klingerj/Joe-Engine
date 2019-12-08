@@ -67,6 +67,9 @@ namespace JoeEngine {
             case TRANSLUCENT_OIT_SORT:
                 newShader = new JEOITSortShader(materialComponent, device, physicalDevice, swapChain, renderPass, vertPath, fragPath);
                 break;
+            case FORWARD_POINTS:
+                newShader = new JEPointsShader(materialComponent, 1, 0, device, physicalDevice, swapChain, renderPass, vertPath, fragPath);
+                break;
             default:
                 throw std::runtime_error("Invalid shader pipeline type!");
             }

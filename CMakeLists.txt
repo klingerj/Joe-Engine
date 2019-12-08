@@ -20,6 +20,8 @@ else (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     endif()
 endif()
 
+include("./Source/Scripts/CheckHWCapabilities.cmake")
+
 # configure a header file to pass some of the CMake settings
 # to the source code
 configure_file(
@@ -30,16 +32,20 @@ configure_file(
 # add the binary tree to the search path for include files
 # so that we will find JoeEngineConfig.h
 include_directories("${PROJECT_BINARY_DIR}")
+include_directories("${PROJECT_BINARY_DIR}/../ThirdParty/pcg-cpp-0.98/include")
 
 # Source files
 set(SOURCE_LIST
     "Source/main.cpp"
+    "Build/JoeEngineConfig.h"
     "Source/EngineInstance.cpp"
     "Source/EngineInstance.h"
     "Source/Io/IOHandler.cpp"
     "Source/Io/IOHandler.h"
     "Source/Physics/PhysicsManager.cpp"
     "Source/Physics/PhysicsManager.h"
+    "Source/Physics/ParticleSystem.cpp"
+    "Source/Physics/ParticleSystem.h"
     "Source/Rendering/MeshBufferManager.cpp"
     "Source/Rendering/MeshBufferManager.h"
     "Source/Rendering/TextureLibrary.cpp"
@@ -89,6 +95,8 @@ set(SOURCE_LIST
     "Source/Utils/Common.h"
     "Source/Utils/MemAllocUtils.cpp"
     "Source/Utils/MemAllocUtils.h"
+    "Source/Utils/RandomNumberGen.cpp"
+    "Source/Utils/RandomNumberGen.h"
     "Source/Utils/ScopedTimer.cpp"
     "Source/Utils/ScopedTimer.h"
     "Source/Utils/ThreadPool.cpp"
@@ -97,6 +105,9 @@ set(SOURCE_LIST
     "Source/Utils/VulkanValidationLayers.h"
     "Source/Containers/PackedArray.cpp"
     "Source/Containers/PackedArray.h"
+    "ThirdParty/pcg-cpp-0.98/include/pcg_random.hpp"
+    "ThirdParty/pcg-cpp-0.98/include/pcg_extras.hpp"
+    "ThirdParty/pcg-cpp-0.98/include/pcg_uint128.hpp"
 )
 
 add_executable(JoeEngine ${SOURCE_LIST})
@@ -104,7 +115,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCE_LIST})
 
 include("./ThirdParty/ImportDependencies.cmake")
 
-# Run pre-build scripts
+# Run post-build scripts
 if (WIN32)
     set(MAKE_CMD "${CMAKE_CURRENT_SOURCE_DIR}/Source/Scripts/compileShaders.bat")
 else (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")

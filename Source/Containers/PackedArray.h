@@ -56,6 +56,10 @@ namespace JoeEngine {
             return m_data;
         }
 
+        std::vector<T>& GetData() {
+            return m_data;
+        }
+
         void AddElement(uint32_t index, T element) {
             if (index + 1 > m_indirectionMap.size()) {
                 m_indirectionMap.resize(index + 1);

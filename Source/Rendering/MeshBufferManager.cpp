@@ -63,18 +63,86 @@ namespace JoeEngine {
         m_numBuffers = 0;
     }
 
-    MeshComponent JEMeshBufferManager::CreateMeshComponent(const std::string& filepath) {
+    void JEMeshBufferManager::ExpandMemberLists() {
         m_vertexBuffers.push_back(VK_NULL_HANDLE);
         m_indexBuffers.push_back(VK_NULL_HANDLE);
         m_vertexBufferMemory.push_back(VK_NULL_HANDLE);
         m_indexBufferMemory.push_back(VK_NULL_HANDLE);
         m_vertexLists.push_back(std::vector<JEMeshVertex>());
+        m_vertexPointLists.push_back(std::vector<JEMeshPointVertex>());
         m_indexLists.push_back(std::vector<uint32_t>());
         m_boundingBoxes.push_back(BoundingBoxData());
+    }
+
+    void JEMeshBufferManager::ComputeMeshBounds(const std::vector<JEMeshVertex>& vertices, uint32_t bufferId) {
+        glm::vec3 minPos = glm::vec3(FLT_MAX);
+        glm::vec3 maxPos = glm::vec3(-FLT_MAX);
+
+        for (const JEMeshVertex& vertex : vertices) {
+            minPos = glm::vec3(std::min(minPos.x, vertex.pos.x), std::min(minPos.y, vertex.pos.y), std::min(minPos.z, vertex.pos.z));
+            maxPos = glm::vec3(std::max(maxPos.x, vertex.pos.x), std::max(maxPos.y, vertex.pos.y), std::max(maxPos.z, vertex.pos.z));
+        }
+
+        if (vertices.size() > 0) {
+            m_boundingBoxes[bufferId][0] = minPos;
+            m_boundingBoxes[bufferId][1] = glm::vec3(minPos.x, minPos.y, maxPos.z);
+            m_boundingBoxes[bufferId][2] = glm::vec3(minPos.x, maxPos.y, minPos.z);
+            m_boundingBoxes[bufferId][3] = glm::vec3(minPos.x, maxPos.y, maxPos.z);
+            m_boundingBoxes[bufferId][4] = glm::vec3(maxPos.x, minPos.y, minPos.z);
+            m_boundingBoxes[bufferId][5] = glm::vec3(maxPos.x, minPos.y, maxPos.z);
+            m_boundingBoxes[bufferId][6] = glm::vec3(maxPos.x, maxPos.y, minPos.z);
+            m_boundingBoxes[bufferId][7] = maxPos;
+        }
+    }
+
+    void JEMeshBufferManager::ComputeMeshBounds(const std::vector<JEMeshPointVertex>& vertices, uint32_t bufferId) {
+        glm::vec3 minPos = glm::vec3(FLT_MAX);
+        glm::vec3 maxPos = glm::vec3(-FLT_MAX);
+
+        for (const JEMeshPointVertex& vertex : vertices) {
+            minPos = glm::vec3(std::min(minPos.x, vertex.pos.x), std::min(minPos.y, vertex.pos.y), std::min(minPos.z, vertex.pos.z));
+            maxPos = glm::vec3(std::max(maxPos.x, vertex.pos.x), std::max(maxPos.y, vertex.pos.y), std::max(maxPos.z, vertex.pos.z));
+        }
+
+        if (vertices.size() > 0) {
+            m_boundingBoxes[bufferId][0] = minPos;
+            m_boundingBoxes[bufferId][1] = glm::vec3(minPos.x, minPos.y, maxPos.z);
+            m_boundingBoxes[bufferId][2] = glm::vec3(minPos.x, maxPos.y, minPos.z);
+            m_boundingBoxes[bufferId][3] = glm::vec3(minPos.x, maxPos.y, maxPos.z);
+            m_boundingBoxes[bufferId][4] = glm::vec3(maxPos.x, minPos.y, minPos.z);
+            m_boundingBoxes[bufferId][5] = glm::vec3(maxPos.x, minPos.y, maxPos.z);
+            m_boundingBoxes[bufferId][6] = glm::vec3(maxPos.x, maxPos.y, minPos.z);
+            m_boundingBoxes[bufferId][7] = maxPos;
+        }
+    }
+
+    MeshComponent JEMeshBufferManager::CreateMeshComponent(const std::string& filepath) {
+        ExpandMemberLists();
         LoadModelFromFile(filepath);
         CreateVertexBuffer(m_vertexLists[m_numBuffers], &m_vertexBuffers[m_numBuffers], &m_vertexBufferMemory[m_numBuffers]);
         CreateIndexBuffer(m_indexLists[m_numBuffers], &m_indexBuffers[m_numBuffers], &m_indexBufferMemory[m_numBuffers]);
-        return MeshComponent((int)(m_numBuffers++));
+        ComputeMeshBounds(m_vertexLists[m_numBuffers], m_numBuffers);
+        return MeshComponent((int)(m_numBuffers++), MESH_TRIANGLES);
+    }
+
+    MeshComponent JEMeshBufferManager::CreateMeshComponent(const std::vector<JEMeshVertex>& vertices, const std::vector<uint32_t>& indices) {
+        ExpandMemberLists();
+        m_vertexLists[m_numBuffers] = std::vector<JEMeshVertex>(vertices);
+        m_indexLists[m_numBuffers] = std::vector<uint32_t>(indices);
+        CreateVertexBuffer(m_vertexLists[m_numBuffers], &m_vertexBuffers[m_numBuffers], &m_vertexBufferMemory[m_numBuffers]);
+        CreateIndexBuffer(m_indexLists[m_numBuffers], &m_indexBuffers[m_numBuffers], &m_indexBufferMemory[m_numBuffers]);
+        ComputeMeshBounds(m_vertexLists[m_numBuffers], m_numBuffers);
+        return MeshComponent((int)(m_numBuffers++),MESH_TRIANGLES);
+    }
+
+    MeshComponent JEMeshBufferManager::CreateMeshComponent(const std::vector<JEMeshPointVertex>& vertices, const std::vector<uint32_t>& indices) {
+        ExpandMemberLists();
+        m_vertexPointLists[m_numBuffers] = std::vector<JEMeshPointVertex>(vertices);
+        m_indexLists[m_numBuffers] = std::vector<uint32_t>(indices);
+        CreateVertexBuffer(m_vertexPointLists[m_numBuffers], &m_vertexBuffers[m_numBuffers], &m_vertexBufferMemory[m_numBuffers]);
+        CreateIndexBuffer(m_indexLists[m_numBuffers], &m_indexBuffers[m_numBuffers], &m_indexBufferMemory[m_numBuffers]);
+        ComputeMeshBounds(m_vertexPointLists[m_numBuffers], m_numBuffers);
+        return MeshComponent((int)(m_numBuffers++), MESH_POINTS);
     }
 
     void JEMeshBufferManager::LoadModelFromFile(const std::string& filepath) {
@@ -90,7 +158,7 @@ namespace JoeEngine {
         std::unordered_map<JEMeshVertex, uint32_t> uniqueVertices = {};
         std::vector<JEMeshVertex>& vertexList = m_vertexLists[m_numBuffers];
 
-        // To compute the mesh's OBB (needed for physics), keep track of the min/max extents
+        // To compute the mesh's OBB, keep track of the min/max extents
         glm::vec3 minPos = glm::vec3(FLT_MAX);
         glm::vec3 maxPos = glm::vec3(-FLT_MAX);
 
@@ -140,8 +208,62 @@ namespace JoeEngine {
         }
     }
 
+    void JEMeshBufferManager::UpdateMeshBuffer(uint32_t bufferId, const std::vector<JEMeshVertex>& vertices, const std::vector<uint32_t>& indices) {
+        VkDeviceSize bufferSize = sizeof(JEMeshVertex) * vertices.size();
+        //VkBuffer stagingBuffer;
+        //VkDeviceMemory stagingBufferMemory;
+        //CreateBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(device, m_vertexBufferMemory[bufferId], 0, bufferSize, 0, &data);
+        memcpy(data, vertices.data(), (size_t)bufferSize);
+        vkUnmapMemory(device, m_vertexBufferMemory[bufferId]);
+
+        //CopyBuffer(device, commandPool, graphicsQueue, stagingBuffer, m_vertexBuffers[bufferId], bufferSize);
+
+        //vkDestroyBuffer(device, stagingBuffer, nullptr);
+        //vkFreeMemory(device, stagingBufferMemory, nullptr);
+        ComputeMeshBounds(m_vertexLists[bufferId], bufferId);
+    }
+
+    void JEMeshBufferManager::UpdateMeshBuffer(uint32_t bufferId, const std::vector<JEMeshPointVertex>& vertices, const std::vector<uint32_t>& indices) {
+        VkDeviceSize bufferSize = sizeof(JEMeshPointVertex) * vertices.size();
+        //VkBuffer stagingBuffer;
+        //VkDeviceMemory stagingBufferMemory;
+        //CreateBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(device, m_vertexBufferMemory[bufferId], 0, bufferSize, 0, &data);
+        memcpy(data, vertices.data(), (size_t)bufferSize);
+        vkUnmapMemory(device, m_vertexBufferMemory[bufferId]);
+
+        //CopyBuffer(device, commandPool, graphicsQueue, stagingBuffer, m_vertexBuffers[bufferId], bufferSize);
+
+        //vkDestroyBuffer(device, stagingBuffer, nullptr);
+        //vkFreeMemory(device, stagingBufferMemory, nullptr);
+        ComputeMeshBounds(m_vertexLists[bufferId], bufferId);
+    }
+
     void JEMeshBufferManager::CreateVertexBuffer(const std::vector<JEMeshVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory) {
-        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+        VkDeviceSize bufferSize = sizeof(JEMeshVertex) * vertices.size();
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        CreateBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        memcpy(data, vertices.data(), (size_t)bufferSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        CreateBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, *vertexBuffer, *vertexBufferMemory);
+        CopyBuffer(device, commandPool, graphicsQueue, stagingBuffer, *vertexBuffer, bufferSize);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
+
+    void JEMeshBufferManager::CreateVertexBuffer(const std::vector<JEMeshPointVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory) {
+        VkDeviceSize bufferSize = sizeof(JEMeshPointVertex) * vertices.size();
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
         CreateBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
@@ -159,7 +281,7 @@ namespace JoeEngine {
     }
 
     void JEMeshBufferManager::CreateIndexBuffer(const std::vector<uint32_t>& indices, VkBuffer* indexBuffer, VkDeviceMemory* indexBufferMemory) {
-        VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+        VkDeviceSize bufferSize = sizeof(uint32_t) * indices.size();
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
         CreateBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
@@ -170,7 +292,6 @@ namespace JoeEngine {
         vkUnmapMemory(device, stagingBufferMemory);
 
         CreateBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, *indexBuffer, *indexBufferMemory);
-
         CopyBuffer(device, commandPool, graphicsQueue, stagingBuffer, *indexBuffer, bufferSize);
 
         vkDestroyBuffer(device, stagingBuffer, nullptr);

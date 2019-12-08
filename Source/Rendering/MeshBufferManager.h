@@ -22,6 +22,7 @@ namespace JoeEngine {
         std::vector<VkDeviceMemory> m_vertexBufferMemory;
         std::vector<VkDeviceMemory> m_indexBufferMemory;
         std::vector<std::vector<JEMeshVertex>> m_vertexLists;
+        std::vector<std::vector<JEMeshPointVertex>> m_vertexPointLists;
         std::vector<std::vector<uint32_t>> m_indexLists;
         std::vector<BoundingBoxData> m_boundingBoxes;
         uint16_t m_numBuffers; // TODO: make more intelligent w/ free list for when mesh data is no longer used
@@ -35,6 +36,13 @@ namespace JoeEngine {
         // Mesh used for post processing
         static JESingleMesh m_screenSpaceTriangle;
         static JESingleMesh m_boundingBoxMesh;
+
+        void LoadModelFromFile(const std::string& filepath);
+        void CreateVertexBuffer(const std::vector<JEMeshVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory);
+        void CreateVertexBuffer(const std::vector<JEMeshPointVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory);
+        void CreateIndexBuffer(const std::vector<uint32_t>& indices, VkBuffer* indexBuffer, VkDeviceMemory* indexBufferMemory);
+        void ComputeMeshBounds(const std::vector<JEMeshVertex>& vertices, uint32_t bufferId);
+        void ComputeMeshBounds(const std::vector<JEMeshPointVertex>& vertices, uint32_t bufferId);
 
     public:
         JEMeshBufferManager() : m_numBuffers(0) {
@@ -50,12 +58,13 @@ namespace JoeEngine {
 
         void Initialize(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue);
         void Cleanup();
+        void ExpandMemberLists();
 
-        // TODO: overload to create from custom vert/idx buffer lists
         MeshComponent CreateMeshComponent(const std::string& filepath);
-        void LoadModelFromFile(const std::string& filepath);
-        void CreateVertexBuffer(const std::vector<JEMeshVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory);
-        void CreateIndexBuffer(const std::vector<uint32_t>& indices, VkBuffer* indexBuffer, VkDeviceMemory* indexBufferMemory);
+        MeshComponent CreateMeshComponent(const std::vector<JEMeshVertex>& vertices, const std::vector<uint32_t>& indices);
+        MeshComponent CreateMeshComponent(const std::vector<JEMeshPointVertex>& vertices, const std::vector<uint32_t>& indices);
+        void UpdateMeshBuffer(uint32_t bufferId, const std::vector<JEMeshVertex>& vertices, const std::vector<uint32_t>& indices);
+        void UpdateMeshBuffer(uint32_t bufferId, const std::vector<JEMeshPointVertex>& vertices, const std::vector<uint32_t>& indices);
 
         // Getters
         const VkBuffer& GetVertexBufferAt(int index) const {

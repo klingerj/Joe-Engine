@@ -2,7 +2,7 @@
 
 namespace JoeEngine {
     // Define extern threadpool object
-    JEThreadPool JEthreadPool = JEThreadPool();
+    JEThreadPool JEThreadPoolInstance = JEThreadPool();
 
     // Atomically enqueue a new job
     void JEThreadPool::EnqueueJob(JEThreadJob job) {
