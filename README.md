@@ -36,7 +36,7 @@ Once these are all installed properly, continue with the build instructions.
 1. Download the above zip file containing the Joe Engine repository. Extract it.
 2. You will need to open a Command Prompt or other shell program (e.g. I like to use Git Bash) in the top-level directory of the project (Folders like Build/, Source/, ThirdParty/, etc should be visible).
 3. Execute the following command: `cd Build && cmake-gui ..`
-4. You should now be presented with the CMake GUI. Set the Source directory to `/YourPath/Joe-Engine-master/Source` and the Binaries directory to `/YourPath/Joe-Engine-master/Build`.
+4. You should now be presented with the CMake GUI. Set the Source directory to `/YourPath/Joe-Engine-master` and the Binaries directory to `/YourPath/Joe-Engine-master/Build`.
 5. Click Configure. Choose the latest Visual Studio Generator. Be sure to select the optional argument 'x64' from one of the dropdown menus.
 6. Click Generate. Assuming that works without issue, open the project with Visual Studio.
 7. You should now be viewing the JoeEngine solution in Visual Studio. To test, choose to build in Release mode, then build the solution. Note that you will need a Wi-Fi connection in order for the project to download the JoeEngine's various dependencies from their respective Github repositories. After building successfully, right-click on the JoeEngine project in the Solution Explorer, and click 'Set as Startup Project'.
@@ -46,7 +46,7 @@ Once these are all installed properly, continue with the build instructions.
 1. Download the above zip file containing the Joe Engine repository. Extract it.
 2. You will need to open a Cmd or other shell program in the top-level directory (You should be able to see folders like Build/, Source/, ThirdParty/, etc.).
 3. Execute the following command: `cd Build && cmake-gui ..`
-4. You should now be presented with the CMake GUI. Set the Source directory to `/YourPath/Joe-Engine-master/Source` and the Binaries directory to `/YourPath/Joe-Engine-master/Build`.
+4. You should now be presented with the CMake GUI. Set the Source directory to `/YourPath/Joe-Engine-master` and the Binaries directory to `/YourPath/Joe-Engine-master/Build`.
 5. Click Configure. Choose either the Ninja or XCode Generator.
 6. Click Generate. Assuming that works without issue, open the project with XCode, or build the project from the command line with Ninja.
 7. (XCode instructions). If using Ninja, once you build the project, you should be able to simply run the JoeEngine executable.
