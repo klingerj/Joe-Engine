@@ -39,7 +39,7 @@ namespace JoeEngine {
           \param engineInstance a reference to the current JEEngineInstance object if needed for certain API calls
         */
         void Update(JEEngineInstance* engineInstance) override;
-
+        
         //! Add new material component.
         /*!
           Adds a new, default-constructed material component to the packed array of material components
@@ -73,5 +73,8 @@ namespace JoeEngine {
           \param newComp the new material component
         */
         void SetComponent(uint32_t entityID, MaterialComponent newComp);
+
+
+        const PackedArray<MaterialComponent>& GetComponentList() const;
     };
 }

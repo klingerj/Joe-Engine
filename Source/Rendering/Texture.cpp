@@ -1,10 +1,9 @@
 #include <stdexcept>
-#include <iostream>
 
 #include "Texture.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+/*#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 namespace JoeEngine {
     void JETexture::Cleanup(VkDevice device) {
@@ -21,7 +20,6 @@ namespace JoeEngine {
         VkDeviceSize imageSize = texWidth * texHeight * 4;
 
         if (!pixels) {
-            std::cout << "path: " << filepath.c_str() << std::endl;
             throw std::runtime_error("failed to load texture image!");
         }
 
@@ -102,3 +100,4 @@ namespace JoeEngine {
         }
     }
 }
+*/

@@ -1,29 +1,68 @@
 #pragma once
 
 #include <stdint.h>
+#include <vector>
+#include <string>
 
 namespace JoeEngine {
+    typedef enum JE_RENDER_LAYER : uint32_t {
+        OPAQUE = 0x0,
+        TRANSLUCENT = 0xFFFF,
+        MAX_LAYER = 0xFFFFFFFF
+    } RenderLayer;
+
+    typedef enum JE_GEOM_TYPE : uint32_t {
+        TRIANGLES = 0x0,
+        LINES = 0x1,
+        POINTS = 0x2
+    } GeomType;
+
+    typedef enum JE_MATERIAL_SETTINGS : uint32_t {
+        NO_SETTINGS = 0x0,
+        RECEIVES_SHADOWS = 0x1,
+        CASTS_SHADOWS = 0x2,
+        ALL_SETTINGS = 0xF
+    } MaterialSettings;
+
     //!  The Material Component class
     /*!
       Contains the necessary material info to be attached to a particular entity.
-      The material system is in progress and this class may change in the near future.
       \sa JEMaterialComponentManager
     */
     class MaterialComponent {
     public:
+        // Characteristics
+        uint32_t m_materialSettings;
+        uint32_t m_geomType;
+        uint32_t m_renderLayer;
+        
+        // Material IDs
+
         //! Shader ID.
         /*! Handle to the intended shader to use with this material. */
-        int shaderHandle;
-        // TODO: add texture references/handles?
+        uint32_t m_shaderID;
+        uint32_t m_descriptorID;
+
+        // Textures
+        uint32_t m_texAlbedo;
+        uint32_t m_texRoughness;
+        uint32_t m_texMetallic;
+        uint32_t m_texNormal;
+
+        // Uniforms
+        std::vector<void*> m_uniformData;
+        std::vector<uint32_t> m_uniformDataSizes;
 
         //! Default constructor.
-        /*! Constructs component with invalid shader handle. */
-        MaterialComponent() : MaterialComponent(-1) {}
+        /*! Invokes other constructor with some default values. */
+        MaterialComponent() : MaterialComponent(ALL_SETTINGS, TRIANGLES, OPAQUE) {}
 
         //! Constructor.
-        /*! Constructs component with specified shader handle. */
-        MaterialComponent(uint16_t shaderHandle) : shaderHandle(shaderHandle) {}
-
+        /*! Constructs a material component with the specified material settings, geometry type, and render layer. */
+        MaterialComponent(uint32_t matSettings, uint32_t geomType, uint32_t renderLayer) :
+            m_materialSettings(matSettings), m_geomType(geomType), m_renderLayer(renderLayer),
+            m_shaderID(0), m_descriptorID(0), m_texAlbedo(0), m_texRoughness(0), m_texMetallic(0), m_texNormal(0) {}
+        
         //! Destructor (default).
         ~MaterialComponent() = default;
     };

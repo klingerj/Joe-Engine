@@ -10,9 +10,11 @@
 #include "../Utils/Common.h"
 #include "VulkanRenderingTypes.h"
 #include "VulkanQueue.h"
-#include "../Components/Mesh/MeshComponent.h"   
+#include "../Components/Mesh/MeshComponent.h"
 
 namespace JoeEngine {
+    using BoundingBoxData = std::array<glm::vec3, 8>;
+
     class JEMeshBufferManager {
     private:
         std::vector<VkBuffer> m_vertexBuffers;
@@ -20,7 +22,9 @@ namespace JoeEngine {
         std::vector<VkDeviceMemory> m_vertexBufferMemory;
         std::vector<VkDeviceMemory> m_indexBufferMemory;
         std::vector<std::vector<JEMeshVertex>> m_vertexLists;
+        std::vector<std::vector<JEMeshPointVertex>> m_vertexPointLists;
         std::vector<std::vector<uint32_t>> m_indexLists;
+        std::vector<BoundingBoxData> m_boundingBoxes;
         uint16_t m_numBuffers; // TODO: make more intelligent w/ free list for when mesh data is no longer used
 
         // Vulkan object references (for convenience)
@@ -30,7 +34,15 @@ namespace JoeEngine {
         JEVulkanQueue graphicsQueue;
 
         // Mesh used for post processing
-        static JEMesh_SSTriangle m_screenSpaceTriangle;
+        static JESingleMesh m_screenSpaceTriangle;
+        static JESingleMesh m_boundingBoxMesh;
+
+        void LoadModelFromFile(const std::string& filepath);
+        void CreateVertexBuffer(const std::vector<JEMeshVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory);
+        void CreateVertexBuffer(const std::vector<JEMeshPointVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory);
+        void CreateIndexBuffer(const std::vector<uint32_t>& indices, VkBuffer* indexBuffer, VkDeviceMemory* indexBufferMemory);
+        void ComputeMeshBounds(const std::vector<JEMeshVertex>& vertices, uint32_t bufferId);
+        void ComputeMeshBounds(const std::vector<JEMeshPointVertex>& vertices, uint32_t bufferId);
 
     public:
         JEMeshBufferManager() : m_numBuffers(0) {
@@ -40,20 +52,22 @@ namespace JoeEngine {
             m_indexBufferMemory.reserve(128);
             m_vertexLists.reserve(128);
             m_indexLists.reserve(128);
+            m_boundingBoxes.reserve(128);
         }
         ~JEMeshBufferManager() {}
 
         void Initialize(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, const JEVulkanQueue& graphicsQueue);
         void Cleanup();
+        void ExpandMemberLists();
 
-        // TODO: overload to create from custom vert/idx buffer lists
         MeshComponent CreateMeshComponent(const std::string& filepath);
-        void LoadModelFromFile(const std::string& filepath);
-        void CreateVertexBuffer(const std::vector<JEMeshVertex>& vertices, VkBuffer* vertexBuffer, VkDeviceMemory* vertexBufferMemory);
-        void CreateIndexBuffer(const std::vector<uint32_t>& indices, VkBuffer* indexBuffer, VkDeviceMemory* indexBufferMemory);
+        MeshComponent CreateMeshComponent(const std::vector<JEMeshVertex>& vertices, const std::vector<uint32_t>& indices);
+        MeshComponent CreateMeshComponent(const std::vector<JEMeshPointVertex>& vertices, const std::vector<uint32_t>& indices);
+        void UpdateMeshBuffer(uint32_t bufferId, const std::vector<JEMeshVertex>& vertices, const std::vector<uint32_t>& indices);
+        void UpdateMeshBuffer(uint32_t bufferId, const std::vector<JEMeshPointVertex>& vertices, const std::vector<uint32_t>& indices);
 
         // Getters
-        const VkBuffer& GetVertexBufferAt(int index) {
+        const VkBuffer& GetVertexBufferAt(int index) const {
             if (index < 0) {
                 // TODO: throw?
             }
@@ -61,7 +75,7 @@ namespace JoeEngine {
             return m_vertexBuffers[index];
         }
 
-        const VkBuffer& GetIndexBufferAt(int index) {
+        const VkBuffer& GetIndexBufferAt(int index) const {
             if (index < 0) {
                 // TODO: throw?
             }
@@ -69,7 +83,7 @@ namespace JoeEngine {
             return m_indexBuffers[index];
         }
 
-        const std::vector<uint32_t>& GetIndexListAt(int index) {
+        const std::vector<uint32_t>& GetIndexListAt(int index) const {
             if (index < 0) {
                 // TODO: throw?
             }
@@ -77,8 +91,16 @@ namespace JoeEngine {
             return m_indexLists[index];
         }
 
-        const JEMesh_SSTriangle& GetScreenSpaceTriMesh() const {
+        const std::vector<BoundingBoxData>& GetBoundingBoxData() const {
+            return m_boundingBoxes;
+        }
+
+        const JESingleMesh& GetScreenSpaceTriMesh() const {
             return m_screenSpaceTriangle;
+        }
+
+        const JESingleMesh& GetBoundingBoxMesh() const {
+            return m_boundingBoxMesh;
         }
     };
 }

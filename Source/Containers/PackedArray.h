@@ -40,11 +40,23 @@ namespace JoeEngine {
             return m_data.begin() + m_numElements;
         }
 
+        typename std::vector<T>::const_iterator begin() const noexcept {
+            return m_data.begin();
+        }
+
+        typename std::vector<T>::const_iterator end() const noexcept {
+            return m_data.begin() + m_numElements;
+        }
+
         uint32_t Size() const {
             return m_numElements;
         }
 
         const std::vector<T>& GetData() const {
+            return m_data;
+        }
+
+        std::vector<T>& GetData() {
             return m_data;
         }
 

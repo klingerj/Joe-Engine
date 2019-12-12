@@ -55,5 +55,5 @@ namespace JoeEngine {
         void EnqueueJob(JEThreadJob job); // Atomically queue up a new job
     };
 
-    extern JEThreadPool JEthreadPool;
+    extern JEThreadPool JEThreadPoolInstance;
 }

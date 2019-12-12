@@ -1,7 +1,7 @@
-#include "VulkanSwapChain.h"
-
 #include <set>
 #include <algorithm>
+
+#include "VulkanSwapChain.h"
 
 namespace JoeEngine {
     bool JEVulkanSwapChain::CheckDeviceExtensionSupport(VkPhysicalDevice physicalDevice) const {
@@ -92,13 +92,13 @@ namespace JoeEngine {
         }
     }
 
-    void JEVulkanSwapChain::Create(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanWindow& vulkanWindow, int width, int height) {
+    void JEVulkanSwapChain::Create(VkPhysicalDevice physicalDevice, VkDevice device, const JEVulkanWindow& vulkanWindow, uint32_t width, uint32_t height) {
         SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(physicalDevice, vulkanWindow.GetSurface());
         VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
         VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
         VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities, vulkanWindow.GetWindow());
 
-        uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+        uint32_t imageCount = JE_DEFAULT_MAX_FRAMES_IN_FLIGHT + 1; //swapChainSupport.capabilities.minImageCount + 1);
         if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
             imageCount = swapChainSupport.capabilities.maxImageCount;
         }
@@ -143,10 +143,10 @@ namespace JoeEngine {
         m_swapChainImageFormat = surfaceFormat.format;
         m_swapChainExtent = extent;
 
-        CreateImageViews(physicalDevice, device, vulkanWindow.GetSurface(), width, height);
+        CreateImageViews(physicalDevice, device, vulkanWindow.GetSurface());
     }
 
-    void JEVulkanSwapChain::CreateImageViews(VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface, int width, int height) {
+    void JEVulkanSwapChain::CreateImageViews(VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface) {
         m_swapChainImageViews.resize(m_swapChainImages.size());
 
         for (uint32_t i = 0; i < m_swapChainImages.size(); ++i) {

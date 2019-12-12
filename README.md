@@ -9,13 +9,18 @@ The goal of the Joe Engine is to be my C++ playground. The engine will contain v
 View the docs [here](https://klingerj.github.io/html/) (in-progress).
 
 ### Demo
-Brief [demo video](https://vimeo.com/326088400) here.
+Brief [demo video](https://vimeo.com/326088400) here (outdated).
 
 ### Current features
 * Data-oriented Entity-Component System
+* Material System
 * Deferred Renderer
-* Post Processing
+* Order-independent translucency (OIT)
+* Instanced rendering
+* Post Processing (Now broken after addition of material system :) )
 * Shadow Mapping
+* Frustum Culling
+* CPU Particle Emitter Systems
 * (Buggy) Rigidbody Simulation
 * Threadpool 
 
@@ -33,3 +38,7 @@ Brief [demo video](https://vimeo.com/326088400) here.
 [Real-Time Collision Detection by Christer Ericson](https://realtimecollisiondetection.net/)  
 [Gaffer on Games](https://gafferongames.com/)  
 [Unconstrained Rigidbody Physics by David Baraff, Siggraph course notes](https://www.cs.cmu.edu/~baraff/sigcourse/notesd1.pdf)  
+[Real-Time deep image rendering and order independent transparency by Pyarelal Knowles](http://researchbank.rmit.edu.au/view/rmit:161520)
+
+# Assets
+[Metal PBR Texture](https://3dtextures.me/about/)  

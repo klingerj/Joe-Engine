@@ -1,0 +1,17 @@
+# This file uses centimeters as units for non-parametric coordinates.
+
+mtllib triLeft.mtl
+g default
+v -0.500000 -0.500000 0.000000
+v 0.500000 0.001318 0.186568
+v -0.500000 0.500000 0.000000
+vt 0.000000 0.000000
+vt 1.000000 0.000000
+vt 0.000000 1.000000
+vn -0.183404 0.000000 0.983038
+vn -0.183404 0.000000 0.983038
+vn -0.183404 0.000000 0.983038
+s off
+g pPlane1
+usemtl initialShadingGroup
+f 1/1/1 2/2/2 3/3/3
