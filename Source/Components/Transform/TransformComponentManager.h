@@ -5,7 +5,7 @@
 #include "../../Containers/PackedArray.h"
 
 namespace JoeEngine {
-    //!  The Transform Component Manager class
+    //! The Transform Component Manager class
     /*!
       Contains all transform components in a packed array of data.
       \sa JEEngineInstance

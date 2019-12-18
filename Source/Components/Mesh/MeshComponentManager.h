@@ -5,7 +5,7 @@
 #include "../../Containers/PackedArray.h"
 
 namespace JoeEngine {
-    //!  The Mesh Component Manager class
+    //! The Mesh Component Manager class
     /*!
       Contains all mesh components in a packed array of data.
       \sa JEEngineInstance
@@ -75,7 +75,7 @@ namespace JoeEngine {
         //! Get list of mesh components.
         /*!
           Gets the member list of mesh components.
-          \return the packed array of mesh components.
+          \return the list of mesh components.
         */
         const PackedArray<MeshComponent>& GetComponentList() const;
     };

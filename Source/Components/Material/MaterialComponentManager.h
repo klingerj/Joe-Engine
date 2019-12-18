@@ -5,7 +5,7 @@
 #include "../../Containers/PackedArray.h"
 
 namespace JoeEngine {
-    //!  The Material Component Manager class
+    //! The Material Component Manager class
     /*!
       Contains all material components in a packed array of data.
       The material system is in progress and this class may change in the near future.
@@ -30,7 +30,7 @@ namespace JoeEngine {
         JEMaterialComponentManager(JEMaterialComponentManager&& mgr) = delete;
         JEMaterialComponentManager& operator=(const JEMaterialComponentManager& mgr) = delete;
         JEMaterialComponentManager& operator=(JEMaterialComponentManager&& mgr) = delete;*/
-        
+
         //! Update material components.
         /*!
           Updates all stored material components.
@@ -39,7 +39,7 @@ namespace JoeEngine {
           \param engineInstance a reference to the current JEEngineInstance object if needed for certain API calls
         */
         void Update(JEEngineInstance* engineInstance) override;
-        
+
         //! Add new material component.
         /*!
           Adds a new, default-constructed material component to the packed array of material components
@@ -51,7 +51,7 @@ namespace JoeEngine {
 
         //! Remove material component.
         /*!
-          Removes the material component from the packed array of material components
+          Removes the material component from the list of material components
           at the specified entity index.
           Overrides purely virtual function declared in JEComponentManager.
           \param entityID the id of the entity to remove the material component from
@@ -74,7 +74,11 @@ namespace JoeEngine {
         */
         void SetComponent(uint32_t entityID, MaterialComponent newComp);
 
-
+        //! Get list of material components.
+        /*!
+          Gets the member list of mesh components.
+          \return the list of mesh components.
+        */
         const PackedArray<MaterialComponent>& GetComponentList() const;
     };
 }

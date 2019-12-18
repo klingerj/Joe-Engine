@@ -5,7 +5,7 @@
 namespace JoeEngine {
     class JEEngineInstance;
 
-    //!  The Component Manager class
+    //! The Component Manager class
     /*!
       Abstract base class for all component manager derived classes.
       \sa JEEngineInstance

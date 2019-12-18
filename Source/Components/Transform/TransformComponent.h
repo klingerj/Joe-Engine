@@ -4,7 +4,7 @@
 #include "glm/gtx/quaternion.hpp"
 
 namespace JoeEngine {
-    //!  The Transform Component class
+    //! The Transform Component class
     /*!
       Contains the necessary transformation info to be attached to a particular entity.
       This consists of one each of a translation, rotation, and scale.

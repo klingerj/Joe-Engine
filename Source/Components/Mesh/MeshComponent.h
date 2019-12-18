@@ -2,17 +2,17 @@
 
 namespace JoeEngine {
     //! Mesh Buffer Type enum
-    /*! Used to indicate what kind of buffer this mesh component refers to. */
+    /*! Indicates what kind of buffer a mesh component refers to. */
     enum JE_MESH_BUFFER_TYPE {
         MESH_TRIANGLES,
         MESH_LINES,
         MESH_POINTS
     };
 
-    //!  The Mesh Component class
+    //! The Mesh Component class
     /*!
       Contains the necessary mesh info to be attached to a particular entity.
-      These handles are used to access mesh data managed by th MeshBufferManager class.
+      These handles are used to access mesh data managed by the MeshBufferManager class.
       \sa JEMeshComponentManager, JEMeshBufferManager, JEVulkanRenderer
     */
     class MeshComponent {
