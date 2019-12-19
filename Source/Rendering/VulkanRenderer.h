@@ -49,7 +49,6 @@ namespace JoeEngine {
         JESceneManager* m_sceneManager;
 
         // Other backend managers
-        // JEShaderManager m_shaderManager; // TODO: create me
         JEMeshBufferManager m_meshBufferManager;
 
         // Vulkan Instance creation
@@ -99,14 +98,6 @@ namespace JoeEngine {
         /// Rendering variables and functions
 
         // Shaders
-        // TODO: Move this to a shader manager
-        //std::vector<JEVulkanShadowPassShader> m_shadowPassShaders;
-        //JEVulkanDeferredPassGeometryShader m_deferredPassGeometryShader;
-        //JEVulkanDeferredPassLightingShader m_deferredPassLightingShader; // TODO: change me to a list?
-        //std::vector<JEVulkanMeshShader> m_meshShaders; // TODO: add this to VulkanShader.h and re-implement
-        //std::vector<JEVulkanPostProcessShader> m_postProcessingShaders;
-        //JEVulkanFlatShader m_flatShader;
-        //JEVulkanForwardShader m_forwardShader;
         JEShaderManager m_shaderManager;
         uint32_t m_shadowShaderID;
         uint32_t m_deferredGeometryShaderID;
@@ -172,7 +163,6 @@ namespace JoeEngine {
         // Order-independent translucency
         uint32_t m_oitLLDescriptor;
         uint32_t m_oitSortShader;
-        // TODO: oit render pass, framebuffer, command buffer, etc
         VkRenderPass m_oitRenderPass = VK_NULL_HANDLE;
         std::vector<VkFramebuffer> m_oitFramebuffers;
         std::vector<VkCommandBuffer> m_oitCommandBuffers;

@@ -518,11 +518,6 @@ namespace JoeEngine {
     }*/
 
     /*void JEVulkanRenderer::CleanupTextures() {
-        /*for (JETexture t : m_textures) {
-            t.Cleanup(m_device);
-        }
-        m_textures.clear();
-
         m_textureLibraryGlobal.Cleanup(m_device);
     }*/
 
@@ -548,7 +543,7 @@ namespace JoeEngine {
             //std::array<glm::mat4, 2> uniformInvViewProjData = { m_sceneManager->m_camera.GetInvProj(), m_sceneManager->m_camera.GetInvView() };
             const std::array<glm::mat4, 2> uniformInvViewProjData = { glm::inverse(m_sceneManager->m_camera.GetProj()), glm::inverse(m_sceneManager->m_camera.GetView()) };
 
-            // Add light viewProj matrix (TODO: matrices) as uniforms
+            // Add light viewProj matrix as uniforms
             const std::array<glm::mat4, 1> uniformLightData = { m_sceneManager->m_shadowCamera.GetOrthoViewProj() };
 
             std::vector<const void*> buffers;
@@ -568,7 +563,8 @@ namespace JoeEngine {
         for (uint32_t i = 0; i < materialComponents.size(); ++i) {
             // TODO: Don't do this for every material, ignore duplicates
 
-            if (m_enableDeferred) {// Add light viewProj matrix (TODO: matrices) as uniforms
+            if (m_enableDeferred) {
+                // Add light viewProj matrix as uniforms
                 const std::array<glm::mat4, 1> uniformLightData = { m_sceneManager->m_shadowCamera.GetOrthoViewProj() };
 
                 std::vector<const void*> buffers;
@@ -790,10 +786,6 @@ namespace JoeEngine {
     }
 
     void JEVulkanRenderer::DrawShadowPass(/*std vector of JELights*/const std::vector<MeshComponent>& meshComponents, const JECamera& camera) {
-        // TODO: keep local list of ShadowPassStructs. Push_back to this list during this function for each shadow
-        // pass that we do, aka for each light in the vector.
-        // Or, do that in a different function so that the render passes and framebuffers are all already created before this function.
-
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -1237,7 +1229,6 @@ namespace JoeEngine {
 
                 const std::vector<BoundingBoxData> boundingBoxData = m_meshBufferManager.GetBoundingBoxData();
                 for (uint32_t j = 0; j < transformComponents.size(); ++j) {
-                    // TODO: move to helper function somehow
                     const glm::vec3& minPos = boundingBoxData[meshComponents[j].GetVertexHandle()][0];
                     const glm::vec3& maxPos = boundingBoxData[meshComponents[j].GetVertexHandle()][7];
                     const glm::vec3 scale = 0.5f * (maxPos - minPos);
@@ -2201,39 +2192,5 @@ namespace JoeEngine {
         m_sceneManager->RecreateResources({ m_width, m_height });
     }
 
-    void JEVulkanRenderer::RegisterCallbacks(JEIOHandler* ioHandler) {
-        /*JECallbackFunction loadScene0 = [&] {
-            vkDeviceWaitIdle(m_device);
-            m_meshBufferManager.Cleanup();
-            CleanupTextures();
-            CleanupShaders();
-            m_sceneManager->LoadScene(0, { m_width, m_height }, { m_shadowPass.width, m_shadowPass.height });
-            CreateShadowCommandBuffer();
-            CreateDeferredPassGeometryCommandBuffer();
-            CreateDeferredLightingAndPostProcessingCommandBuffer();
-        };
-        JECallbackFunction loadScene1 = [&] {
-            vkDeviceWaitIdle(m_device);
-            m_meshBufferManager.Cleanup();
-            CleanupTextures();
-            CleanupShaders();
-            m_sceneManager->LoadScene(1, { m_width, m_height }, { m_shadowPass.width, m_shadowPass.height });
-            CreateShadowCommandBuffer();
-            CreateDeferredPassGeometryCommandBuffer();
-            CreateDeferredLightingAndPostProcessingCommandBuffer();
-        };
-        JECallbackFunction loadScene2 = [&] {
-            vkDeviceWaitIdle(m_device);
-            m_meshBufferManager.Cleanup();
-            CleanupTextures();
-            CleanupShaders();
-            m_sceneManager->LoadScene(2, { m_width, m_height }, { m_shadowPass.width, m_shadowPass.height });
-            CreateShadowCommandBuffer();
-            CreateDeferredPassGeometryCommandBuffer();
-            CreateDeferredLightingAndPostProcessingCommandBuffer();
-        };
-        ioHandler->AddCallback(JE_KEY_0, loadScene0);
-        ioHandler->AddCallback(JE_KEY_1, loadScene1);
-        ioHandler->AddCallback(JE_KEY_2, loadScene2);*/
-    }
+    void JEVulkanRenderer::RegisterCallbacks(JEIOHandler* ioHandler) {}
 }

@@ -8,16 +8,16 @@ http://bitsquid.blogspot.com/2011/09/managing-decoupling-part-4-id-lookup.html
 */
 
 namespace JoeEngine {
-    //! The PackedArray class
+    //! The PackedArray class.
     /*!
-      Abstract base class for all component manager derived classes.
+      Data structure class that stores a densely-packed list of data with a variety of helper functions for easy insertion and removal.
       \sa JEEngineInstance
     */
     template <typename T>
     class PackedArray {
     private:
 
-        //! The IDInt class
+        //! The IDInt class.
         /*!
           Private class solely for usage with a PackedArray. This class essentially just wraps an integer, but ensures that its default
           constructed value is -1 rather than 0. This is important for the PackedArray class because it stores indices - 0 is considered

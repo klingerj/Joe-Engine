@@ -43,7 +43,7 @@ public:
       Overrides purely virtual function declared in JEComponentManager.
       \param entityID the id of the entity to add the rotator component to
     */
-    void AddNewComponent(uint32_t id) override;
+    void AddNewComponent(uint32_t entityID) override;
 
     //! Remove rotator component.
     /*!
@@ -52,7 +52,7 @@ public:
       Overrides purely virtual function declared in JEComponentManager.
       \param entityID the id of the entity to remove the rotator component from
     */
-    void RemoveComponent(uint32_t id) override;
+    void RemoveComponent(uint32_t entityID) override;
 
     //! Get rotator component.
     /*!
@@ -60,5 +60,5 @@ public:
       \param entityID the entity ID whose rotator component to return
       \return pointer to the rotator component attached to the entity ID
     */
-    RotatorComponent* GetComponent(uint32_t index) const;
+    RotatorComponent* GetComponent(uint32_t entityID) const;
 };

@@ -328,7 +328,7 @@ namespace JoeEngine {
         }
         if (currentTimeDelta > m_currentTime) {
             auto& meshPhysicsData = m_meshDataManager->GetMeshData_Physics();
-            for (uint32_t i = 0; i < m_meshDataManager->GetNumMeshes(); ++i) { // TODO: Process multiple meshes at a time with AVX
+            for (uint32_t i = 0; i < m_meshDataManager->GetNumMeshes(); ++i) {
                 meshPhysicsData.obbs[i].center = meshPhysicsData.positions[i];
                 // Integration
                 if (!(meshPhysicsData.freezeStates[i] & JE_PHYSICS_FREEZE_POSITION)) {
@@ -338,7 +338,7 @@ namespace JoeEngine {
 
                 // Compute forces
                 glm::vec3 force = glm::vec3(0.0f, -9.80665f, 0.0f);
-                const float mass = 1.0f; // TODO change to use mass data
+                const float mass = 1.0f;
 
                 // Inertia Tensor
                 glm::mat3 inertiaTensor_body = glm::mat3(1.0f);
@@ -412,13 +412,12 @@ namespace JoeEngine {
                     collInfo.minimumTranslation /= (float)numCollisions;
                 }
 
-                // TODO: compute angular velocity, rotation matrix, etc
                 if (!(meshPhysicsData.freezeStates[i] & JE_PHYSICS_FREEZE_ROTATION)) {
                     meshPhysicsData.angularMomentums[i] += torque * m_updateRateFactor;
                     meshPhysicsData.angularMomentums[i] *= 0.95f;
                     glm::vec3 angularVelocity = inertiaTensor_Inverse * meshPhysicsData.angularMomentums[i];
                     float angle = std::sqrt(glm::dot(angularVelocity, angularVelocity)) * m_updateRateFactor;
-                    glm::vec3 angularComp = 0.4f * -glm::cross(angularVelocity, collInfo.point); //TODO: figure why this is negative'd
+                    glm::vec3 angularComp = 0.4f * -glm::cross(angularVelocity, collInfo.point);
                     meshPhysicsData.velocities[i] += angularComp * glm::dot(meshPhysicsData.velocities[i], glm::vec3(collInfo.minimumTranslation));
 
                     // Update model matrices
@@ -432,7 +431,7 @@ namespace JoeEngine {
                     //}
 
                     meshPhysicsData.rotations[i] = glm::mat3(rotation);
-                    meshPhysicsData.obbs[i].u[0] = meshPhysicsData.rotations[i][0]; // TODO: this might be wrong w/ the columns idk
+                    meshPhysicsData.obbs[i].u[0] = meshPhysicsData.rotations[i][0];
                     meshPhysicsData.obbs[i].u[1] = meshPhysicsData.rotations[i][1];
                     meshPhysicsData.obbs[i].u[2] = meshPhysicsData.rotations[i][2];
 
@@ -449,7 +448,6 @@ namespace JoeEngine {
     }
 
     // Checks for intersection between two oriented bounding boxes
-    // TODO: change back to const references
     JECollisionInfo JEPhysicsManager::SAT(JE_OBB& obbA, JE_OBB& obbB, uint32_t indexA, uint32_t indexB) {
         JECollisionInfo collisionInfo = {};
         collisionInfo.minimumTranslation = glm::vec4(0.0f, 0.0f, 0.0f, -999999.0f);
@@ -773,7 +771,6 @@ namespace JoeEngine {
 
         // Return the collision result otherwise.
         // The collision result contains the minimum penetration information necessary to apply the impulse response
-        // TODO: Maybe come back to this if we find that ground collisions are visually shaky.
         obbA.e /= m_meshDataManager->GetMeshData_Physics().scales[indexA];
         obbB.e /= m_meshDataManager->GetMeshData_Physics().scales[indexB];
         return collisionInfo;

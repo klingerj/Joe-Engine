@@ -25,7 +25,6 @@ namespace JoeEngine {
 /*
 namespace JoeEngine {
     // Collision information
-    // TODO: expand this to store info for edge-edge collisions. Right now we are just checking vertex-face.
     typedef struct je_collision_info_t {
         glm::vec4 minimumTranslation; // x, y, & z contains the direction, w contains the minimum penetration distance of the two object collision
         glm::vec3 point; // The point on the bounding box that the collision should be applied to 
@@ -45,7 +44,7 @@ namespace JoeEngine {
         const float m_updateRateFactor; // For physics integration
         uint32_t m_frameCtr;
 
-        JECollisionInfo SAT(JE_OBB& obbA, JE_OBB& obbB, uint32_t indexA, uint32_t indexB); // TODO make me const
+        JECollisionInfo SAT(JE_OBB& obbA, JE_OBB& obbB, uint32_t indexA, uint32_t indexB);
 
     public:
         JEPhysicsManager() : m_startTime(), m_currentTime(0.0), m_updateRateInMilliseconds(16.667), m_updateRateFactor(1.0f / 60.0f), m_frameCtr(0) {}

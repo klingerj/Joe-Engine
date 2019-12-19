@@ -6,12 +6,12 @@ void RotatorComponentManager::Update(JoeEngine::JEEngineInstance* engineInstance
     }
 }
 
-void RotatorComponentManager::AddNewComponent(uint32_t id) {
-    m_rotatorComponents.AddElement(id, RotatorComponent());
+void RotatorComponentManager::AddNewComponent(uint32_t entityID) {
+    m_rotatorComponents.AddElement(entityID, RotatorComponent());
 }
 
-void RotatorComponentManager::RemoveComponent(uint32_t id) {
-    m_rotatorComponents.RemoveElement(id);
+void RotatorComponentManager::RemoveComponent(uint32_t entityID) {
+    m_rotatorComponents.RemoveElement(entityID);
 }
 
 RotatorComponent* RotatorComponentManager::GetComponent(uint32_t id) const {

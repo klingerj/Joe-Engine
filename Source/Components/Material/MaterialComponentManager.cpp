@@ -3,7 +3,7 @@
 namespace JoeEngine {
     void JEMaterialComponentManager::Update(JEEngineInstance* engineInstance) {
         /*for (MaterialComponent& comp : m_materialComponents) {
-            // TODO
+
         }*/
     }
 

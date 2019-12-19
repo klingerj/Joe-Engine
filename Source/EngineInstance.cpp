@@ -124,8 +124,6 @@ namespace JoeEngine {
                     }
                 }
 
-                // TODO: sort materials by render layer, material (shader index and source textures), and mesh
-                // the renderer will attempt to render them as instanced geometry and will minimize pipeline/descriptor binding
                 // Sort all components by material properties and by mesh for efficient descriptor set binding and instanced rendering
                 indices.clear();
                 std::vector<MeshComponent>      meshComponentsSorted;
