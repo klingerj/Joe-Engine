@@ -8,11 +8,13 @@ namespace JoeEngine {
     //! The ScopedTimer class
     /*!
       Class dedicated to finding the elapsed time of a segment of code.
-      It is meant to be used as follows:
-      {
-        ScopedTimer<float> timer;
-        // ... (code to profile)
+      It is meant to be used as follows, using temporary scopes:\n
+      <pre>
+      {\n
+        ScopedTimer<float> timer;\n
+        (code to profile)\n
       }
+      </pre>
     */
     template <typename T>
     class ScopedTimer {
