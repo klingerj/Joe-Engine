@@ -5,55 +5,48 @@
 #include "ParticleSystem.h"
 
 namespace JoeEngine {
+    //! The Physics Manager class.
+    /*!
+      Class dedicated to making physics calculations at a framerate that is decoupled from the rendering framerate.
+      Currently only used for particle system calculations.s
+    */
     class JEPhysicsManager {
     private:
+        //! Simple std::chrono typedef for convenience
         using JE_TIME = std::chrono::time_point<std::chrono::steady_clock>;
-        JE_TIME m_startTime; // Start time of the physics system
+
+        //! Start time.
+        /*!
+          The start time marker for a particular frame. Physics calculations only occur if the amount of time elapsed
+          since this time marker is greater than the specified time increment, 'm_updateRateMillis'. Then this marker
+          is updated to contain the current time.
+        */
+        JE_TIME m_startTime;
+
+        //! Update rate in milliseconds.
+        /*! How many milliseconds must pass before a physics update is permitted to occur. */
         const float m_updateRateMillis; // time increment
+
+        //! Update rate for integration
+        /*! Timestep for physics integration calculations. */
         const float m_updateDt; // dt for physics integration
 
     public:
+        //! Constructor.
+        /*! Initializes update rate member variables. */
         JEPhysicsManager() : m_startTime(), m_updateRateMillis(16.6666667f), m_updateDt(1.0f / 60.0f) {}
-        ~JEPhysicsManager() {}
 
+        //! Destructor (default).
+        ~JEPhysicsManager() = default;
+
+        //! Initialize the class.
         void Initialize();
 
+        //! Update particle systems.
+        /*!
+          Performs an update on each provided particle system, if at least 'm_updateRateMillis' milliseconds have elapsed
+          since the last update.
+        */
         void UpdateParticleSystems(std::vector<JEParticleSystem>& particleSystems);
     };
 }
-
-/*
-namespace JoeEngine {
-    // Collision information
-    typedef struct je_collision_info_t {
-        glm::vec4 minimumTranslation; // x, y, & z contains the direction, w contains the minimum penetration distance of the two object collision
-        glm::vec3 point; // The point on the bounding box that the collision should be applied to 
-    } JECollisionInfo;
-    // Note: when checking CollisionInfo, if the w component of the minimumTranslation = -1.0f, it's a no collision
-
-    // Class to manage the game's physics update
-
-    class JEPhysicsManager {
-    private:
-        std::shared_ptr<JEMeshDataManager> m_meshDataManager;
-        
-        using JE_TIMER = std::chrono::time_point<std::chrono::steady_clock>;
-        JE_TIMER m_startTime; // Start time of the physics system
-        double m_currentTime; // Current time of the physics system
-        const double m_updateRateInMilliseconds; // in ms
-        const float m_updateRateFactor; // For physics integration
-        uint32_t m_frameCtr;
-
-        JECollisionInfo SAT(JE_OBB& obbA, JE_OBB& obbB, uint32_t indexA, uint32_t indexB);
-
-    public:
-        JEPhysicsManager() : m_startTime(), m_currentTime(0.0), m_updateRateInMilliseconds(16.667), m_updateRateFactor(1.0f / 60.0f), m_frameCtr(0) {}
-        ~JEPhysicsManager() {}
-
-        void Initialize(const std::shared_ptr<JEMeshDataManager>& m);
-
-        // Compute physics on the mesh data
-        void Update();
-    };
-}
-*/

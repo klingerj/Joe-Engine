@@ -19,7 +19,10 @@ namespace JoeEngine {
     template <typename T>
     class ScopedTimer {
     private:
+        //! Simple std::chrono typedef for convenience
         using Clock = std::chrono::high_resolution_clock;
+
+        //! Simple std::chrono typedef for convenience
         using Time = std::chrono::time_point<Clock>;
 
         //! Start time for profiling.
