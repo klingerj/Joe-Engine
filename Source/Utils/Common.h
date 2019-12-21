@@ -130,6 +130,7 @@ namespace JoeEngine {
     //! Find a supported format among several candidate depth formats.
     VkFormat FindDepthFormat(VkPhysicalDevice physicalDevice);
 
+    //! Simple typedef for std::function.
     using JECallbackFunction = std::function<void()>;
 
     //! Project path string.
