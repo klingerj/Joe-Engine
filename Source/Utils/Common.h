@@ -116,7 +116,7 @@ namespace JoeEngine {
     //! Create image.
     void CreateImage(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
     
-    //! Create image view.s
+    //! Create image view.
     VkImageView CreateImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
     
     //! Transition image from initial to final layout.

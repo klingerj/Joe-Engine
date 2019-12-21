@@ -44,7 +44,9 @@ namespace JoeEngine {
         //! Check if validation layers are enabled.
         /*!
           Function that checks if validation are intended to be enabled. The return value of this function initializes the
-          flag 'm_enableValidationLayers'.
+          flag 'm_enableValidationLayers'. Generally, compiling on Debug mode returns true, and compiling on Release mode
+          returns false.
+          \return true if validation layers are meant to be enabled, false otherwise.
         */
         bool AreLayersEnabled();
 
@@ -57,25 +59,40 @@ namespace JoeEngine {
         ~JEVulkanValidationLayers() = default;
 
         //! Setup debug callback.
-        /*! Makes Vulkan calls to setup the debug callback function. */
+        /*!
+          Makes Vulkan calls to setup the debug callback function.
+          \param instance the Vulkan instance to setup the callback with.
+        */
         void SetupDebugCallback(const VkInstance& instance);
 
         //! Destroy debug callback.
-        /*! Makes Vulkan calls to destroy the debug callback function. */
+        /*!
+          Makes Vulkan calls to destroy the debug callback function.
+          \param instance the Vulkan instance to destroy the callback with.
+        */
         void DestroyDebugCallback(const VkInstance& instance);
 
         //! Check for validation layer support.
-        /*! Ensure that the requested validation layer(s) are available. */
+        /*!
+          Ensure that the requested validation layer(s) are available.
+          \return true if the requested validation layers are available, false otherwise.
+        */
         bool CheckValidationLayerSupport() const;
 
         //! Get validation layers enabled flag.
-        /*! Return validation layers enabled flag. */
+        /*!
+          Return validation layers enabled flag.
+          \return the flag indicating if validation are enabled.
+        */
         const bool AreValidationLayersEnabled() const {
             return m_enableValidationLayers;
         }
         
         //! Get validation layers list.
-        /*! Return the validation layers string list. */
+        /*!
+          Return the validation layers string list.
+          \return the list of validation layer strings.
+        */
         const std::vector<const char*>& GetValidationLayers() const {
             return m_validationLayers;
         }

@@ -64,11 +64,17 @@ namespace JoeEngine {
         void ThreadFunction(); // Runs threads on an infinite loop until a job
 
         //! Dequeue thread job.
-        /*! Removes a job from the job queue. */
+        /*!
+          Removes a job from the job queue.
+          \return the dequeued job.
+        */
         JEThreadJob DequeueJob();
 
         //! Perform thread job.
-        /*! Helper function for executing a job's function on its data. */
+        /*!
+          Helper function for executing a job's function on its data.
+          \param threadJob the job to execute.
+        */
         void ThreadDoJob(JEThreadJob threadJob);
 
         //! Join threads.
@@ -95,7 +101,10 @@ namespace JoeEngine {
         }
 
         //! Enqueue thread job.
-        /*! Synchronously add a new thread job to the job queue. */
+        /*!
+          Synchronously add a new thread job to the job queue.
+          \param job the job to enqueue.
+        */
         void EnqueueJob(JEThreadJob job);
     };
 

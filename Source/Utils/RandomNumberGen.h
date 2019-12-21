@@ -10,7 +10,7 @@ namespace JoeEngine {
         //! The RNG class
         /*!
           Wrapper class around random number generation classes for a cleaner API.
-          This is the float/double variant (complies with std::uniform_real_distribution)
+          This is the float/double variant (complies with std::uniform_real_distribution).
         */
         template <typename T>
         class JERandomNumberGen {
@@ -41,7 +41,10 @@ namespace JoeEngine {
             ~JERandomNumberGen() = default;
             
             //! Get a random number from the distribution.
-            /*! Returns a new random number.*/
+            /*!
+              Returns a new random number.
+              \return a new random number.
+            */
             T GetNextRandomNum() {
                 return m_uniform_dist(m_rng);
             }
@@ -50,7 +53,7 @@ namespace JoeEngine {
         //! The RNG class
         /*!
           Wrapper class around random number generation classes for a cleaner API.
-          This is the integer variant (complies with std::uniform_int_distribution)
+          This is the integer variant (complies with std::uniform_int_distribution).
         */
         template <typename T>
         class JEIntRandomNumberGen {
@@ -81,7 +84,10 @@ namespace JoeEngine {
             ~JEIntRandomNumberGen() = delete;
 
             //! Get a random number from the distribution.
-            /*! Returns a new random number.*/
+            /*!
+              Returns a new random number.
+              \return a new random number.
+            */
             T GetNextRandomNum() {
                 return m_uniform_dist(m_rng);
             }

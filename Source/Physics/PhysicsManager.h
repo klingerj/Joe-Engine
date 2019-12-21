@@ -46,6 +46,7 @@ namespace JoeEngine {
         /*!
           Performs an update on each provided particle system, if at least 'm_updateRateMillis' milliseconds have elapsed
           since the last update.
+          \param particleSystems the list of particle systems to update.
         */
         void UpdateParticleSystems(std::vector<JEParticleSystem>& particleSystems);
     };

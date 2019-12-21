@@ -15,10 +15,10 @@ namespace JoeEngine {
         JEEntityManager() : m_idCounter(0), m_entities() {}
         ~JEEntityManager() {}
 
-        JEEntityManager(const JEEntityManager& mgr) = delete;
+        /*JEEntityManager(const JEEntityManager& mgr) = delete;
         JEEntityManager(const JEEntityManager&& mgr) = delete;
         JEEntityManager& operator=(const JEEntityManager& mgr) = delete;
-        JEEntityManager& operator=(JEEntityManager&& mgr) = delete;
+        JEEntityManager& operator=(JEEntityManager&& mgr) = delete;*/
 
         Entity SpawnEntity();
         void DestroyEntity(Entity e);

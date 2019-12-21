@@ -94,6 +94,7 @@ namespace JoeEngine {
           Return an up-to-date list of particle positions for rendering. Also resets particle data if lifetime is over.
           Note: particles not deleted when their lifetime is over, they just reset to the origin of the system with a 
           new lifetime.
+          \return the updated list of position data.
         */
         const std::vector<JEMeshPointVertex> GetVertices() {
             {
@@ -112,41 +113,65 @@ namespace JoeEngine {
         }
         
         //! Get indices list.
+        /*!
+          /return const-reference to the list of indices.
+        */
         const std::vector<uint32_t>& GetIndices() const {
             return m_indices;
         }
 
         //! Get mesh component.
+        /*!
+          /return const-reference to the mesh component.
+        */
         const MeshComponent& GetMeshComponent() const {
             return m_meshComponent;
         }
 
         //! Get material component.
+        /*!
+          /return const-reference to the material component.
+        */
         const MaterialComponent& GetMaterialComponent() const {
             return m_materialComponent;
         }
 
         //! Get all position data.
+        /*!
+          /return reference to the list of position data.
+        */
         std::vector<glm::vec3>& GetPositionData() {
             return m_positionData;
         }
 
         //! Get all velocity data.
+        /*!
+          /return reference to the list of velocity data.
+        */
         std::vector<glm::vec3>& GetVelocityData() {
             return m_velocityData;
         }
 
         //! Get all acceleration data.
+        /*!
+          /return reference to the list of acceleration data.
+        */
         std::vector<glm::vec3>& GetAccelData() {
             return m_accelData;
         }
 
         //! Get all lifetime data.
+        /*!
+          /return reference to the list of lifetime data.
+        */
         std::vector<float>& GetLifetimeData() {
             return m_lifetimeData;
         }
 
         //! Get number of particles in system (never changes).
+        /*!
+          /return number of particles in the system.
+        */
         uint32_t GetNumParticles() const {
             return m_settings.numParticles;
         }
