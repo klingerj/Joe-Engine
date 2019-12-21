@@ -83,15 +83,13 @@ namespace JoeEngine {
         AllSettings = 0xFFFFFFFF
     } RendererSettings;
 
-    // &-operator for Renderer Settings.
-    inline bool operator&(RendererSettings a, RendererSettings b)
-    { // Note the pass by value
+    //! &-operator for Renderer Settings.
+    inline bool operator&(RendererSettings a, RendererSettings b) { // Note the pass by value
         return (uint32_t)a & (uint32_t)b;
     }
 
-    // |- operator for Renderer Settings.
-    inline RendererSettings operator|(RendererSettings a, RendererSettings b)
-    { // Note the pass by value
+    //! |- operator for Renderer Settings.
+    inline RendererSettings operator|(RendererSettings a, RendererSettings b) { // Note the pass by value
         return (RendererSettings)((uint32_t)a | (uint32_t)b);
     }
 
