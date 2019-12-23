@@ -116,7 +116,7 @@ namespace JoeEngine {
                         }
 
                         const TransformComponent& transformComp = transformComponents.GetData()[i];
-                        if (m_sceneManager.m_camera.Cull(meshComp, transformComp, boundingBoxes[meshComp.GetVertexHandle()])) {
+                        if (m_sceneManager.m_camera.Cull(transformComp, boundingBoxes[meshComp.GetVertexHandle()])) {
                             meshComponentsPassedCulling.emplace_back(meshComp);
                             transformsPassedCulling.emplace_back(transformComp.GetTransform());
                             materialComponentsPassedCulling.emplace_back(materialComponents.GetData()[i]);
