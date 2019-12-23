@@ -50,8 +50,6 @@ set(SOURCE_LIST
     "Source/Rendering/MeshBufferManager.h"
     "Source/Rendering/TextureLibrary.cpp"
     "Source/Rendering/TextureLibrary.h"
-    "Source/Rendering/Texture.cpp"
-    "Source/Rendering/Texture.h"
     "Source/Rendering/VulkanQueue.cpp"
     "Source/Rendering/VulkanQueue.h"
     "Source/Rendering/VulkanRenderer.cpp"
