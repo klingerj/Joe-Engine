@@ -8,7 +8,6 @@
 
 #include "VulkanSwapChain.h"
 #include "VulkanRenderingTypes.h"
-#include "Texture.h"
 #include "TextureLibrary.h"
 #include "../Scene/Camera.h"
 #include "../Components/Material/MaterialComponent.h"

@@ -24,7 +24,7 @@ namespace JoeEngine {
         m_sceneManager = sceneManager;
 
         // Window (GLFW)
-        m_vulkanWindow.Initialize(m_width, m_height, "VulkanWindow", m_instance);
+        m_vulkanWindow.Initialize(m_width, m_height, "VulkanWindow");
 
         /// Vulkan setup
 

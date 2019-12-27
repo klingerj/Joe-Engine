@@ -1,7 +1,7 @@
 #include "VulkanWindow.h"
 
 namespace JoeEngine {
-    void JEVulkanWindow::Initialize(const int w, const int h, const std::string& n, VkInstance instance) {
+    void JEVulkanWindow::Initialize(const int w, const int h, const std::string& n) {
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         m_window = glfwCreateWindow(w, h, n.c_str(), nullptr, nullptr);
