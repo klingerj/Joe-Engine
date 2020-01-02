@@ -96,12 +96,26 @@ namespace JoeEngine {
     // Vulkan Functions
 
     //! Begin single time command buffer recording.
+    /*!
+      \param device the Vulkan logical device.
+      \param commandPool the Vulkan command pool.
+    */
     VkCommandBuffer BeginSingleTimeCommands(VkDevice device, VkCommandPool commandPool);
 
     //! End single time command buffer recording.
+    /*!
+      \param device the Vulkan logical device.
+      \param commandBuffer the Vulkan commandBuffer
+      \param graphicsQueue the Vulkan graphics queue.
+      \param commandPool the Vulkan command pool.
+    */
     void EndSingleTimeCommands(VkDevice device, VkCommandBuffer commandBuffer, const JEVulkanQueue& graphicsQueue, VkCommandPool commandPool);
 
     //! Check if a depth format has a stencil component.
+    /*!
+      \param format the format to check for stencil component presence.
+      \return true if the format has a stencil component, false otherwise.
+    */
     bool HasStencilComponent(VkFormat format);
 
     //! Get memory for an allocation.

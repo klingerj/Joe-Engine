@@ -1068,7 +1068,7 @@ namespace JoeEngine {
     }
     
     // Forward Translucent Shader
-
+    /*
     void JEForwardTranslucentShader::CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
         VkExtent2D frameExtent, VkRenderPass renderPass, const MaterialComponent& materialComponent) {
         // Shader stages
@@ -1291,6 +1291,7 @@ namespace JoeEngine {
     void JEForwardTranslucentShader::BindPushConstants_InstancedData(VkCommandBuffer commandBuffer, const std::array<uint32_t, 4>& instancedData) const {
         vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof(JE_PushConst_ViewProj), sizeof(uint32_t) * 4, instancedData.data());
     }
+    */
 
     // OIT Sort Shader
 

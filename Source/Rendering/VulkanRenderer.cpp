@@ -337,7 +337,6 @@ namespace JoeEngine {
 
         VkDeviceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        //std::vector<VkDeviceQueueCreateInfo> queueCreateInfos = GetQueueCreateInfos(indices);
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
         std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
@@ -511,15 +510,6 @@ namespace JoeEngine {
     }
 
     /// Renderer Functions
-
-    /*void JEVulkanRenderer::CreateTextures() {
-        JETexture t = JETexture(m_device, m_physicalDevice, m_graphicsQueue, m_commandPool, JE_TEXTURES_DIR + "ducreux.jpg");
-        m_textures.push_back(t);
-    }*/
-
-    /*void JEVulkanRenderer::CleanupTextures() {
-        m_textureLibraryGlobal.Cleanup(m_device);
-    }*/
 
     void JEVulkanRenderer::UpdateShaderBuffers(const std::vector<MaterialComponent>& materialComponents,
         const std::vector<glm::mat4>& transforms, const std::vector<glm::mat4>& transformsSorted, uint32_t imageIndex) {

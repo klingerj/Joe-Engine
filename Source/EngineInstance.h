@@ -52,6 +52,7 @@ namespace JoeEngine {
         std::unordered_map<std::type_index, uint32_t> m_componentTypeToIndex;
         
         //! Initialization/startup function.
+        //! \param rendererSettings the user-provided renderer subsystem settings.
         void InitializeEngine(RendererSettings rendererSettings);
 
         //! Stop/shutdown function.
@@ -94,9 +95,11 @@ namespace JoeEngine {
         Entity SpawnEntity();
 
         //! User function - destroy an entity in the scene.
+        //! \param entity the entity to destroy.
         void DestroyEntity(Entity entity);
 
         //! Load a particular scene.
+        //! \param id the scene ID to load.
         void LoadScene(uint32_t id);
 
         //! Register a component manager with the engine.
@@ -113,36 +116,65 @@ namespace JoeEngine {
             return static_cast<U*>(m_componentManagers[m_componentTypeToIndex.at(typeid(T))].get())->GetComponentList();
         }
 
-        //! Create a mesh component with a specific path to a mesh file. Invokes a function in the renderer.
+        //! Create a mesh component with a specific path to a mesh file. Invokes a mesh loading function in the renderer.
+        /*!
+          \param filepath the mesh file source path.
+          \return the newly created Mesh Component.
+        */
         // TODO: replace me with something more general? or not, as this is a built-in component type
         MeshComponent CreateMeshComponent(const std::string& filepath);
 
         //! Load a texture into the engine at a specific path. Invokes a function in the renderer.
+        /*!
+          \param filepath the texture file source path.
+          \return the newly created texture's ID.
+        */
         uint32_t LoadTexture(const std::string& filepath);
 
         //! Load a shader into the engine at a specific vertex/fragment filepath pair and store in the material component.
-        //! Invokes a function in the renderer.
+        /*!
+          Invokes the shader loading function in the renderer.
+          \param materialComponent the material component to create a shader for.
+          \param vertFilepath the vertex shader file source path.
+          \param fragFilepath the fragment shader file source path.
+        */
         void CreateShader(MaterialComponent& materialComponent, const std::string& vertFilepath, const std::string& fragFilepath);
 
         //! Create a descriptor from the specified material component properties. Invokes a function in the renderer.
+        /*!
+          \param materialComponent the material component to create a descriptor for.
+        */
         void CreateDescriptor(MaterialComponent& materialComponent);
 
         //! Instantiate a particle system with specific settings in the scene.
+        /*!
+          \param settings the user-provided particle system settings.
+          \param materialComponent the material properties for the particle system.
+        */
         void InstantiateParticleSystem(const JEParticleSystemSettings& settings, const MaterialComponent& materialComponent);
 
         //! Add a component to a particular entity.
+        //! \param entity the entity to add a component to.
         template<typename T>
         void AddComponent(const Entity& entity) {
             m_componentManagers[m_componentTypeToIndex.at(typeid(T))].get()->AddNewComponent(entity.GetId());
         }
 
         //! Get the component attached to an entity.
+        /*!
+          \param entity the entity to get the component for
+          \return a pointer to the retrieved component.
+        */
         template <typename T, typename U>
         T* GetComponent(const Entity& entity) const {
             return static_cast<U*>(m_componentManagers[m_componentTypeToIndex.at(typeid(T))].get())->GetComponent(entity.GetId());
         }
 
         //! Set a entity's component data to some new component data.
+        /*!
+          \param entity the entity to set the component for.
+          \param comp the new component data.
+        */
         template <typename U, typename T>
         void SetComponent(const Entity& entity, const T& comp) {
             static_cast<U*>(m_componentManagers[m_componentTypeToIndex.at(typeid(T))].get())->SetComponent(entity.GetId(), comp);
