@@ -5,24 +5,29 @@
 
 The goal of the Joe Engine is to be my C++ playground. The engine will contain various engine programming experiments and features related to rendering, systems, and performance.  
 
-### Documentation
-View the docs [here](https://klingerj.github.io/html/) (in-progress).
+### Index
+* [Demos](#demo)
+* [Documentation](#docs)
+* [Engine Features](#features)
 
 ### Demo
 Brief [demo video](https://vimeo.com/326088400) here (outdated).
 
-### Current features
-* Data-oriented entity-component system
-* Material system
-* Deferred renderer
-* Order-independent translucency (OIT)
-* Instanced rendering
-* Post-processing (Deprecated, needs to be re-implemented with new material system)
-* Shadow mapping
-* Frustum culling
-* CPU particle emitter systems
-* (Buggy) rigidbody simulation (deprecated/inactive now)
-* Threadpool
+### Docs
+View the docs [here](https://klingerj.github.io/html/) (in-progress).
+
+### Features
+##### Deferred renderer
+##### Instanced rendering
+##### Shadow mapping
+##### Frustum culling
+##### Order-independent translucency (OIT)
+##### Data-oriented entity-component system
+##### Material system
+##### CPU particle emitter systems
+##### Threadpool
+##### Post-processing (Deprecated/inactive now)
+##### (Buggy) rigidbody simulation (Deprecated/inactive now)
 
 ### Build Instructions
 Regardless of platform, you will need to install the following software:  
@@ -49,7 +54,7 @@ Once these are all installed properly, continue with the build instructions.
 4. You should now be presented with the CMake GUI. Set the Source directory to `/YourPath/Joe-Engine-master` and the Binaries directory to `/YourPath/Joe-Engine-master/Build`.
 5. Click Configure. Choose either the Ninja or XCode Generator.
 6. Click Generate. Assuming that works without issue, open the project with XCode, or build the project from the command line with Ninja.
-7. (XCode instructions). If using Ninja, once you build the project, you should be able to simply run the JoeEngine executable.
+7. If using XCode IDE, open the project with XCode and build using the GUI. If using Ninja, once you build the project, you should be able to simply run the JoeEngine executable.
 
 ### Dependencies
 [Vulkan SDK](https://www.lunarg.com/vulkan-sdk/)  
