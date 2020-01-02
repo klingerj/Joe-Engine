@@ -132,7 +132,7 @@ namespace JoeEngine {
         CreateVertexBuffer(m_vertexLists[m_numBuffers], &m_vertexBuffers[m_numBuffers], &m_vertexBufferMemory[m_numBuffers]);
         CreateIndexBuffer(m_indexLists[m_numBuffers], &m_indexBuffers[m_numBuffers], &m_indexBufferMemory[m_numBuffers]);
         ComputeMeshBounds(m_vertexLists[m_numBuffers], m_numBuffers);
-        return MeshComponent((int)(m_numBuffers++),MESH_TRIANGLES);
+        return MeshComponent((int)(m_numBuffers++), MESH_TRIANGLES);
     }
 
     MeshComponent JEMeshBufferManager::CreateMeshComponent(const std::vector<JEMeshPointVertex>& vertices, const std::vector<uint32_t>& indices) {

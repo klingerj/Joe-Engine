@@ -3,7 +3,7 @@
 namespace JoeEngine {
     void JETransformComponentManager::Update(JEEngineInstance* engineInstance) {
         /*for (TransformComponent& t : m_transformComponents) {
-            // TODO
+
         }*/
     }
 

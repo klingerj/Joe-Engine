@@ -116,7 +116,7 @@ namespace JoeEngine {
                         }
 
                         const TransformComponent& transformComp = transformComponents.GetData()[i];
-                        if (m_sceneManager.m_camera.Cull(meshComp, transformComp, boundingBoxes[meshComp.GetVertexHandle()])) {
+                        if (m_sceneManager.m_camera.Cull(transformComp, boundingBoxes[meshComp.GetVertexHandle()])) {
                             meshComponentsPassedCulling.emplace_back(meshComp);
                             transformsPassedCulling.emplace_back(transformComp.GetTransform());
                             materialComponentsPassedCulling.emplace_back(materialComponents.GetData()[i]);
@@ -124,8 +124,6 @@ namespace JoeEngine {
                     }
                 }
 
-                // TODO: sort materials by render layer, material (shader index and source textures), and mesh
-                // the renderer will attempt to render them as instanced geometry and will minimize pipeline/descriptor binding
                 // Sort all components by material properties and by mesh for efficient descriptor set binding and instanced rendering
                 indices.clear();
                 std::vector<MeshComponent>      meshComponentsSorted;

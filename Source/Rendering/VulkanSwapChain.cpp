@@ -143,10 +143,10 @@ namespace JoeEngine {
         m_swapChainImageFormat = surfaceFormat.format;
         m_swapChainExtent = extent;
 
-        CreateImageViews(physicalDevice, device, vulkanWindow.GetSurface());
+        CreateImageViews(physicalDevice, device);
     }
 
-    void JEVulkanSwapChain::CreateImageViews(VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface) {
+    void JEVulkanSwapChain::CreateImageViews(VkPhysicalDevice physicalDevice, VkDevice device) {
         m_swapChainImageViews.resize(m_swapChainImages.size());
 
         for (uint32_t i = 0; i < m_swapChainImages.size(); ++i) {
