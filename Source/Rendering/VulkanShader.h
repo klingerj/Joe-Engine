@@ -474,11 +474,23 @@ namespace JoeEngine {
         void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) const;
     };
 
-    /*
+    //! The JEForwardTranslucentShader class.
+    /*!
+      Shader for rendering translucent meshes, optionally with OIT enabled.
+      \sa JEShader, JEVulkanShader
+    */
     class JEForwardTranslucentShader : public JEVulkanShader {
     private:
+        //! Flag indicating that this shader is intended to be used with OIT.
         bool m_oit;
 
+        //! Derived class version of descriptor set layout creation.
+        /*!
+          \param device the Vulkan logical device.
+          \param numSourceTextures the number of uniform sampler textures.
+          \param numUniformBuffers the number of uniform data buffers.
+          \param numStorageBuffers the number of shader storage data buffers.
+        */
         void CreateDescriptorSetLayouts(VkDevice device, uint32_t numSourceTextures, uint32_t numUniformBuffers, uint32_t numStorageBuffers) override {
             m_descriptorSetLayouts.push_back(VK_NULL_HANDLE);
             
@@ -506,11 +518,24 @@ namespace JoeEngine {
                 }
             }
         }
+
+        //! Create graphics pipeline.
+        /*!
+          \param device the Vulkan logical device.
+          \param vertShaderModule the vertex shader module object.
+          \param fragShaderModule the fragment shader module object.
+          \param frameExtent the window/frame dimensions.
+          \param renderPass the intended Vulkan render pass object for the shader.
+          \param materialComponent the material properties for the shader.
+        */
         void CreateGraphicsPipeline(VkDevice device, VkShaderModule vertShaderModule, VkShaderModule fragShaderModule,
             VkExtent2D frameExtent, VkRenderPass renderPass, const MaterialComponent& materialComponent) override;
 
     public:
+        //! Default constructor (deleted).
         JEForwardTranslucentShader() = delete;
+        
+        //! Constructor.
         JEForwardTranslucentShader(const MaterialComponent& materialComponent, uint32_t numSourceTextures, uint32_t numUniformBuffers, VkDevice device, VkPhysicalDevice physicalDevice,
             const JEVulkanSwapChain& swapChain, VkRenderPass renderPass, bool enableOIT, const std::string& vertPath, const std::string& fragPath) :
             JEVulkanShader(device, vertPath, fragPath) {
@@ -529,10 +554,20 @@ namespace JoeEngine {
             CreateGraphicsPipeline(device, vertShaderModule, fragShaderModule, swapChain.GetExtent(), renderPass, materialComponent);
         }
 
+        //! Bind the view-projection matrix push constant.
+        /*!
+          \param commandBuffer the command buffer to record the bind command to.
+          \param viewProj the view projection matrix to provide to the shader.
+        */
         void BindPushConstants_ViewProj(VkCommandBuffer commandBuffer, const glm::mat4& viewProj) const;
+
+        //! Bind the instanced data push constant.
+        /*!
+          \param commandBuffer the command buffer to record the bind command to.
+          \param instancedData per-geometry-instance data to provide to the shader.
+        */
         void BindPushConstants_InstancedData(VkCommandBuffer commandBuffer, const std::array<uint32_t, 4>& instancedData) const;
     };
-    */
 
     //! The JEOITSortShader class.
     /*!
