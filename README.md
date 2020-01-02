@@ -20,7 +20,7 @@ The goal of the Joe Engine is to be my C++ playground. The engine will contain v
 Brief [demo video](https://vimeo.com/326088400) here (outdated).
 
 ### Documentation
-View the docs [here](https://klingerj.github.io/html/) (in-progress).
+View the docs [here](https://klingerj.github.io/html/).
 
 ### Features
 ##### Deferred renderer
