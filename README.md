@@ -9,11 +9,17 @@ The goal of the Joe Engine is to be my C++ playground. The engine will contain v
 * [Demos](#demo)
 * [Documentation](#docs)
 * [Engine Features](#features)
+* [Build Instructions](#build-instructions)
+  * [Windows](#windows)
+  * [MacOS](#macos)
+* [Dependencies](#dependencies)
+* [Resources](#resources)
+* [Assets](#assets)
 
-### Demo
+### Demos
 Brief [demo video](https://vimeo.com/326088400) here (outdated).
 
-### Docs
+### Documentation
 View the docs [here](https://klingerj.github.io/html/) (in-progress).
 
 ### Features
@@ -63,7 +69,7 @@ Once these are all installed properly, continue with the build instructions.
 [Tiny OBJ Loader](https://github.com/syoyo/tinyobjloader)  
 [STB Image Loading](https://github.com/nothings/stb)  
 
-### Relevant Resources
+### Resources
 [Vulkan Tutorial](https://vulkan-tutorial.com/)  
 [Sascha Willems Vulkan C++ examples and demos](https://github.com/SaschaWillems/Vulkan)  
 [ARM Software Vulkan SDK Samples](https://github.com/ARM-software/vulkan-sdk)  
