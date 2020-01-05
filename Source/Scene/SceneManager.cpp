@@ -18,7 +18,7 @@ namespace JoeEngine {
             m_shadowCamera = JECamera(glm::vec3(4.0f, 4.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPassExtent.width / (float)shadowPassExtent.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
 
             std::vector<Entity> entities;
-            MeshComponent meshComp_wahoo = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "wahoo.obj");
+            MeshComponent meshComp_alien = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "alienModel_Small.obj");
             MeshComponent meshComp_sphere = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "sphere.obj");
             MeshComponent meshComp_cube = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "cube.obj");
 
@@ -115,7 +115,7 @@ namespace JoeEngine {
                     entities.push_back(newEntity);
                     
                     if (i % 3 == 0) {
-                        m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_wahoo);
+                        m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_alien);
                     } else if (i % 3 == 1) {
                         m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_sphere);
                     } else if (i % 3 == 2) {
@@ -185,7 +185,7 @@ namespace JoeEngine {
             m_shadowCamera = JECamera(glm::vec3(4.0f, 4.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPassExtent.width / (float)shadowPassExtent.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
 
             std::vector<Entity> entities;
-            MeshComponent meshComp_wahoo = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "wahoo.obj");
+            MeshComponent meshComp_alien = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "alienModel_Small.obj");
             MeshComponent meshComp_sphere = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "sphere.obj");
             MeshComponent meshComp_cube = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "cube.obj");
             uint32_t tex1 = m_engineInstance->LoadTexture(JE_TEXTURES_DIR + "ducreux.jpg");
@@ -204,7 +204,7 @@ namespace JoeEngine {
                     entities.push_back(newEntity);
 
                     if (i % 3 == 0) {
-                        m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_wahoo);
+                        m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_alien);
                     } else if (i % 3 == 1) {
                         m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_sphere);
                     } else if (i % 3 == 2) {
@@ -246,7 +246,7 @@ namespace JoeEngine {
             m_shadowCamera = JECamera(glm::vec3(4.0f, 4.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), shadowPassExtent.width / (float)shadowPassExtent.height, JE_SHADOW_VIEW_NEAR_PLANE, JE_SHADOW_VIEW_FAR_PLANE);
 
             std::vector<Entity> entities;
-            MeshComponent meshComp_wahoo = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "wahoo.obj");
+            MeshComponent meshComp_alien = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "alienModel_Small.obj");
             MeshComponent meshComp_sphere = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "sphere.obj");
             MeshComponent meshComp_cube = m_engineInstance->CreateMeshComponent(JE_MODELS_OBJ_DIR + "cube.obj");
 
@@ -343,7 +343,7 @@ namespace JoeEngine {
                     entities.push_back(newEntity);
 
                     if (i % 3 == 0) {
-                        m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_wahoo);
+                        m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_alien);
                     } else if (i % 3 == 1) {
                         m_engineInstance->SetComponent<JEMeshComponentManager>(newEntity, meshComp_sphere);
                     } else if (i % 3 == 2) {
