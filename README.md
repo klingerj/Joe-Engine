@@ -104,8 +104,9 @@ The Joe Engine provides several core components, namely [Mesh](https://klingerj.
 ##### Material system
 To allow for more authorable materials, the Joe Engine offers a simple material system. This allows the user to specify properties such as render layer, opacity/translucency, whether it casts shadows, shaders, and source textures while letting the engine take care of API-specific function calls. Additionally, the Joe Engine will ensure that all API-specific shader resource binding function calls (e.g. descriptor set binding) are performed the optimal amount of times by sorting all entities by their material properties by how frequently they change. As mentioned in the Instanced rendering section, the engine will then further sort each of these individual “material groups” of entities by mesh component.  
   
-Two entities with separately authored materials.  
+Below are two entities with separately authored materials:  
 ![](Images/materials.png)
+Left: Translucent, red. Right: opaque, texture-mapped.
 
 ##### Threadpool
 To assist with the multi-threading of large tasks, the JoeEngine offers a thread pool (see the [ThreadPool](https://klingerj.github.io/html/class_joe_engine_1_1_j_e_thread_pool.html) class in the documentation). The user must first specify some data and a function for the thread to execute - this constitutes a thread task. The thread pool class API offers functions for easily queueing up such tasks to be executed. The threads in the pool are launched once during engine start-up and block until a new task is enqueued. It is up to the user to break up their own workloads into tasks for the thread pool.
