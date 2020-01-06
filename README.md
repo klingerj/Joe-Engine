@@ -60,7 +60,7 @@ Another way that the Joe Engine attempts to reduce the number of GPU draw calls 
 ##### Order-independent translucency (OIT)
 Rendering of translucent materials (where alpha < 1, in other words, not fully opaque) can be difficult as the blending function is not commutative- objects must be rendered in a particular order (typically back-to-front with respect to the camera). This works, but does not solve the issue of the correct rendering of intersecting/overlapping translucent triangles.  
   
-There are many ways to go about accomplishing this. [This](http://researchbank.rmit.edu.au/view/rmit:161520) thesis paper by Pyarelal Knowles (also listed in the [Resources](#resources) section) gives excellent background on the topic and describes the various implementation options well. The Joe Engine implements the linked-list solution described section X, but does not include many of the further optimizations and improvements described later in the paper.  
+There are many ways to go about accomplishing this. [This](http://researchbank.rmit.edu.au/view/rmit:161520) thesis paper by Pyarelal Knowles (also listed in the [Resources](#resources) section) gives excellent background on the topic and describes the various implementation options well. The Joe Engine implements the linked-list solution described in section 3.3, but does not include many of the further optimizations and improvements described later in the paper.  
   
 This permits the Joe Engine to issue GPU draw calls of translucent objects in any order while still outputting the correct result. The following example scene, consisting of two intersecting translucent triangles, exemplifies the utility of this feature.  
   
