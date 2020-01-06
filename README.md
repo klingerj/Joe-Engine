@@ -34,7 +34,7 @@ The second pass takes the above G-buffers as input textures and computes all lig
   
 ![](Images/deferredFinal.png)
 
-This particular deferred lighting pass computed lambertian shading and shadows (more info in the [Shadow Mapping](#shadow-mapping) section.
+This particular deferred lighting pass computed lambertian shading and shadows (see the [Shadow Mapping](#shadow-mapping) section).
 
 ##### Instanced rendering
 The JoeEngine seeks to minimize the amount of GPU draw calls in the main render loop. Every frame, before any draw calls are made, a master list of scene entities are sorted by Mesh Component (see the [Entity-Component System](#data-oriented-entity-component-system) section below). This allows the engine to render multiple meshes in a single draw call by simply specifying a number of entity instances.  
