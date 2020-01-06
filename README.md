@@ -6,7 +6,6 @@
 The goal of the Joe Engine is to be my C++ playground. The engine will contain various engine programming experiments and features related to rendering, systems, and performance.  
 
 ### Index
-* [Demos](#demos)
 * [Documentation](#documentation)
 * [Engine Features](#features)
 * [Build Instructions](#build-instructions)
@@ -15,9 +14,6 @@ The goal of the Joe Engine is to be my C++ playground. The engine will contain v
 * [Dependencies](#dependencies)
 * [Resources](#resources)
 * [Assets](#assets)
-
-### Demos
-Brief [demo video](https://vimeo.com/326088400) here (outdated).
 
 ### Documentation
 View the docs [here](https://klingerj.github.io/html/).
@@ -105,6 +101,7 @@ The Joe Engine provides several core components, namely [Mesh](https://klingerj.
 To allow for more authorable materials, the Joe Engine offers a simple material system. This allows the user to specify properties such as render layer, opacity/translucency, whether it casts shadows, shaders, and source textures while letting the engine take care of API-specific function calls. Additionally, the Joe Engine will ensure that all API-specific shader resource binding function calls (e.g. descriptor set binding) are performed the optimal amount of times by sorting all entities by their material properties by how frequently they change. As mentioned in the Instanced rendering section, the engine will then further sort each of these individual “material groups” of entities by mesh component.  
   
 Below are two entities with separately authored materials:  
+  
 ![](Images/materials.png)
 Left: Translucent, red. Right: opaque, texture-mapped.
 
