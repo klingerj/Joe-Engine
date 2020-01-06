@@ -99,7 +99,7 @@ Now that all Components reside in the ideal memory layout, we can rest assured t
   
 The Joe Engine provides several core components, namely [Mesh](https://klingerj.github.io/html/class_joe_engine_1_1_mesh_component.html), [Material](https://klingerj.github.io/html/class_joe_engine_1_1_material_component.html), and [Transform](https://klingerj.github.io/html/class_joe_engine_1_1_transform_component.html). As a sample custom component type, a ‘[RotatorComponent](https://klingerj.github.io/html/class_rotator_component.html)’ is also provided. A RotatorComponent constantly rotates an entity about a specified axis:  
   
-![](Images/rotator-component.png)
+![](Images/rotator-component.gif)
 
 ##### Material system
 To allow for more authorable materials, the Joe Engine offers a simple material system. This allows the user to specify properties such as render layer, opacity/translucency, whether it casts shadows, shaders, and source textures while letting the engine take care of API-specific function calls. Additionally, the Joe Engine will ensure that all API-specific shader resource binding function calls (e.g. descriptor set binding) are performed the optimal amount of times by sorting all entities by their material properties by how frequently they change. As mentioned in the Instanced rendering section, the engine will then further sort each of these individual “material groups” of entities by mesh component.  
